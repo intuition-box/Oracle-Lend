@@ -26,15 +26,15 @@ const Analytics: React.FC = () => {
     {
       title: 'Total Value Locked (TVL)',
       value: `$${formatCurrency(analytics.totalTVL.usd)}`,
-      change: '+12.5%',
+      change: null,
       icon: 'fas fa-lock',
       color: 'text-green-400',
-      subtitle: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST + ${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE`
+      subtitle: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST + ${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE + ${formatCurrency(analytics.totalTVL.INTUIT)} INTUIT`
     },
     {
       title: 'Total Transactions',
       value: formatNumber(analytics.totalTransactions),
-      change: '+8.3%',
+      change: null,
       icon: 'fas fa-exchange-alt',
       color: 'text-blue-400',
       subtitle: 'All-time protocol transactions'
@@ -42,7 +42,7 @@ const Analytics: React.FC = () => {
     {
       title: 'Unique Wallets',
       value: formatNumber(analytics.uniqueWallets),
-      change: '+15.7%',
+      change: null,
       icon: 'fas fa-users',
       color: 'text-purple-400',
       subtitle: 'Active protocol users'
@@ -50,7 +50,7 @@ const Analytics: React.FC = () => {
     {
       title: '24h Volume',
       value: `$${formatCurrency(analytics.volume24h)}`,
-      change: '+4.2%',
+      change: null,
       icon: 'fas fa-chart-line',
       color: 'text-yellow-400',
       subtitle: 'Trading + lending volume'
@@ -63,55 +63,47 @@ const Analytics: React.FC = () => {
       stats: [
         { label: 'tTRUST Pool Size', value: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST`, icon: '⚡' },
         { label: 'ORACLE Pool Size', value: `${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE`, icon: '🔮' },
-        { label: 'Total Borrowed', value: '$2.1M', icon: 'fas fa-arrow-down' },
-        { label: 'Average APY', value: '6.8%', icon: 'fas fa-percentage' }
+        { label: 'INTUIT Pool Size', value: `${formatCurrency(analytics.totalTVL.INTUIT)} INTUIT`, icon: '💎' },
+        { label: 'Total Borrowed', value: `$${formatCurrency(analytics.totalBorrowed)}`, icon: 'fas fa-arrow-down' }
       ]
     },
     {
       category: 'Swap Analytics',
       stats: [
-        { label: 'Daily Swaps', value: '1,247', icon: 'fas fa-exchange-alt' },
-        { label: 'Average Trade Size', value: '$1,850', icon: 'fas fa-dollar-sign' },
-        { label: 'Total Liquidity', value: '$4.2M', icon: 'fas fa-water' },
-        { label: 'Price Impact Avg', value: '0.12%', icon: 'fas fa-chart-area' }
+        { label: 'Daily Swaps', value: formatNumber(analytics.dailySwaps), icon: 'fas fa-exchange-alt' },
+        { label: 'Swap Volume (24h)', value: `$${formatCurrency(analytics.swapVolume24h)}`, icon: 'fas fa-dollar-sign' },
+        { label: 'Total Swaps', value: formatNumber(analytics.totalSwaps), icon: 'fas fa-exchange-alt' },
+        { label: 'Avg Trade Size', value: `$${formatCurrency(analytics.avgTradeSize)}`, icon: 'fas fa-chart-area' }
       ]
     },
     {
       category: 'Network Activity',
       stats: [
-        { label: 'Active Lenders', value: '892', icon: 'fas fa-plus-circle' },
-        { label: 'Active Borrowers', value: '634', icon: 'fas fa-minus-circle' },
-        { label: 'New Users (24h)', value: '47', icon: 'fas fa-user-plus' },
-        { label: 'Avg Session Time', value: '12m 34s', icon: 'fas fa-clock' }
+        { label: 'Active Lenders', value: formatNumber(analytics.activeLenders), icon: 'fas fa-plus-circle' },
+        { label: 'Active Borrowers', value: formatNumber(analytics.activeBorrowers), icon: 'fas fa-minus-circle' },
+        { label: 'New Users (24h)', value: formatNumber(analytics.newUsers24h), icon: 'fas fa-user-plus' },
+        { label: 'Active Users (24h)', value: formatNumber(analytics.activeUsers24h), icon: 'fas fa-user' }
       ]
     }
   ]
 
-  // Generate mock chart data
-  const generateChartData = (points: number = 24) => {
-    const data = []
-    const now = Date.now()
-    const baseValue = 1000000 // Base TVL value
-    
-    for (let i = points - 1; i >= 0; i--) {
-      const timestamp = now - (i * (timeframe === '24h' ? 3600000 : timeframe === '7d' ? 86400000 : 86400000 * 30 / points))
-      const variation = Math.sin(i * 0.5) * 50000 + Math.random() * 100000
-      data.push({
-        timestamp,
-        value: baseValue + variation,
-        formatted: new Date(timestamp).toLocaleTimeString([], { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          ...(timeframe !== '24h' && { month: 'short', day: 'numeric' })
-        })
+  // Use real chart data from analytics
+  const getChartData = () => {
+    const data = analytics.chartData || []
+    return data.map(point => ({
+      timestamp: point.timestamp,
+      value: parseFloat(point.value),
+      formatted: new Date(point.timestamp).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        ...(timeframe !== '24h' && { month: 'short', day: 'numeric' })
       })
-    }
-    return data
+    }))
   }
 
-  const chartData = generateChartData()
-  const maxValue = Math.max(...chartData.map(d => d.value))
-  const minValue = Math.min(...chartData.map(d => d.value))
+  const chartData = getChartData()
+  const maxValue = chartData.length > 0 ? Math.max(...chartData.map(d => d.value)) : 1000000
+  const minValue = chartData.length > 0 ? Math.min(...chartData.map(d => d.value)) : 0
 
   return (
     <div className="space-y-8">
@@ -128,7 +120,7 @@ const Analytics: React.FC = () => {
               <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${metric.color} bg-opacity-20 flex items-center justify-center`}>
                 <i className={`${metric.icon} ${metric.color} text-xl`}></i>
               </div>
-              <span className="text-green-400 text-sm font-medium">{metric.change}</span>
+              {metric.change && <span className="text-green-400 text-sm font-medium">{metric.change}</span>}
             </div>
             <h3 className="text-gray-400 text-sm mb-1">{metric.title}</h3>
             <p className="text-2xl font-bold text-white mb-1">
@@ -287,14 +279,7 @@ const Analytics: React.FC = () => {
         </h2>
         
         <div className="space-y-3 max-h-64 overflow-y-auto">
-          {[
-            { type: 'supply', user: '0x742d...35Cc', amount: '150 tTRUST', time: '2 minutes ago', icon: 'fas fa-plus', color: 'text-green-400' },
-            { type: 'swap', user: '0x8a9b...24Ed', amount: '5,000 ORACLE → 50 tTRUST', time: '5 minutes ago', icon: 'fas fa-exchange-alt', color: 'text-blue-400' },
-            { type: 'borrow', user: '0x1c4f...89Aa', amount: '25 tTRUST', time: '8 minutes ago', icon: 'fas fa-download', color: 'text-orange-400' },
-            { type: 'repay', user: '0x3e7d...12Bb', amount: '1,200 ORACLE', time: '12 minutes ago', icon: 'fas fa-upload', color: 'text-purple-400' },
-            { type: 'supply', user: '0x9f2e...45Ff', amount: '75,000 ORACLE', time: '15 minutes ago', icon: 'fas fa-plus', color: 'text-green-400' },
-            { type: 'swap', user: '0x6b8c...78Dd', amount: '2 tTRUST → 200 ORACLE', time: '18 minutes ago', icon: 'fas fa-exchange-alt', color: 'text-blue-400' }
-          ].map((activity, index) => (
+          {(analytics.recentTransactions || []).map((activity, index) => (
             <div key={index} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors">
               <div className="flex items-center space-x-4">
                 <div className={`w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center`}>
@@ -305,6 +290,7 @@ const Analytics: React.FC = () => {
                     <span className="text-gray-400">User</span> {activity.user} 
                     <span className="text-gray-400 ml-1">
                       {activity.type === 'supply' ? 'supplied' :
+                       activity.type === 'withdraw' ? 'withdrew' :
                        activity.type === 'borrow' ? 'borrowed' :
                        activity.type === 'repay' ? 'repaid' :
                        'swapped'}
@@ -313,11 +299,21 @@ const Analytics: React.FC = () => {
                   <p className="text-gray-500 text-xs">{activity.time}</p>
                 </div>
               </div>
-              <button className="text-gray-500 hover:text-gray-400 transition-colors">
+              <button 
+                onClick={() => window.open(`https://explorer.intuition.network/tx/${activity.txHash}`, '_blank')}
+                className="text-gray-500 hover:text-gray-400 transition-colors"
+                title="View on block explorer"
+              >
                 <i className="fas fa-external-link-alt text-xs"></i>
               </button>
             </div>
           ))}
+          {(!analytics.recentTransactions || analytics.recentTransactions.length === 0) && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">No recent transactions</p>
+              <p className="text-gray-500 text-sm mt-1">Activity will appear here as users interact with the protocol</p>
+            </div>
+          )}
         </div>
         
         <div className="mt-4 text-center">

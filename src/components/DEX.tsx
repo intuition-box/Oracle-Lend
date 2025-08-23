@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
 import { SwapQuote } from '../types'
+import { trackTransaction, initializeAnalytics } from '../utils/analyticsTracker'
 
 const DEX: React.FC = () => {
   const { swap, isLoading, getTokenBalances, exchangeRates } = useContract()
@@ -25,8 +26,11 @@ const DEX: React.FC = () => {
   // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUIT, 1 ORACLE = 1 INTUIT
   const EXCHANGE_RATE = 100
 
-  // Fetch balances when wallet connects
+  // Initialize analytics and fetch balances when wallet connects
   useEffect(() => {
+    // Initialize analytics tracking
+    initializeAnalytics()
+    
     if (isConnected && account) {
       getTokenBalances(account).then(contractBalances => {
         setBalances({
@@ -95,6 +99,19 @@ const DEX: React.FC = () => {
     const result = await swap(fromToken, toToken, fromAmount)
     
     if (result.success) {
+      // Track swap transaction for analytics
+      if (account && result.txHash) {
+        const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
+        trackTransaction(
+          result.txHash,
+          'swap',
+          account,
+          `${fromToken}→${toToken}`,
+          `${fromAmount} ${fromToken}`,
+          volumeUSD
+        )
+      }
+      
       setFromAmount('')
       setToAmount('')
       setTransactionStatus({
@@ -156,6 +173,18 @@ const DEX: React.FC = () => {
   }
 
   const slippageOptions = [0.1, 0.5, 1.0, 2.0]
+
+  // Calculate volume in USD for analytics
+  const calculateVolumeUSD = (token: string, amount: string) => {
+    const amountFloat = parseFloat(amount)
+    const prices = {
+      tTRUST: 2500,
+      ORACLE: 25,
+      INTUIT: 25
+    }
+    const price = prices[token as keyof typeof prices] || 0
+    return (amountFloat * price).toFixed(2)
+  }
 
   return (
     <div className="space-y-8">

@@ -34,9 +34,29 @@ export interface AnalyticsData {
   totalTVL: {
     tTRUST: string
     ORACLE: string
+    INTUIT: string
     usd: string
   }
   volume24h: string
+  totalBorrowed: string
+  dailySwaps: number
+  swapVolume24h: string
+  totalSwaps: number
+  avgTradeSize: string
+  activeLenders: number
+  activeBorrowers: number
+  newUsers24h: number
+  activeUsers24h: number
+  chartData: Array<{ timestamp: number; value: string }>
+  recentTransactions: Array<{
+    type: 'supply' | 'withdraw' | 'borrow' | 'repay' | 'swap'
+    user: string
+    amount: string
+    time: string
+    icon: string
+    color: string
+    txHash: string
+  }>
   timestamp: number
 }
 
