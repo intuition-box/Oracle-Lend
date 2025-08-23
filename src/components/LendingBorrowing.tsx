@@ -550,6 +550,20 @@ const LendingBorrowing: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Discord Link */}
+      <div className="text-center py-8">
+        <a 
+          href="https://discord.com/invite/0xintuition" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center space-x-3 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25"
+        >
+          <i className="fab fa-discord text-xl"></i>
+          <span>Join Intuition Discord</span>
+          <i className="fas fa-external-link-alt text-sm opacity-75"></i>
+        </a>
+      </div>
     </div>
   )
 }
