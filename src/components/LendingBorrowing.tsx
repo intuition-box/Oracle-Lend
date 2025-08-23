@@ -254,7 +254,7 @@ const LendingBorrowing: React.FC = () => {
                         <h3 className="text-base font-bold text-white">{pool.token}</h3>
                         <p className="text-xs text-gray-400">
                           {pool.token === 'tTRUST' ? 'Intuition Trust Token' : 
-                           pool.token === 'ORACLE' ? 'Oracle Token' : 'Intuition Token'}
+                           pool.token === 'ORACLE' ? 'Oracle Token' : 'INTUINT'}
                         </p>
                       </div>
                     </div>

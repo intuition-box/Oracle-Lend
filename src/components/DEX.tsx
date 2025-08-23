@@ -146,7 +146,7 @@ const DEX: React.FC = () => {
         price: `$${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       INTUINT: {
-        name: 'Intuition Token',
+        name: 'INTUINT',
         symbol: 'INTUINT',
         icon: '💎',
         price: `$${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

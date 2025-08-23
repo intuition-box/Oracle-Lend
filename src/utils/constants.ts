@@ -42,7 +42,7 @@ export const TOKENS = {
   },
   INTUINT: {
     symbol: 'INTUINT',
-    name: 'Intuition Token',
+    name: 'INTUINT',
     address: INTUITION_TESTNET.contracts.intuintToken,
     decimals: 18,
     icon: '💎',
