@@ -11,6 +11,13 @@ const LendingBorrowing: React.FC = () => {
   const [amount, setAmount] = useState('')
   const [action, setAction] = useState<'supply' | 'withdraw' | 'borrow' | 'repay'>('supply')
 
+  const [transactionStatus, setTransactionStatus] = useState<{
+    show: boolean
+    type: 'success' | 'error'
+    message: string
+    txHash?: string
+  } | null>(null)
+
   const handleTransaction = async () => {
     if (!amount || !isConnected) return
 
@@ -34,8 +41,24 @@ const LendingBorrowing: React.FC = () => {
 
     if (result.success) {
       setAmount('')
-      // You could add a success toast here
+      setTransactionStatus({
+        show: true,
+        type: 'success',
+        message: `Successfully ${action}ed ${amount} ${selectedToken}`,
+        txHash: result.txHash
+      })
+    } else {
+      setTransactionStatus({
+        show: true,
+        type: 'error',
+        message: result.error || `${action} transaction failed`
+      })
     }
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      setTransactionStatus(null)
+    }, 5000)
   }
 
   const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
@@ -59,6 +82,42 @@ const LendingBorrowing: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Transaction Status Notification */}
+      {transactionStatus && (
+        <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg border ${
+          transactionStatus.type === 'success' 
+            ? 'bg-green-900/90 border-green-500/50 text-green-100' 
+            : 'bg-red-900/90 border-red-500/50 text-red-100'
+        } backdrop-blur-sm animate-pulse`}>
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              {transactionStatus.type === 'success' ? (
+                <i className="fas fa-check-circle text-green-400 text-xl"></i>
+              ) : (
+                <i className="fas fa-exclamation-circle text-red-400 text-xl"></i>
+              )}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold mb-1">
+                {transactionStatus.type === 'success' ? 'Transaction Successful!' : 'Transaction Failed'}
+              </h4>
+              <p className="text-sm opacity-90">{transactionStatus.message}</p>
+              {transactionStatus.txHash && (
+                <p className="text-xs mt-2 opacity-70">
+                  Tx: {transactionStatus.txHash.slice(0, 10)}...{transactionStatus.txHash.slice(-8)}
+                </p>
+              )}
+            </div>
+            <button 
+              onClick={() => setTransactionStatus(null)}
+              className="flex-shrink-0 text-gray-400 hover:text-white"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold gradient-text mb-4">Lending & Borrowing</h1>
