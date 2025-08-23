@@ -47,50 +47,71 @@ function App() {
   }, [])
 
   return (
-    <div className={`min-h-screen cosmic-bg ${isDarkMode ? 'dark' : ''}`}>
-      {/* Global Transaction Notification */}
+    <>
+      {/* Global Transaction Notification - COMPLETELY OUTSIDE EVERYTHING */}
       {notification && (
         <div 
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 max-w-md w-auto mx-4 p-4 rounded-lg border shadow-2xl ${
-            notification.type === 'success' 
-              ? 'bg-green-900/95 border-green-500/50 text-green-100' 
-              : notification.type === 'rejected'
-              ? 'bg-yellow-900/95 border-yellow-500/50 text-yellow-100'
-              : 'bg-red-900/95 border-red-500/50 text-red-100'
-          } backdrop-blur-sm`}
           style={{ 
             position: 'fixed', 
-            top: '1rem', 
+            top: '20px', 
             left: '50%', 
             transform: 'translateX(-50%)', 
-            zIndex: 999999 
+            zIndex: 2147483647,
+            width: 'auto',
+            maxWidth: '400px',
+            padding: '16px',
+            borderRadius: '12px',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+            border: notification.type === 'success' 
+              ? '1px solid rgba(34, 197, 94, 0.5)' 
+              : notification.type === 'rejected'
+              ? '1px solid rgba(245, 158, 11, 0.5)'
+              : '1px solid rgba(239, 68, 68, 0.5)',
+            backgroundColor: notification.type === 'success' 
+              ? 'rgba(21, 128, 61, 0.95)' 
+              : notification.type === 'rejected'
+              ? 'rgba(146, 64, 14, 0.95)'
+              : 'rgba(127, 29, 29, 0.95)',
+            color: '#ffffff'
           }}
         >
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ flexShrink: 0 }}>
               {notification.type === 'success' ? (
-                <i className="fas fa-check-circle text-green-400 text-xl"></i>
+                <i className="fas fa-check-circle" style={{ color: '#4ade80', fontSize: '20px' }}></i>
               ) : notification.type === 'rejected' ? (
-                <i className="fas fa-times-circle text-yellow-400 text-xl"></i>
+                <i className="fas fa-times-circle" style={{ color: '#fbbf24', fontSize: '20px' }}></i>
               ) : (
-                <i className="fas fa-exclamation-circle text-red-400 text-xl"></i>
+                <i className="fas fa-exclamation-circle" style={{ color: '#f87171', fontSize: '20px' }}></i>
               )}
             </div>
-            <div className="flex-1">
-              <h4 className="font-bold mb-1">
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '14px' }}>
                 {notification.type === 'success' ? 'Transaction Successful!' : 
                  notification.type === 'rejected' ? 'Transaction Rejected' : 'Transaction Failed'}
               </h4>
-              <p className="text-sm opacity-90">{notification.message}</p>
+              <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>{notification.message}</p>
               {notification.txHash && (
-                <p className="text-xs mt-2 opacity-70">
+                <p style={{ fontSize: '11px', marginTop: '8px', opacity: 0.7, margin: '8px 0 0 0' }}>
                   Tx: {notification.txHash.slice(0, 10)}...{notification.txHash.slice(-8)}
                 </p>
               )}
             </div>
             <button 
               onClick={() => setNotification(null)}
-              className="flex-shrink-0 text-gray-400 hover:text-white"
+              style={{ 
+                flexShrink: 0, 
+                color: '#9ca3af', 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                padding: '4px'
+              }}
+              onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ffffff'}
+              onMouseOut={(e) => (e.target as HTMLElement).style.color = '#9ca3af'}
             >
               <i className="fas fa-times"></i>
             </button>
@@ -98,7 +119,8 @@ function App() {
         </div>
       )}
       
-      <Router>
+      <div className={`min-h-screen cosmic-bg ${isDarkMode ? 'dark' : ''}`}>
+        <Router>
         <Layout 
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
@@ -115,7 +137,8 @@ function App() {
           </Routes>
         </Layout>
       </Router>
-    </div>
+      </div>
+    </>
   )
 }
 
