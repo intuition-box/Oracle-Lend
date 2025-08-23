@@ -303,7 +303,25 @@ const DEX: React.FC = () => {
                         placeholder="0.00"
                         className="bg-transparent text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none"
                       />
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.25).toString())}
+                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
+                        >
+                          25%
+                        </button>
+                        <button
+                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.5).toString())}
+                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
+                        >
+                          50%
+                        </button>
+                        <button
+                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.75).toString())}
+                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
+                        >
+                          75%
+                        </button>
                         <button
                           onClick={() => setFromAmount(balances[fromToken])}
                           className="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 rounded bg-purple-600/20"

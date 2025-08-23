@@ -433,7 +433,7 @@ const LendingBorrowing: React.FC = () => {
                       Balance: {parseFloat(getUserBalance()).toFixed(4)} {selectedToken}
                     </span>
                   </div>
-                  <div className="relative">
+                  <div className="space-y-2">
                     <input
                       type="number"
                       value={amount}
@@ -441,12 +441,32 @@ const LendingBorrowing: React.FC = () => {
                       placeholder="0.00"
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20"
                     />
-                    <button 
-                      onClick={handleMaxClick}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors"
-                    >
-                      MAX
-                    </button>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.25).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
+                      >
+                        25%
+                      </button>
+                      <button 
+                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.5).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
+                      >
+                        50%
+                      </button>
+                      <button 
+                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.75).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
+                      >
+                        75%
+                      </button>
+                      <button 
+                        onClick={handleMaxClick}
+                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
+                      >
+                        MAX
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
