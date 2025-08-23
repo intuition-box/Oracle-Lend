@@ -1,4 +1,4 @@
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "python-3.11"]
 [agent]
 expertMode = true
 integrations = ["javascript_mem_db==1.0.0"]
@@ -27,9 +27,17 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "VITE_SERVER_ALLOWED_HOSTS=all npx vite --host 0.0.0.0 --port 5000"
+args = "npx vite --config vite.config.js"
 waitForPort = 5000
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
