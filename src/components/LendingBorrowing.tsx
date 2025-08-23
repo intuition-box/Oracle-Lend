@@ -4,7 +4,7 @@ import { useWallet } from '../hooks/useWallet'
 
 const LendingBorrowing: React.FC = () => {
   const { userPosition, lendingPools, isLoading, supply, withdraw, borrow, repay } = useContract()
-  const { isConnected } = useWallet()
+  const { isConnected, balance } = useWallet()
   
   const [activeTab, setActiveTab] = useState<'supply' | 'borrow'>('supply')
   const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
@@ -91,9 +91,10 @@ const LendingBorrowing: React.FC = () => {
   // Get user wallet balance for selected token
   const getUserBalance = () => {
     if (selectedToken === 'tTRUST') {
-      return '10.5' // This would come from the wallet hook
+      return balance // Use real wallet balance for tTRUST
     }
-    return '0' // For ORACLE and INTUINT, would need to query ERC20 balance
+    // For ORACLE and INTUINT, use supplied amounts since we don't have ERC20 balance reading yet
+    return userPosition.supplied[selectedToken] || '0'
   }
 
   const handleMaxClick = () => {
