@@ -7,11 +7,11 @@ const DEX: React.FC = () => {
   const { swap, isLoading, getTokenBalances, exchangeRates } = useContract()
   const { isConnected, account, balance } = useWallet()
   
-  const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
-  const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('ORACLE')
+  const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('tTRUST')
+  const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('ORACLE')
   const [fromAmount, setFromAmount] = useState('')
   const [toAmount, setToAmount] = useState('')
-  const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0', INTUINT: '0' })
+  const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [slippage, setSlippage] = useState(0.5)
   const [transactionStatus, setTransactionStatus] = useState<{
@@ -21,7 +21,7 @@ const DEX: React.FC = () => {
     txHash?: string
   } | null>(null)
 
-  // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUINT, 1 ORACLE = 1 INTUINT
+  // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUIT, 1 ORACLE = 1 INTUIT
   const EXCHANGE_RATE = 100
 
   // Fetch balances when wallet connects
@@ -31,11 +31,11 @@ const DEX: React.FC = () => {
         setBalances({
           tTRUST: balance, // Use real wallet balance for tTRUST
           ORACLE: contractBalances.ORACLE,
-          INTUINT: contractBalances.INTUINT
+          INTUIT: contractBalances.INTUIT
         })
       })
     } else {
-      setBalances({ tTRUST: '0', ORACLE: '0', INTUINT: '0' })
+      setBalances({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
     }
   }, [isConnected, account, balance, getTokenBalances])
 
@@ -51,14 +51,14 @@ const DEX: React.FC = () => {
         rate = exchangeRates.tTRUST_ORACLE
       } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
         rate = 1 / exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'tTRUST' && toToken === 'INTUINT') {
-        rate = exchangeRates.tTRUST_INTUINT
-      } else if (fromToken === 'INTUINT' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_INTUINT
-      } else if (fromToken === 'ORACLE' && toToken === 'INTUINT') {
-        rate = exchangeRates.ORACLE_INTUINT
-      } else if (fromToken === 'INTUINT' && toToken === 'ORACLE') {
-        rate = 1 / exchangeRates.ORACLE_INTUINT
+      } else if (fromToken === 'tTRUST' && toToken === 'INTUIT') {
+        rate = exchangeRates.tTRUST_INTUIT
+      } else if (fromToken === 'INTUIT' && toToken === 'tTRUST') {
+        rate = 1 / exchangeRates.tTRUST_INTUIT
+      } else if (fromToken === 'ORACLE' && toToken === 'INTUIT') {
+        rate = exchangeRates.ORACLE_INTUIT
+      } else if (fromToken === 'INTUIT' && toToken === 'ORACLE') {
+        rate = 1 / exchangeRates.ORACLE_INTUIT
       }
       
       const outputAmount = inputAmount * rate
@@ -109,7 +109,7 @@ const DEX: React.FC = () => {
         setBalances({
           tTRUST: balance, // Use real wallet balance for tTRUST
           ORACLE: contractBalances.ORACLE,
-          INTUINT: contractBalances.INTUINT
+          INTUIT: contractBalances.INTUIT
         })
       }
     } else {
@@ -126,11 +126,11 @@ const DEX: React.FC = () => {
     }, 5000)
   }
 
-  const getTokenInfo = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
+  const getTokenInfo = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
     // Calculate dynamic prices based on exchange rates
     const basePrice = 2500 // Base tTRUST price
     const oraclePrice = basePrice / exchangeRates.tTRUST_ORACLE
-    const intuintPrice = basePrice / exchangeRates.tTRUST_INTUINT
+    const intuintPrice = basePrice / exchangeRates.tTRUST_INTUIT
     
     return {
       tTRUST: {
@@ -145,9 +145,9 @@ const DEX: React.FC = () => {
         icon: '🔮',
         price: `$${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
-      INTUINT: {
-        name: 'INTUINT',
-        symbol: 'INTUINT',
+      INTUIT: {
+        name: 'INTUIT',
+        symbol: 'INTUIT',
         icon: '💎',
         price: `$${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       }
@@ -217,7 +217,7 @@ const DEX: React.FC = () => {
               Your Balances
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => {
+              {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => {
                 const info = getTokenInfo(token)
                 return (
                   <div key={token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
@@ -313,10 +313,10 @@ const DEX: React.FC = () => {
                         <div className="relative">
                           <select
                             value={fromToken}
-                            onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUINT')}
+                            onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
                             className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
                           >
-                            {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => (
+                            {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                               <option key={token} value={token} className="bg-gray-800">
                                 {getTokenInfo(token).icon} {token}
                               </option>
@@ -359,10 +359,10 @@ const DEX: React.FC = () => {
                       <div className="relative">
                         <select
                           value={toToken}
-                          onChange={(e) => setToToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUINT')}
+                          onChange={(e) => setToToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
                           className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
                         >
-                          {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => (
+                          {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
                               {getTokenInfo(token).icon} {token}
                             </option>
@@ -456,12 +456,12 @@ const DEX: React.FC = () => {
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
                   <div className="text-3xl mb-2">⚡ → 💎</div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to INTUINT</h3>
+                  <h3 className="font-bold text-white mb-1">tTRUST to INTUIT</h3>
                   <p className="text-2xl font-bold text-cyan-400">
-                    1 : {exchangeRates.tTRUST_INTUINT.toFixed(2)}
+                    1 : {exchangeRates.tTRUST_INTUIT.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    1 tTRUST = {exchangeRates.tTRUST_INTUINT.toFixed(2)} INTUINT
+                    1 tTRUST = {exchangeRates.tTRUST_INTUIT.toFixed(2)} INTUIT
                   </p>
                 </div>
               </div>
@@ -469,12 +469,12 @@ const DEX: React.FC = () => {
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
                   <div className="text-3xl mb-2">🔮 ↔ 💎</div>
-                  <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUINT</h3>
+                  <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUIT</h3>
                   <p className="text-2xl font-bold text-purple-400">
-                    1 : {exchangeRates.ORACLE_INTUINT.toFixed(4)}
+                    1 : {exchangeRates.ORACLE_INTUIT.toFixed(4)}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    1 ORACLE = {exchangeRates.ORACLE_INTUINT.toFixed(4)} INTUINT
+                    1 ORACLE = {exchangeRates.ORACLE_INTUIT.toFixed(4)} INTUIT
                   </p>
                 </div>
               </div>

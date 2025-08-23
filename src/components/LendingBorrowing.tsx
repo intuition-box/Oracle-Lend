@@ -7,7 +7,7 @@ const LendingBorrowing: React.FC = () => {
   const { isConnected, balance } = useWallet()
   
   const [activeTab, setActiveTab] = useState<'supply' | 'borrow'>('supply')
-  const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
+  const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('tTRUST')
   const [amount, setAmount] = useState('')
   const [action, setAction] = useState<'supply' | 'withdraw' | 'borrow' | 'repay'>('supply')
 
@@ -69,7 +69,7 @@ const LendingBorrowing: React.FC = () => {
     }, 5000)
   }
 
-  const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
+  const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
     return lendingPools.find(pool => pool.token === token)
   }
 
@@ -93,7 +93,7 @@ const LendingBorrowing: React.FC = () => {
     if (selectedToken === 'tTRUST') {
       return balance // Use real wallet balance for tTRUST
     }
-    // For ORACLE and INTUINT, use supplied amounts since we don't have ERC20 balance reading yet
+    // For ORACLE and INTUIT, use supplied amounts since we don't have ERC20 balance reading yet
     return userPosition.supplied[selectedToken] || '0'
   }
 
@@ -179,7 +179,7 @@ const LendingBorrowing: React.FC = () => {
                 <div className="text-xs text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.supplied.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.supplied.ORACLE)} ORACLE</div>
-                  <div>{formatCurrency(userPosition.supplied.INTUINT)} INTUINT</div>
+                  <div>{formatCurrency(userPosition.supplied.INTUIT)} INTUIT</div>
                 </div>
               </div>
 
@@ -194,7 +194,7 @@ const LendingBorrowing: React.FC = () => {
                 <div className="text-xs text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.borrowed.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.borrowed.ORACLE)} ORACLE</div>
-                  <div>{formatCurrency(userPosition.borrowed.INTUINT)} INTUINT</div>
+                  <div>{formatCurrency(userPosition.borrowed.INTUIT)} INTUIT</div>
                 </div>
               </div>
 
@@ -254,7 +254,7 @@ const LendingBorrowing: React.FC = () => {
                         <h3 className="text-base font-bold text-white">{pool.token}</h3>
                         <p className="text-xs text-gray-400">
                           {pool.token === 'tTRUST' ? 'Intuition Trust Token' : 
-                           pool.token === 'ORACLE' ? 'Oracle Token' : 'INTUINT'}
+                           pool.token === 'ORACLE' ? 'Oracle Token' : 'INTUIT'}
                         </p>
                       </div>
                     </div>
@@ -413,15 +413,15 @@ const LendingBorrowing: React.FC = () => {
                       <span>ORACLE</span>
                     </button>
                     <button
-                      onClick={() => setSelectedToken('INTUINT')}
+                      onClick={() => setSelectedToken('INTUIT')}
                       className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
-                        selectedToken === 'INTUINT'
+                        selectedToken === 'INTUIT'
                           ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
                           : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
                       }`}
                     >
                       <span>💎</span>
-                      <span>INTUINT</span>
+                      <span>INTUIT</span>
                     </button>
                   </div>
                 </div>

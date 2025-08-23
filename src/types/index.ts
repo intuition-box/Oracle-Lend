@@ -8,11 +8,11 @@ export interface WalletState {
 export interface TokenBalance {
   tTRUST: string
   ORACLE: string
-  INTUINT: string
+  INTUIT: string
 }
 
 export interface LendingPool {
-  token: 'tTRUST' | 'ORACLE' | 'INTUINT'
+  token: 'tTRUST' | 'ORACLE' | 'INTUIT'
   totalSupply: string
   totalBorrow: string
   supplyAPY: number

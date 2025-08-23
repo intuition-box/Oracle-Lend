@@ -79,20 +79,20 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-teal-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">{TOKENS.INTUINT.icon}</span>
+                  <span className="text-white font-bold text-xl">{TOKENS.INTUIT.icon}</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{TOKENS.INTUINT.symbol}</h3>
-                  <p className="text-sm text-gray-400">{TOKENS.INTUINT.name}</p>
+                  <h3 className="text-lg font-bold text-white">{TOKENS.INTUIT.symbol}</h3>
+                  <p className="text-sm text-gray-400">{TOKENS.INTUIT.name}</p>
                 </div>
               </div>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-cyan-400">{parseInt(PROTOCOL_CONFIG.tokenSupply.INTUINT).toLocaleString()}</p>
+              <p className="text-3xl font-bold text-cyan-400">{parseInt(PROTOCOL_CONFIG.tokenSupply.INTUIT).toLocaleString()}</p>
               <p className="text-sm text-gray-400 mt-1">Total Supply</p>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              <p>Contract: {TOKENS.INTUINT.address}</p>
+              <p>Contract: {TOKENS.INTUIT.address}</p>
             </div>
           </div>
         </div>

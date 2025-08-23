@@ -7,14 +7,14 @@ export const useContract = () => {
   const [error, setError] = useState<string | null>(null)
   const [exchangeRates, setExchangeRates] = useState({
     tTRUST_ORACLE: 100,
-    tTRUST_INTUINT: 100,
-    ORACLE_INTUINT: 1
+    tTRUST_INTUIT: 100,
+    ORACLE_INTUIT: 1
   })
 
   // Mock data for development - replace with actual contract calls
   const [userPosition, setUserPosition] = useState<UserPosition>({
-    supplied: { tTRUST: '0', ORACLE: '0', INTUINT: '0' },
-    borrowed: { tTRUST: '0', ORACLE: '0', INTUINT: '0' },
+    supplied: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
+    borrowed: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
     collateralValue: '0',
     borrowPower: '0',
     healthFactor: 0
@@ -38,7 +38,7 @@ export const useContract = () => {
       utilizationRate: 0
     },
     {
-      token: 'INTUINT',
+      token: 'INTUIT',
       totalSupply: '0',
       totalBorrow: '0',
       supplyAPY: 3.6,
@@ -48,7 +48,7 @@ export const useContract = () => {
   ])
 
   // Supply tokens to lending pool
-  const supply = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
+  const supply = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -96,7 +96,7 @@ export const useContract = () => {
 
         return { success: true, txHash }
       } else {
-        // For ERC20 tokens (ORACLE, INTUINT)
+        // For ERC20 tokens (ORACLE, INTUIT)
         const txParams = {
           from: fromAddress,
           to: TOKENS[token].address,
@@ -139,7 +139,7 @@ export const useContract = () => {
   }, [])
 
   // Withdraw tokens from lending pool
-  const withdraw = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
+  const withdraw = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -193,7 +193,7 @@ export const useContract = () => {
   }, [])
 
   // Borrow tokens from lending pool
-  const borrow = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
+  const borrow = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -247,7 +247,7 @@ export const useContract = () => {
   }, [])
 
   // Repay borrowed tokens
-  const repay = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
+  const repay = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -318,8 +318,8 @@ export const useContract = () => {
     const updateRates = () => {
       setExchangeRates(prev => ({
         tTRUST_ORACLE: prev.tTRUST_ORACLE * (1 + (Math.random() - 0.5) * 0.02), // ±1% fluctuation
-        tTRUST_INTUINT: prev.tTRUST_INTUINT * (1 + (Math.random() - 0.5) * 0.02), // ±1% fluctuation
-        ORACLE_INTUINT: prev.ORACLE_INTUINT * (1 + (Math.random() - 0.5) * 0.01) // ±0.5% fluctuation
+        tTRUST_INTUIT: prev.tTRUST_INTUIT * (1 + (Math.random() - 0.5) * 0.02), // ±1% fluctuation
+        ORACLE_INTUIT: prev.ORACLE_INTUIT * (1 + (Math.random() - 0.5) * 0.01) // ±0.5% fluctuation
       }))
     }
 
@@ -330,8 +330,8 @@ export const useContract = () => {
 
   // Swap tokens with real wallet transactions
   const swap = useCallback(async (
-    fromToken: 'tTRUST' | 'ORACLE' | 'INTUINT',
-    toToken: 'tTRUST' | 'ORACLE' | 'INTUINT',
+    fromToken: 'tTRUST' | 'ORACLE' | 'INTUIT',
+    toToken: 'tTRUST' | 'ORACLE' | 'INTUIT',
     amount: string
   ) => {
     setIsLoading(true)
@@ -361,14 +361,14 @@ export const useContract = () => {
         rate = exchangeRates.tTRUST_ORACLE
       } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
         rate = 1 / exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'tTRUST' && toToken === 'INTUINT') {
-        rate = exchangeRates.tTRUST_INTUINT
-      } else if (fromToken === 'INTUINT' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_INTUINT
-      } else if (fromToken === 'ORACLE' && toToken === 'INTUINT') {
-        rate = exchangeRates.ORACLE_INTUINT
-      } else if (fromToken === 'INTUINT' && toToken === 'ORACLE') {
-        rate = 1 / exchangeRates.ORACLE_INTUINT
+      } else if (fromToken === 'tTRUST' && toToken === 'INTUIT') {
+        rate = exchangeRates.tTRUST_INTUIT
+      } else if (fromToken === 'INTUIT' && toToken === 'tTRUST') {
+        rate = 1 / exchangeRates.tTRUST_INTUIT
+      } else if (fromToken === 'ORACLE' && toToken === 'INTUIT') {
+        rate = exchangeRates.ORACLE_INTUIT
+      } else if (fromToken === 'INTUIT' && toToken === 'ORACLE') {
+        rate = 1 / exchangeRates.ORACLE_INTUIT
       }
 
       const outputAmount = inputAmount * rate
@@ -439,10 +439,10 @@ export const useContract = () => {
     try {
       // This would connect to real contracts to get actual balances
       // For now, returning 0 so users can see their real wallet balances when connected
-      return { tTRUST: '0', ORACLE: '0', INTUINT: '0' }
+      return { tTRUST: '0', ORACLE: '0', INTUIT: '0' }
     } catch (error) {
       console.error('Failed to get token balances:', error)
-      return { tTRUST: '0', ORACLE: '0', INTUINT: '0' }
+      return { tTRUST: '0', ORACLE: '0', INTUIT: '0' }
     }
   }, [])
 

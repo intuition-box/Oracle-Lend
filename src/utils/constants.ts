@@ -40,9 +40,9 @@ export const TOKENS = {
     color: '#8B5CF6',
     isNative: false
   },
-  INTUINT: {
-    symbol: 'INTUINT',
-    name: 'INTUINT',
+  INTUIT: {
+    symbol: 'INTUIT',
+    name: 'INTUIT',
     address: INTUITION_TESTNET.contracts.intuintToken,
     decimals: 18,
     icon: '💎',
@@ -65,7 +65,7 @@ export const PROTOCOL_CONFIG = {
   // Real token supplies
   tokenSupply: {
     ORACLE: '10000000', // 10 million ORACLE tokens
-    INTUINT: '1000000' // 1 million INTUINT tokens
+    INTUIT: '1000000' // 1 million INTUIT tokens
   }
 }
 
