@@ -277,7 +277,6 @@ const DEX: React.FC = () => {
                         <p className="text-lg font-bold text-white">
                           {parseFloat(balances[token]).toFixed(4)} {token}
                         </p>
-                        <p className="text-sm text-gray-400">{info.price}</p>
                       </div>
                     </div>
                   </div>
