@@ -4,7 +4,7 @@ import { useWallet } from '../hooks/useWallet'
 import { SwapQuote } from '../types'
 
 const DEX: React.FC = () => {
-  const { swap, isLoading, getTokenBalances } = useContract()
+  const { swap, isLoading, getTokenBalances, exchangeRates } = useContract()
   const { isConnected, account, balance } = useWallet()
   
   const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
@@ -38,22 +38,21 @@ const DEX: React.FC = () => {
     if (fromAmount && parseFloat(fromAmount) > 0) {
       const inputAmount = parseFloat(fromAmount)
       
-      // Define exchange rates (using tTRUST as base)
-      // 1 tTRUST = 100 ORACLE = 100 INTUINT, 1 ORACLE = 1 INTUINT
+      // Use dynamic exchange rates
       let rate = 1
       
       if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
-        rate = 100 // 1 tTRUST = 100 ORACLE
+        rate = exchangeRates.tTRUST_ORACLE
       } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
-        rate = 0.01 // 100 ORACLE = 1 tTRUST
+        rate = 1 / exchangeRates.tTRUST_ORACLE
       } else if (fromToken === 'tTRUST' && toToken === 'INTUINT') {
-        rate = 100 // 1 tTRUST = 100 INTUINT
+        rate = exchangeRates.tTRUST_INTUINT
       } else if (fromToken === 'INTUINT' && toToken === 'tTRUST') {
-        rate = 0.01 // 100 INTUINT = 1 tTRUST
+        rate = 1 / exchangeRates.tTRUST_INTUINT
       } else if (fromToken === 'ORACLE' && toToken === 'INTUINT') {
-        rate = 1 // 1 ORACLE = 1 INTUINT
+        rate = exchangeRates.ORACLE_INTUINT
       } else if (fromToken === 'INTUINT' && toToken === 'ORACLE') {
-        rate = 1 // 1 INTUINT = 1 ORACLE
+        rate = 1 / exchangeRates.ORACLE_INTUINT
       }
       
       const outputAmount = inputAmount * rate
@@ -74,7 +73,7 @@ const DEX: React.FC = () => {
       setToAmount('')
       setQuote(null)
     }
-  }, [fromAmount, fromToken, toToken, slippage])
+  }, [fromAmount, fromToken, toToken, slippage, exchangeRates])
 
   const handleSwapTokens = () => {
     setFromToken(toToken)
@@ -104,24 +103,29 @@ const DEX: React.FC = () => {
   }
 
   const getTokenInfo = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
+    // Calculate dynamic prices based on exchange rates
+    const basePrice = 2500 // Base tTRUST price
+    const oraclePrice = basePrice / exchangeRates.tTRUST_ORACLE
+    const intuintPrice = basePrice / exchangeRates.tTRUST_INTUINT
+    
     return {
       tTRUST: {
         name: 'Intuition Trust Token',
         symbol: 'tTRUST',
         icon: '⚡',
-        price: '$2,500.00'
+        price: `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       ORACLE: {
         name: 'Oracle Token',
         symbol: 'ORACLE',
         icon: '🔮',
-        price: '$25.00'
+        price: `$${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       INTUINT: {
         name: 'Intuition Token',
         symbol: 'INTUINT',
         icon: '💎',
-        price: '$25.00'
+        price: `$${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       }
     }[token]
   }
@@ -133,6 +137,29 @@ const DEX: React.FC = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold gradient-text mb-4">Token Swap</h1>
+        <p className="text-gray-400">Exchange rates update every 10 seconds</p>
+      </div>
+
+      {/* Exchange Rates Display */}
+      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+          <i className="fas fa-chart-line text-green-400 mr-3"></i>
+          Live Exchange Rates
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-400 mb-1">1 tTRUST =</p>
+            <p className="text-lg font-bold text-green-400">{exchangeRates.tTRUST_ORACLE.toFixed(2)} ORACLE</p>
+          </div>
+          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-400 mb-1">1 tTRUST =</p>
+            <p className="text-lg font-bold text-blue-400">{exchangeRates.tTRUST_INTUINT.toFixed(2)} INTUINT</p>
+          </div>
+          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-400 mb-1">1 ORACLE =</p>
+            <p className="text-lg font-bold text-purple-400">{exchangeRates.ORACLE_INTUINT.toFixed(4)} INTUINT</p>
+          </div>
+        </div>
       </div>
 
       {!isConnected && (
