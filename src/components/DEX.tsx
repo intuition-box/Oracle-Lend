@@ -153,7 +153,7 @@ const DEX: React.FC = () => {
     
     return {
       tTRUST: {
-        name: 'Intuition Trust Token',
+        name: 'Intuition Token',
         symbol: 'tTRUST',
         icon: '⚡',
         price: `${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

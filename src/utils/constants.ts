@@ -6,7 +6,7 @@ export const INTUITION_TESTNET = {
   wsUrl: 'wss://testnet.rpc.intuition.systems/ws',
   blockExplorer: 'https://testnet.explorer.intuition.systems',
   nativeCurrency: {
-    name: 'Intuition Trust Token',
+    name: 'Intuition Token',
     symbol: 'tTRUST',
     decimals: 18,
   },
@@ -24,7 +24,7 @@ export const INTUITION_TESTNET = {
 export const TOKENS = {
   tTRUST: {
     symbol: 'tTRUST',
-    name: 'Intuition Trust Token',
+    name: 'Intuition Token',
     address: INTUITION_TESTNET.contracts.tTrustToken,
     decimals: 18,
     icon: '⚡',
