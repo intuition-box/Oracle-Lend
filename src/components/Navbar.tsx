@@ -41,7 +41,7 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Left side - Faucet Link */}
           <div className="flex items-center space-x-4">
             <a
-              href="https://faucet.intuition.systems"
+              href="https://testnet.hub.intuition.systems/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 transition-all duration-200"
@@ -120,7 +120,7 @@ const Navbar: React.FC<NavbarProps> = ({
               
               <div className="pt-4 border-t border-gray-700/50">
                 <a
-                  href="https://faucet.intuition.systems"
+                  href="https://testnet.hub.intuition.systems/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300"

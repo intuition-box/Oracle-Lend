@@ -54,13 +54,13 @@ export const PROTOCOL_CONFIG = {
   
   // Initial token supplies
   initialSupply: {
-    ORACLE: '500000000000000' // 500 trillion ORACLE tokens
+    ORACLE: '10000000' // 10 million ORACLE tokens
   }
 }
 
 // External links
 export const EXTERNAL_LINKS = {
-  faucet: 'https://faucet.intuition.systems',
+  faucet: 'https://testnet.hub.intuition.systems/',
   docs: 'https://docs.intuition.systems',
   discord: 'https://discord.gg/intuition',
   twitter: 'https://twitter.com/intuitionsys',

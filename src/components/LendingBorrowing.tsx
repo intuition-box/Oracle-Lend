@@ -62,9 +62,6 @@ const LendingBorrowing: React.FC = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold gradient-text mb-4">Lending & Borrowing</h1>
-        <p className="text-gray-400 max-w-2xl mx-auto">
-          Supply assets to earn interest or borrow against your collateral with competitive rates on Intuition testnet.
-        </p>
       </div>
 
       {!isConnected && (
