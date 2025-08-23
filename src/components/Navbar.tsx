@@ -54,9 +54,11 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Center - Logo and Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                <span className="text-2xl">∞</span>
-              </div>
+              <img 
+                src="/oracle-lend-logo.png" 
+                alt="Oracle Lend Logo" 
+                className="w-10 h-10 object-contain rounded-lg"
+              />
               <span className="text-xl font-bold gradient-text">ORACLE LEND</span>
             </Link>
 
@@ -103,9 +105,11 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="md:hidden py-4 border-t border-gray-700/50">
             {/* Mobile Logo */}
             <div className="flex items-center justify-center space-x-3 pb-4 mb-4 border-b border-gray-700/50">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                <span className="text-lg">∞</span>
-              </div>
+              <img 
+                src="/oracle-lend-logo.png" 
+                alt="Oracle Lend Logo" 
+                className="w-8 h-8 object-contain rounded-lg"
+              />
               <span className="text-lg font-bold gradient-text">ORACLE LEND</span>
             </div>
             <div className="flex flex-col space-y-2">
