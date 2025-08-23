@@ -65,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400">
           <p>&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
           <p className="text-sm mt-2">
-            Chain ID: 13579 | Native Token: $tTRUST | Data Availability: Arbitrum AnyTrust
+            Chain ID: 13579 | Native Token: tTRUST | Data Availability: Arbitrum AnyTrust
           </p>
         </div>
       </footer>

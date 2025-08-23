@@ -190,14 +190,25 @@ export const useContract = () => {
         params: [txParams],
       })
       
-      // Update user position
-      setUserPosition(prev => ({
-        ...prev,
-        supplied: {
+      // Update user position with recalculated collateral value
+      setUserPosition(prev => {
+        const newSupplied = {
           ...prev.supplied,
           [token]: Math.max(0, parseFloat(prev.supplied[token]) - parseFloat(amount)).toString()
         }
-      }))
+        
+        const newCollateralValue = (
+          parseFloat(newSupplied.tTRUST) * 2500 + 
+          parseFloat(newSupplied.ORACLE) * 25 + 
+          parseFloat(newSupplied.INTUIT) * 25
+        ).toString()
+        
+        return {
+          ...prev,
+          supplied: newSupplied,
+          collateralValue: newCollateralValue
+        }
+      })
 
       return { success: true, txHash }
     } catch (error: any) {
@@ -244,14 +255,25 @@ export const useContract = () => {
         params: [txParams],
       })
       
-      // Update user position
-      setUserPosition(prev => ({
-        ...prev,
-        borrowed: {
+      // Update user position with recalculated borrow power
+      setUserPosition(prev => {
+        const newBorrowed = {
           ...prev.borrowed,
           [token]: (parseFloat(prev.borrowed[token]) + parseFloat(amount)).toString()
         }
-      }))
+        
+        const newBorrowPower = (
+          parseFloat(newBorrowed.tTRUST) * 2500 + 
+          parseFloat(newBorrowed.ORACLE) * 25 + 
+          parseFloat(newBorrowed.INTUIT) * 25
+        ).toString()
+        
+        return {
+          ...prev,
+          borrowed: newBorrowed,
+          borrowPower: newBorrowPower
+        }
+      })
 
       return { success: true, txHash }
     } catch (error: any) {
@@ -311,14 +333,25 @@ export const useContract = () => {
         params: [txParams],
       })
       
-      // Update user position
-      setUserPosition(prev => ({
-        ...prev,
-        borrowed: {
+      // Update user position with recalculated borrow power
+      setUserPosition(prev => {
+        const newBorrowed = {
           ...prev.borrowed,
           [token]: Math.max(0, parseFloat(prev.borrowed[token]) - parseFloat(amount)).toString()
         }
-      }))
+        
+        const newBorrowPower = (
+          parseFloat(newBorrowed.tTRUST) * 2500 + 
+          parseFloat(newBorrowed.ORACLE) * 25 + 
+          parseFloat(newBorrowed.INTUIT) * 25
+        ).toString()
+        
+        return {
+          ...prev,
+          borrowed: newBorrowed,
+          borrowPower: newBorrowPower
+        }
+      })
 
       return { success: true, txHash }
     } catch (error: any) {
