@@ -1,4 +1,4 @@
-import { ethers } from 'ethers'
+import { ethers, BrowserProvider, Contract, formatEther, formatUnits, parseEther, parseUnits, isAddress } from 'ethers'
 import { INTUITION_TESTNET } from './constants'
 
 // Contract ABIs (simplified for essential functions)
@@ -58,18 +58,18 @@ const ERC20_ABI = [
 ]
 
 export interface Web3Instance {
-  provider: ethers.providers.Web3Provider
+  provider: BrowserProvider
   signer: ethers.Signer
   contracts: {
-    oracleLend: ethers.Contract
-    oracleToken: ethers.Contract
-    tTrustToken: ethers.Contract
-    swap: ethers.Contract
+    oracleLend: Contract
+    oracleToken: Contract
+    tTrustToken: Contract
+    swap: Contract
   }
 }
 
 export class Web3Service {
-  private provider: ethers.providers.Web3Provider | null = null
+  private provider: BrowserProvider | null = null
   private signer: ethers.Signer | null = null
   private contracts: any = {}
 
@@ -81,8 +81,8 @@ export class Web3Service {
       throw new Error('MetaMask is not installed')
     }
 
-    this.provider = new ethers.providers.Web3Provider(window.ethereum)
-    this.signer = this.provider.getSigner()
+    this.provider = new BrowserProvider(window.ethereum)
+    this.signer = await this.provider.getSigner()
 
     // Initialize contracts
     await this.initializeContracts()
@@ -97,17 +97,17 @@ export class Web3Service {
     }
 
     this.contracts = {
-      oracleLend: new ethers.Contract(INTUITION_TESTNET.contracts.oracleLend, ORACLE_LEND_ABI, this.signer),
-      oracleToken: new ethers.Contract(INTUITION_TESTNET.contracts.oracleToken, ORACLE_TOKEN_ABI, this.signer),
-      tTrustToken: new ethers.Contract(INTUITION_TESTNET.contracts.tTrustToken, ERC20_ABI, this.signer),
-      swap: new ethers.Contract(INTUITION_TESTNET.contracts.dex, SWAP_ABI, this.signer)
+      oracleLend: new Contract(INTUITION_TESTNET.contracts.oracleLend, ORACLE_LEND_ABI, this.signer),
+      oracleToken: new Contract(INTUITION_TESTNET.contracts.oracleToken, ORACLE_TOKEN_ABI, this.signer),
+      tTrustToken: new Contract(INTUITION_TESTNET.contracts.tTrustToken, ERC20_ABI, this.signer),
+      swap: new Contract(INTUITION_TESTNET.contracts.dex, SWAP_ABI, this.signer)
     }
   }
 
   /**
    * Get current network information
    */
-  async getNetwork(): Promise<ethers.providers.Network> {
+  async getNetwork(): Promise<ethers.Network> {
     if (!this.provider) {
       throw new Error('Provider not initialized')
     }
@@ -122,7 +122,7 @@ export class Web3Service {
       throw new Error('Provider not initialized')
     }
     const balance = await this.provider.getBalance(address)
-    return ethers.utils.formatEther(balance)
+    return formatEther(balance)
   }
 
   /**
@@ -133,10 +133,10 @@ export class Web3Service {
       throw new Error('Provider not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.provider)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.provider)
     const balance = await tokenContract.balanceOf(userAddress)
     const decimals = await tokenContract.decimals()
-    return ethers.utils.formatUnits(balance, decimals)
+    return formatUnits(balance, decimals)
   }
 
   /**
@@ -147,10 +147,10 @@ export class Web3Service {
       throw new Error('Provider not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.provider)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.provider)
     const allowance = await tokenContract.allowance(owner, spender)
     const decimals = await tokenContract.decimals()
-    return ethers.utils.formatUnits(allowance, decimals)
+    return formatUnits(allowance, decimals)
   }
 
   /**
@@ -161,9 +161,9 @@ export class Web3Service {
       throw new Error('Signer not available')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.signer)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.signer)
     const decimals = await tokenContract.decimals()
-    const parsedAmount = ethers.utils.parseUnits(amount, decimals)
+    const parsedAmount = parseUnits(amount, decimals)
     
     return await tokenContract.approve(spender, parsedAmount)
   }
@@ -176,9 +176,9 @@ export class Web3Service {
       throw new Error('OracleLend contract not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.signer)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.signer)
     const decimals = await tokenContract.decimals()
-    const parsedAmount = ethers.utils.parseUnits(amount, decimals)
+    const parsedAmount = parseUnits(amount, decimals)
     
     return await this.contracts.oracleLend.supply(tokenAddress, parsedAmount)
   }
@@ -191,9 +191,9 @@ export class Web3Service {
       throw new Error('OracleLend contract not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.signer)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.signer)
     const decimals = await tokenContract.decimals()
-    const parsedAmount = ethers.utils.parseUnits(amount, decimals)
+    const parsedAmount = parseUnits(amount, decimals)
     
     return await this.contracts.oracleLend.withdraw(tokenAddress, parsedAmount)
   }
@@ -206,9 +206,9 @@ export class Web3Service {
       throw new Error('OracleLend contract not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.signer)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.signer)
     const decimals = await tokenContract.decimals()
-    const parsedAmount = ethers.utils.parseUnits(amount, decimals)
+    const parsedAmount = parseUnits(amount, decimals)
     
     return await this.contracts.oracleLend.borrow(tokenAddress, parsedAmount)
   }
@@ -221,9 +221,9 @@ export class Web3Service {
       throw new Error('OracleLend contract not initialized')
     }
 
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.signer)
+    const tokenContract = new Contract(tokenAddress, ERC20_ABI, this.signer)
     const decimals = await tokenContract.decimals()
-    const parsedAmount = ethers.utils.parseUnits(amount, decimals)
+    const parsedAmount = parseUnits(amount, decimals)
     
     return await this.contracts.oracleLend.repay(tokenAddress, parsedAmount)
   }
@@ -236,8 +236,8 @@ export class Web3Service {
       throw new Error('Swap contract not initialized')
     }
 
-    const parsedAmountIn = ethers.utils.parseEther(amountIn)
-    const parsedMinAmountOut = ethers.utils.parseEther(minAmountOut)
+    const parsedAmountIn = parseEther(amountIn)
+    const parsedMinAmountOut = parseEther(minAmountOut)
     
     return await this.contracts.swap.swapTrustForOracle(parsedAmountIn, parsedMinAmountOut)
   }
@@ -250,8 +250,8 @@ export class Web3Service {
       throw new Error('Swap contract not initialized')
     }
 
-    const parsedAmountIn = ethers.utils.parseEther(amountIn)
-    const parsedMinAmountOut = ethers.utils.parseEther(minAmountOut)
+    const parsedAmountIn = parseEther(amountIn)
+    const parsedMinAmountOut = parseEther(minAmountOut)
     
     return await this.contracts.swap.swapOracleForTrust(parsedAmountIn, parsedMinAmountOut)
   }
@@ -268,13 +268,13 @@ export class Web3Service {
       throw new Error('Swap contract not initialized')
     }
 
-    const parsedAmountIn = ethers.utils.parseEther(amountIn)
+    const parsedAmountIn = parseEther(amountIn)
     const [amountOut, fee, priceImpact] = await this.contracts.swap.getSwapAmountOut(tokenIn, parsedAmountIn)
     
     return {
-      amountOut: ethers.utils.formatEther(amountOut),
-      fee: ethers.utils.formatEther(fee),
-      priceImpact: priceImpact.toNumber() / 100 // Convert from basis points to percentage
+      amountOut: formatEther(amountOut),
+      fee: formatEther(fee),
+      priceImpact: Number(priceImpact) / 100 // Convert from basis points to percentage
     }
   }
 
@@ -306,15 +306,15 @@ export class Web3Service {
 
     return {
       supplied: {
-        tTRUST: ethers.utils.formatEther(tTrustSupplied),
-        ORACLE: ethers.utils.formatEther(oracleSupplied)
+        tTRUST: formatEther(tTrustSupplied),
+        ORACLE: formatEther(oracleSupplied)
       },
       borrowed: {
-        tTRUST: ethers.utils.formatEther(tTrustBorrowed),
-        ORACLE: ethers.utils.formatEther(oracleBorrowed)
+        tTRUST: formatEther(tTrustBorrowed),
+        ORACLE: formatEther(oracleBorrowed)
       },
-      borrowPower: ethers.utils.formatEther(borrowPower),
-      healthFactor: ethers.utils.formatEther(healthFactor)
+      borrowPower: formatEther(borrowPower),
+      healthFactor: formatEther(healthFactor)
     }
   }
 
@@ -344,8 +344,8 @@ export class Web3Service {
 
       marketData.push({
         token: marketAddress,
-        totalSupply: ethers.utils.formatEther(market.totalSupply),
-        totalBorrow: ethers.utils.formatEther(market.totalBorrow),
+        totalSupply: formatEther(market.totalSupply),
+        totalBorrow: formatEther(market.totalBorrow),
         supplyRate: market.supplyRate / 100, // Convert from basis points
         borrowRate: market.borrowRate / 100,
         utilizationRate: Math.round(utilizationRate * 100) / 100
@@ -373,18 +373,18 @@ export class Web3Service {
       await this.contracts.swap.getSwapStats()
 
     return {
-      tTrustReserve: ethers.utils.formatEther(tTrustReserve),
-      oracleReserve: ethers.utils.formatEther(oracleReserve),
-      totalVolume: ethers.utils.formatEther(totalVolume),
+      tTrustReserve: formatEther(tTrustReserve),
+      oracleReserve: formatEther(oracleReserve),
+      totalVolume: formatEther(totalVolume),
       totalTrades: totalTrades.toNumber(),
-      feesCollected: ethers.utils.formatEther(feesCollected)
+      feesCollected: formatEther(feesCollected)
     }
   }
 
   /**
    * Wait for transaction confirmation
    */
-  async waitForTransaction(txHash: string, confirmations: number = 1): Promise<ethers.ContractReceipt> {
+  async waitForTransaction(txHash: string, confirmations: number = 1): Promise<ethers.TransactionReceipt> {
     if (!this.provider) {
       throw new Error('Provider not initialized')
     }
@@ -475,15 +475,15 @@ export const web3Service = new Web3Service()
 
 // Utility functions
 export const formatTokenAmount = (amount: string, decimals: number = 18): string => {
-  return ethers.utils.formatUnits(amount, decimals)
+  return formatUnits(amount, decimals)
 }
 
-export const parseTokenAmount = (amount: string, decimals: number = 18): ethers.BigNumber => {
-  return ethers.utils.parseUnits(amount, decimals)
+export const parseTokenAmount = (amount: string, decimals: number = 18): bigint => {
+  return parseUnits(amount, decimals)
 }
 
-export const isAddress = (address: string): boolean => {
-  return ethers.utils.isAddress(address)
+export const isValidAddress = (address: string): boolean => {
+  return isAddress(address)
 }
 
 export const shortenAddress = (address: string, chars: number = 4): string => {

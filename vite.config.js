@@ -1,4 +1,8 @@
-export default {
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
   server: {
     host: '0.0.0.0',
     port: 5000,
@@ -9,5 +13,24 @@ export default {
       '.replit.dev',
       '.replit.app'
     ]
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ethers: ['ethers']
+        }
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@assets': '/attached_assets'
+    }
   }
-}
+})
