@@ -156,19 +156,19 @@ const DEX: React.FC = () => {
         name: 'Intuition Trust Token',
         symbol: 'tTRUST',
         icon: '⚡',
-        price: `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        price: `${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       ORACLE: {
         name: 'Oracle Token',
         symbol: 'ORACLE',
         icon: <TokenIcon token="ORACLE" size="sm" />,
-        price: `$${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        price: `${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       INTUIT: {
         name: 'INTUIT',
         symbol: 'INTUIT',
         icon: '💎',
-        price: `$${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        price: `${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       }
     }[token]
   }
@@ -275,7 +275,7 @@ const DEX: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-white">
-                          {parseFloat(balances[token]).toFixed(4)}
+                          {parseFloat(balances[token]).toFixed(4)} {token}
                         </p>
                         <p className="text-sm text-gray-400">{info.price}</p>
                       </div>
