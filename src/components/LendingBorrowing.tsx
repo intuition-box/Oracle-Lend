@@ -194,9 +194,9 @@ const LendingBorrowing: React.FC = () => {
                   ${formatCurrency(userPosition.collateralValue)}
                 </p>
                 <div className="text-xs text-gray-400 mt-1">
-                  <div>{formatCurrency(userPosition.supplied.tTRUST)} tTRUST</div>
-                  <div>{formatCurrency(userPosition.supplied.ORACLE)} ORACLE</div>
-                  <div>{formatCurrency(userPosition.supplied.INTUIT)} INTUIT</div>
+                  <div>{parseFloat(userPosition.supplied.tTRUST).toFixed(4)} tTRUST</div>
+                  <div>{parseFloat(userPosition.supplied.ORACLE).toFixed(4)} ORACLE</div>
+                  <div>{parseFloat(userPosition.supplied.INTUIT).toFixed(4)} INTUIT</div>
                 </div>
               </div>
 
@@ -213,9 +213,9 @@ const LendingBorrowing: React.FC = () => {
                   ).toString())}
                 </p>
                 <div className="text-xs text-gray-400 mt-1">
-                  <div>{formatCurrency(userPosition.borrowed.tTRUST)} tTRUST</div>
-                  <div>{formatCurrency(userPosition.borrowed.ORACLE)} ORACLE</div>
-                  <div>{formatCurrency(userPosition.borrowed.INTUIT)} INTUIT</div>
+                  <div>{parseFloat(userPosition.borrowed.tTRUST).toFixed(4)} tTRUST</div>
+                  <div>{parseFloat(userPosition.borrowed.ORACLE).toFixed(4)} ORACLE</div>
+                  <div>{parseFloat(userPosition.borrowed.INTUIT).toFixed(4)} INTUIT</div>
                 </div>
               </div>
 
