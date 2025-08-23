@@ -442,7 +442,12 @@ const LendingBorrowing: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Amount</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium text-gray-400">Amount</label>
+                    <span className="text-xs text-gray-400">
+                      Balance: {parseFloat(getUserBalance()).toFixed(4)} {selectedToken}
+                    </span>
+                  </div>
                   <div className="relative">
                     <input
                       type="number"
