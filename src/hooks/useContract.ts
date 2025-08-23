@@ -12,37 +12,13 @@ export const useContract = () => {
   })
 
   // Mock data for development - replace with actual contract calls
-  const [suppliedAmounts, setSuppliedAmounts] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
-  const [borrowedAmounts, setBorrowedAmounts] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
-
-  // Calculate collateral value and borrow power dynamically
-  const calculatePositionValues = () => {
-    const tokenPrices = { tTRUST: 2500, ORACLE: 25, INTUIT: 25 }
-    
-    const collateralValue = Object.entries(suppliedAmounts).reduce((total, [token, amount]) => {
-      const price = tokenPrices[token as keyof typeof tokenPrices]
-      return total + (parseFloat(amount) * price)
-    }, 0)
-    
-    const borrowValue = Object.entries(borrowedAmounts).reduce((total, [token, amount]) => {
-      const price = tokenPrices[token as keyof typeof tokenPrices]
-      return total + (parseFloat(amount) * price)
-    }, 0)
-    
-    return {
-      collateralValue: collateralValue.toString(),
-      borrowPower: borrowValue.toString()
-    }
-  }
-
-  const positionValues = calculatePositionValues()
-  const userPosition: UserPosition = {
-    supplied: suppliedAmounts,
-    borrowed: borrowedAmounts,
-    collateralValue: positionValues.collateralValue,
-    borrowPower: positionValues.borrowPower,
-    healthFactor: 0 // This will be calculated in the component
-  }
+  const [userPosition, setUserPosition] = useState<UserPosition>({
+    supplied: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
+    borrowed: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
+    collateralValue: '0',
+    borrowPower: '0',
+    healthFactor: 0
+  })
 
   const [lendingPools] = useState<LendingPool[]>([
     {
@@ -109,14 +85,25 @@ export const useContract = () => {
           params: [txParams],
         })
 
-        // Update user position
-        setUserPosition(prev => ({
-          ...prev,
-          supplied: {
+        // Update user position with calculated collateral value
+        setUserPosition(prev => {
+          const newSupplied = {
             ...prev.supplied,
             [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
           }
-        }))
+          
+          const newCollateralValue = (
+            parseFloat(newSupplied.tTRUST) * 2500 + 
+            parseFloat(newSupplied.ORACLE) * 25 + 
+            parseFloat(newSupplied.INTUIT) * 25
+          ).toString()
+          
+          return {
+            ...prev,
+            supplied: newSupplied,
+            collateralValue: newCollateralValue
+          }
+        })
 
         return { success: true, txHash }
       } else {
@@ -136,14 +123,25 @@ export const useContract = () => {
           params: [txParams],
         })
 
-        // Update user position
-        setUserPosition(prev => ({
-          ...prev,
-          supplied: {
+        // Update user position with calculated collateral value  
+        setUserPosition(prev => {
+          const newSupplied = {
             ...prev.supplied,
             [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
           }
-        }))
+          
+          const newCollateralValue = (
+            parseFloat(newSupplied.tTRUST) * 2500 + 
+            parseFloat(newSupplied.ORACLE) * 25 + 
+            parseFloat(newSupplied.INTUIT) * 25
+          ).toString()
+          
+          return {
+            ...prev,
+            supplied: newSupplied,
+            collateralValue: newCollateralValue
+          }
+        })
 
         return { success: true, txHash }
       }
