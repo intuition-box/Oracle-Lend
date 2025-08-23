@@ -20,9 +20,17 @@
         min-height: 100vh;
       }
       
+      .light body {
+        background: #ffffff !important;
+      }
+      
       .cosmic-bg {
         background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
         backdrop-filter: blur(1px);
+      }
+      
+      .light .cosmic-bg {
+        background: #ffffff !important;
       }
       
       .glass-effect {
@@ -41,6 +49,8 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        font-family: 'Geist', sans-serif !important;
+        font-weight: 800 !important;
       }
       
       .star {
