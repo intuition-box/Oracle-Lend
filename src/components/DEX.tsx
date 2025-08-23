@@ -197,29 +197,7 @@ const DEX: React.FC = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold gradient-text mb-4">Token Swap</h1>
-        <p className="text-gray-400">Exchange rates update every 10 seconds</p>
-      </div>
-
-      {/* Exchange Rates Display */}
-      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-          <i className="fas fa-chart-line text-green-400 mr-3"></i>
-          Live Exchange Rates
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-400 mb-1">1 tTRUST =</p>
-            <p className="text-lg font-bold text-green-400">{exchangeRates.tTRUST_ORACLE.toFixed(2)} ORACLE</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-400 mb-1">1 tTRUST =</p>
-            <p className="text-lg font-bold text-blue-400">{exchangeRates.tTRUST_INTUINT.toFixed(2)} INTUINT</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-400 mb-1">1 ORACLE =</p>
-            <p className="text-lg font-bold text-purple-400">{exchangeRates.ORACLE_INTUINT.toFixed(4)} INTUINT</p>
-          </div>
-        </div>
+        <p className="text-gray-400">Live market rates with real-time fluctuation</p>
       </div>
 
       {!isConnected && (
