@@ -44,7 +44,7 @@ export const TOKENS = {
 // Protocol constants
 export const PROTOCOL_CONFIG = {
   name: 'ORACLE LEND',
-  description: 'A comprehensive decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Experience secure, permissionless financial services with competitive interest rates and instant liquidity. Built with cutting-edge smart contract technology for transparent, auditable DeFi solutions. Trust your Intuition.',
+  description: 'A comprehensive decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Experience secure, permissionless financial services with competitive interest rates and instant liquidity. Trust your Intuition.',
   exchangeRate: 100, // 1 tTRUST = 100 ORACLE
   maxLTV: 75, // 75% Loan-to-Value ratio
   liquidationThreshold: 85, // 85% liquidation threshold
