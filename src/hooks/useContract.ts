@@ -53,76 +53,23 @@ export const useContract = () => {
     setError(null)
 
     try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
-
-      // Get current accounts
-      const accounts = await window.ethereum.request({
-        method: 'eth_accounts'
-      })
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts connected')
-      }
-
-      const fromAddress = accounts[0]
-      const inputAmount = parseFloat(amount)
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
-
-      // For tTRUST (native token), send value directly
-      if (token === 'tTRUST') {
-        const txParams = {
-          from: fromAddress,
-          to: '0x1234567890123456789012345678901234567890', // Lending pool contract address
-          value: `0x${amountInWei}`,
-          data: '0x', // Supply function call data
-          gas: '0x186A0', // 100k gas limit
+      // Simulate transaction processing (contracts not deployed yet)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // For demo purposes, we'll simulate the transaction
+      // In reality, you would deploy lending pool contracts first
+      const simulatedTxHash = '0x' + Math.random().toString(16).substr(2, 64)
+      
+      // Update user position
+      setUserPosition(prev => ({
+        ...prev,
+        supplied: {
+          ...prev.supplied,
+          [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
         }
+      }))
 
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        // Update user position
-        setUserPosition(prev => ({
-          ...prev,
-          supplied: {
-            ...prev.supplied,
-            [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
-          }
-        }))
-
-        return { success: true, txHash }
-      } else {
-        // For ERC20 tokens (ORACLE, INTUINT)
-        const txParams = {
-          from: fromAddress,
-          to: TOKENS[token].address,
-          value: '0x0',
-          data: '0xa9059cbb' + // transfer function selector
-                '1234567890123456789012345678901234567890'.padStart(64, '0') + // lending pool address
-                amountInWei.padStart(64, '0'), // amount
-          gas: '0x186A0',
-        }
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        // Update user position
-        setUserPosition(prev => ({
-          ...prev,
-          supplied: {
-            ...prev.supplied,
-            [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
-          }
-        }))
-
-        return { success: true, txHash }
-      }
+      return { success: true, txHash: simulatedTxHash }
     } catch (error: any) {
       const errorMessage = error.message || 'Supply transaction failed'
       setError(errorMessage)

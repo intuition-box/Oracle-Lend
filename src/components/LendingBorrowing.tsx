@@ -160,6 +160,21 @@ const LendingBorrowing: React.FC = () => {
 
       {isConnected && (
         <>
+          {/* Protocol Status Notice */}
+          <div className="glass-effect rounded-xl p-6 border border-yellow-500/30 bg-yellow-900/20">
+            <div className="flex items-start space-x-3">
+              <i className="fas fa-info-circle text-yellow-400 mt-1"></i>
+              <div>
+                <h3 className="text-yellow-300 font-bold mb-2">Demo Mode</h3>
+                <p className="text-yellow-100 text-sm">
+                  The lending protocol smart contracts are not yet deployed on Intuition testnet. 
+                  Transactions are currently simulated for demonstration purposes. 
+                  Deploy the contracts first to enable real lending functionality.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* User Position Overview */}
           <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
