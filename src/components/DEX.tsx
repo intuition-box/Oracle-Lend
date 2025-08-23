@@ -173,6 +173,15 @@ const DEX: React.FC = () => {
     }[token]
   }
 
+  // For dropdown options (text only)
+  const getTokenTextIcon = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
+    return {
+      tTRUST: '⚡',
+      ORACLE: '🔮', // Text fallback for dropdown
+      INTUIT: '💎'
+    }[token]
+  }
+
   const slippageOptions = [0.1, 0.5, 1.0, 2.0]
 
   // Calculate volume in USD for analytics
@@ -360,7 +369,7 @@ const DEX: React.FC = () => {
                         >
                           {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
-                              {getTokenInfo(token).icon} {token}
+                              {getTokenTextIcon(token)} {token}
                             </option>
                           ))}
                         </select>
@@ -431,7 +440,7 @@ const DEX: React.FC = () => {
                         >
                           {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
-                              {getTokenInfo(token).icon} {token}
+                              {getTokenTextIcon(token)} {token}
                             </option>
                           ))}
                         </select>
