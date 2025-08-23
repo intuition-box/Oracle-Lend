@@ -96,7 +96,7 @@ const DEX: React.FC = () => {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">Decentralized Exchange</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-4">Token Swap</h1>
         <p className="text-gray-400 max-w-2xl mx-auto">
           Swap between tTRUST and ORACLE tokens with minimal slippage and competitive rates on Intuition testnet.
         </p>

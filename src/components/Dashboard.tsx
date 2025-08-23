@@ -11,7 +11,7 @@ const Dashboard: React.FC = () => {
       gradient: 'from-green-500 to-emerald-600'
     },
     {
-      title: 'Decentralized Exchange',
+      title: 'Token Swap',
       description: 'Swap between tTRUST and ORACLE tokens with minimal slippage and low fees.',
       icon: 'fas fa-exchange-alt',
       link: '/dex',
@@ -21,21 +21,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Exchange Rate Info */}
-      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-        <div className="flex items-center justify-center">
-          <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-info-circle text-blue-400"></i>
-              <div>
-                <h4 className="text-blue-300 font-medium">Exchange Rate</h4>
-                <p className="text-sm text-gray-300">1 tTRUST = 100 ORACLE</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {features.map((feature, index) => (

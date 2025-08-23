@@ -68,7 +68,7 @@ const Analytics: React.FC = () => {
       ]
     },
     {
-      category: 'DEX Analytics',
+      category: 'Swap Analytics',
       stats: [
         { label: 'Daily Swaps', value: '1,247', icon: 'fas fa-exchange-alt' },
         { label: 'Average Trade Size', value: '$1,850', icon: 'fas fa-dollar-sign' },
@@ -118,9 +118,6 @@ const Analytics: React.FC = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold gradient-text mb-4">Protocol Analytics</h1>
-        <p className="text-gray-400 max-w-2xl mx-auto">
-          Real-time metrics and insights for ORACLE LEND protocol on Intuition testnet.
-        </p>
       </div>
 
       {/* Main Metrics */}
