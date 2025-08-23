@@ -12,13 +12,37 @@ export const useContract = () => {
   })
 
   // Mock data for development - replace with actual contract calls
-  const [userPosition, setUserPosition] = useState<UserPosition>({
-    supplied: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
-    borrowed: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
-    collateralValue: '0',
-    borrowPower: '0',
-    healthFactor: 0
-  })
+  const [suppliedAmounts, setSuppliedAmounts] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
+  const [borrowedAmounts, setBorrowedAmounts] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
+
+  // Calculate collateral value and borrow power dynamically
+  const calculatePositionValues = () => {
+    const tokenPrices = { tTRUST: 2500, ORACLE: 25, INTUIT: 25 }
+    
+    const collateralValue = Object.entries(suppliedAmounts).reduce((total, [token, amount]) => {
+      const price = tokenPrices[token as keyof typeof tokenPrices]
+      return total + (parseFloat(amount) * price)
+    }, 0)
+    
+    const borrowValue = Object.entries(borrowedAmounts).reduce((total, [token, amount]) => {
+      const price = tokenPrices[token as keyof typeof tokenPrices]
+      return total + (parseFloat(amount) * price)
+    }, 0)
+    
+    return {
+      collateralValue: collateralValue.toString(),
+      borrowPower: borrowValue.toString()
+    }
+  }
+
+  const positionValues = calculatePositionValues()
+  const userPosition: UserPosition = {
+    supplied: suppliedAmounts,
+    borrowed: borrowedAmounts,
+    collateralValue: positionValues.collateralValue,
+    borrowPower: positionValues.borrowPower,
+    healthFactor: 0 // This will be calculated in the component
+  }
 
   const [lendingPools] = useState<LendingPool[]>([
     {

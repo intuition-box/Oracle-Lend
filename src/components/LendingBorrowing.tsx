@@ -83,14 +83,24 @@ const LendingBorrowing: React.FC = () => {
 
   const calculateHealthFactor = () => {
     const collateralValue = parseFloat(userPosition.collateralValue) || 0
-    const borrowValue = parseFloat(userPosition.borrowPower) || 0
     
-    // If no borrowed amount, return infinity (safest position)
-    if (borrowValue === 0) {
+    // Calculate actual borrowed value from borrowed amounts
+    const totalBorrowed = Object.values(userPosition.borrowed).reduce((total, amount) => {
+      return total + parseFloat(amount || '0')
+    }, 0)
+    
+    // If no borrowed amount, return infinity (safest position) 
+    if (totalBorrowed === 0) {
       return collateralValue > 0 ? 999 : 0 // 999 represents "infinite" health factor
     }
     
-    return collateralValue / borrowValue
+    // Calculate borrowed value in USD (using token prices)
+    const borrowValue = 
+      parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + // tTRUST price
+      parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + // ORACLE price  
+      parseFloat(userPosition.borrowed.INTUIT || '0') * 25   // INTUIT price
+    
+    return borrowValue > 0 ? collateralValue / borrowValue : 999
   }
 
   const healthFactor = calculateHealthFactor()
@@ -196,7 +206,11 @@ const LendingBorrowing: React.FC = () => {
                 </div>
                 <h4 className="font-medium text-white mb-1 text-sm">Total Borrowed</h4>
                 <p className="text-xl font-bold text-red-400">
-                  ${formatCurrency(userPosition.borrowPower)}
+                  ${formatCurrency((
+                    parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + 
+                    parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + 
+                    parseFloat(userPosition.borrowed.INTUIT || '0') * 25
+                  ).toString())}
                 </p>
                 <div className="text-xs text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.borrowed.tTRUST)} tTRUST</div>
@@ -211,7 +225,11 @@ const LendingBorrowing: React.FC = () => {
                 </div>
                 <h4 className="font-medium text-white mb-1 text-sm">Available to Borrow</h4>
                 <p className="text-xl font-bold text-blue-400">
-                  ${formatCurrency((parseFloat(userPosition.collateralValue) * 0.75 - parseFloat(userPosition.borrowPower)).toString())}
+                  ${formatCurrency((parseFloat(userPosition.collateralValue) * 0.75 - (
+                    parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + 
+                    parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + 
+                    parseFloat(userPosition.borrowed.INTUIT || '0') * 25
+                  )).toString())}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">75% of collateral</p>
               </div>
