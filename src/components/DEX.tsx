@@ -428,55 +428,6 @@ const DEX: React.FC = () => {
             </div>
           </div>
 
-          {/* Exchange Rate Information */}
-          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-              <i className="fas fa-chart-line text-blue-400 mr-3"></i>
-              Exchange Rate Information
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">⚡ → 🔮</div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to ORACLE</h3>
-                  <p className="text-2xl font-bold text-green-400">1 : 100</p>
-                  <p className="text-sm text-gray-400 mt-1">1 tTRUST = 100 ORACLE</p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">⚡ → 💎</div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to INTUINT</h3>
-                  <p className="text-2xl font-bold text-cyan-400">1 : 100</p>
-                  <p className="text-sm text-gray-400 mt-1">1 tTRUST = 100 INTUINT</p>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🔮 ↔ 💎</div>
-                  <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUINT</h3>
-                  <p className="text-2xl font-bold text-purple-400">1 : 1</p>
-                  <p className="text-sm text-gray-400 mt-1">Same value tokens</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <i className="fas fa-info-circle text-blue-400 mt-1"></i>
-                <div className="text-sm">
-                  <h4 className="text-blue-300 font-medium mb-1">Fixed Exchange Rates</h4>
-                  <p className="text-gray-300">
-                    Exchange rates are fixed: 1 tTRUST = 100 ORACLE = 100 INTUINT, 1 ORACLE = 1 INTUINT. 
-                    ORACLE and INTUINT have the same value. Small price impacts may apply for larger trades.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </>
       )}
     </div>
