@@ -53,10 +53,12 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center - Logo and Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
-                <i className="fas fa-atom text-white text-sm"></i>
-              </div>
+            <Link to="/" className="flex items-center space-x-3">
+              <img 
+                src="/oracle-lend-logo.png" 
+                alt="Oracle Lend Logo" 
+                className="w-10 h-10 object-contain rounded-lg"
+              />
               <span className="text-xl font-bold gradient-text">ORACLE LEND</span>
             </Link>
 
@@ -101,6 +103,15 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-700/50">
+            {/* Mobile Logo */}
+            <div className="flex items-center justify-center space-x-3 pb-4 mb-4 border-b border-gray-700/50">
+              <img 
+                src="/oracle-lend-logo.png" 
+                alt="Oracle Lend Logo" 
+                className="w-8 h-8 object-contain rounded-lg"
+              />
+              <span className="text-lg font-bold gradient-text">ORACLE LEND</span>
+            </div>
             <div className="flex flex-col space-y-2">
               {navigation.map((item) => (
                 <Link
