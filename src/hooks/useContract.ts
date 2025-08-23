@@ -17,7 +17,7 @@ export const useContract = () => {
     borrowed: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
     collateralValue: '0',
     borrowPower: '0',
-    healthFactor: 0
+    healthFactor: 999 // Initialize as safe (999 represents infinite health factor)
   })
 
   const [lendingPools] = useState<LendingPool[]>([
@@ -262,11 +262,8 @@ export const useContract = () => {
           [token]: (parseFloat(prev.borrowed[token]) + parseFloat(amount)).toString()
         }
         
-        const newBorrowPower = (
-          parseFloat(newBorrowed.tTRUST) * 2500 + 
-          parseFloat(newBorrowed.ORACLE) * 25 + 
-          parseFloat(newBorrowed.INTUIT) * 25
-        ).toString()
+        // Calculate borrow power based on collateral (75% LTV)
+        const newBorrowPower = (parseFloat(prev.collateralValue) * 0.75).toString()
         
         return {
           ...prev,
@@ -340,11 +337,8 @@ export const useContract = () => {
           [token]: Math.max(0, parseFloat(prev.borrowed[token]) - parseFloat(amount)).toString()
         }
         
-        const newBorrowPower = (
-          parseFloat(newBorrowed.tTRUST) * 2500 + 
-          parseFloat(newBorrowed.ORACLE) * 25 + 
-          parseFloat(newBorrowed.INTUIT) * 25
-        ).toString()
+        // Calculate borrow power based on collateral (75% LTV)
+        const newBorrowPower = (parseFloat(prev.collateralValue) * 0.75).toString()
         
         return {
           ...prev,
