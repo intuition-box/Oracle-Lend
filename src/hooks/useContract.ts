@@ -184,6 +184,17 @@ export const useContract = () => {
         throw new Error('MetaMask not installed')
       }
 
+      // Get current accounts
+      const accounts = await window.ethereum.request({
+        method: 'eth_accounts'
+      })
+
+      if (accounts.length === 0) {
+        throw new Error('No accounts connected')
+      }
+
+      const fromAddress = accounts[0]
+
       // Calculate output amount using dynamic rates
       let rate = 1
       const inputAmount = parseFloat(amount)
@@ -209,6 +220,7 @@ export const useContract = () => {
       if (fromToken === 'tTRUST') {
         // Create transaction to swap contract (this would be the real swap contract)
         const txParams = {
+          from: fromAddress,
           to: TOKENS[toToken].address,
           value: `0x${amountInWei}`,
           data: '0x', // This would contain actual swap contract call data
@@ -229,6 +241,7 @@ export const useContract = () => {
         // For ERC20 tokens, would need to call transfer/approve functions
         // For now, simulate the transaction but show real MetaMask prompt
         const txParams = {
+          from: fromAddress,
           to: TOKENS[fromToken].address,
           value: '0x0',
           data: '0xa9059cbb' + // transfer function selector
