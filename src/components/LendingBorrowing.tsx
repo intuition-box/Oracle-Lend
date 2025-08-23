@@ -42,32 +42,15 @@ const LendingBorrowing: React.FC = () => {
 
     if (result.success) {
       setAmount('')
-      setTransactionStatus({
-        show: true,
-        type: 'success',
-        message: `Successfully ${action}ed ${amount} ${selectedToken}`,
-        txHash: result.txHash
-      })
+      // Use global notification system
+      ;(window as any).showNotification('success', `Successfully ${action}ed ${amount} ${selectedToken}`, result.txHash)
     } else {
       if (result.error && result.error.includes('rejected')) {
-        setTransactionStatus({
-          show: true,
-          type: 'rejected',
-          message: 'Transaction was rejected by user'
-        })
+        ;(window as any).showNotification('rejected', 'Transaction was rejected by user')
       } else {
-        setTransactionStatus({
-          show: true,
-          type: 'error',
-          message: result.error || `${action} transaction failed`
-        })
+        ;(window as any).showNotification('error', result.error || `${action} transaction failed`)
       }
     }
-
-    // Auto-hide notification after 5 seconds
-    setTimeout(() => {
-      setTransactionStatus(null)
-    }, 5000)
   }
 
   const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
@@ -121,49 +104,6 @@ const LendingBorrowing: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Transaction Status Notification */}
-      {transactionStatus && (
-        <div 
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-auto mx-4 p-4 rounded-lg border shadow-2xl ${
-          transactionStatus.type === 'success' 
-            ? 'bg-green-900/90 border-green-500/50 text-green-100' 
-            : transactionStatus.type === 'rejected'
-            ? 'bg-yellow-900/90 border-yellow-500/50 text-yellow-100'
-            : 'bg-red-900/90 border-red-500/50 text-red-100'
-        } backdrop-blur-sm animate-pulse`}
-          style={{ position: 'fixed', top: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}
-        >
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              {transactionStatus.type === 'success' ? (
-                <i className="fas fa-check-circle text-green-400 text-xl"></i>
-              ) : transactionStatus.type === 'rejected' ? (
-                <i className="fas fa-times-circle text-yellow-400 text-xl"></i>
-              ) : (
-                <i className="fas fa-exclamation-circle text-red-400 text-xl"></i>
-              )}
-            </div>
-            <div className="flex-1">
-              <h4 className="font-bold mb-1">
-                {transactionStatus.type === 'success' ? 'Transaction Successful!' : 
-                 transactionStatus.type === 'rejected' ? 'Transaction Rejected' : 'Transaction Failed'}
-              </h4>
-              <p className="text-sm opacity-90">{transactionStatus.message}</p>
-              {transactionStatus.txHash && (
-                <p className="text-xs mt-2 opacity-70">
-                  Tx: {transactionStatus.txHash.slice(0, 10)}...{transactionStatus.txHash.slice(-8)}
-                </p>
-              )}
-            </div>
-            <button 
-              onClick={() => setTransactionStatus(null)}
-              className="flex-shrink-0 text-gray-400 hover:text-white"
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div className="text-center">
