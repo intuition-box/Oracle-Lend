@@ -34,12 +34,12 @@ const ORACLE_TOKEN_ABI = [
   'function getTokenInfo() external view returns (string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 maxSupply, uint256 initialSupply)'
 ]
 
-const DEX_ABI = [
+const SWAP_ABI = [
   'function swapTrustForOracle(uint256 amountIn, uint256 minAmountOut) external',
   'function swapOracleForTrust(uint256 amountIn, uint256 minAmountOut) external',
   'function getSwapAmountOut(address tokenIn, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee, uint256 priceImpact)',
   'function getExchangeRate(address tokenIn, uint256 amountIn) external view returns (uint256 rate)',
-  'function getDEXStats() external view returns (uint256 tTrustReserve, uint256 oracleReserve, uint256 totalVolume, uint256 totalTrades, uint256 feesCollected)',
+  'function getSwapStats() external view returns (uint256 tTrustReserve, uint256 oracleReserve, uint256 totalVolume, uint256 totalTrades, uint256 feesCollected)',
   'function getTradingLimits() external view returns (uint256 min, uint256 max)',
   'function isTradeValid(address tokenIn, uint256 amountIn) external view returns (bool)',
   'event Swap(address indexed user, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint256 fee, uint256 priceImpact)'
@@ -64,7 +64,7 @@ export interface Web3Instance {
     oracleLend: ethers.Contract
     oracleToken: ethers.Contract
     tTrustToken: ethers.Contract
-    dex: ethers.Contract
+    swap: ethers.Contract
   }
 }
 
@@ -100,7 +100,7 @@ export class Web3Service {
       oracleLend: new ethers.Contract(INTUITION_TESTNET.contracts.oracleLend, ORACLE_LEND_ABI, this.signer),
       oracleToken: new ethers.Contract(INTUITION_TESTNET.contracts.oracleToken, ORACLE_TOKEN_ABI, this.signer),
       tTrustToken: new ethers.Contract(INTUITION_TESTNET.contracts.tTrustToken, ERC20_ABI, this.signer),
-      dex: new ethers.Contract(INTUITION_TESTNET.contracts.dex, DEX_ABI, this.signer)
+      swap: new ethers.Contract(INTUITION_TESTNET.contracts.dex, SWAP_ABI, this.signer)
     }
   }
 
@@ -232,28 +232,28 @@ export class Web3Service {
    * Swap tTRUST for ORACLE
    */
   async swapTrustForOracle(amountIn: string, minAmountOut: string): Promise<ethers.ContractTransaction> {
-    if (!this.contracts.dex) {
-      throw new Error('DEX contract not initialized')
+    if (!this.contracts.swap) {
+      throw new Error('Swap contract not initialized')
     }
 
     const parsedAmountIn = ethers.utils.parseEther(amountIn)
     const parsedMinAmountOut = ethers.utils.parseEther(minAmountOut)
     
-    return await this.contracts.dex.swapTrustForOracle(parsedAmountIn, parsedMinAmountOut)
+    return await this.contracts.swap.swapTrustForOracle(parsedAmountIn, parsedMinAmountOut)
   }
 
   /**
    * Swap ORACLE for tTRUST
    */
   async swapOracleForTrust(amountIn: string, minAmountOut: string): Promise<ethers.ContractTransaction> {
-    if (!this.contracts.dex) {
-      throw new Error('DEX contract not initialized')
+    if (!this.contracts.swap) {
+      throw new Error('Swap contract not initialized')
     }
 
     const parsedAmountIn = ethers.utils.parseEther(amountIn)
     const parsedMinAmountOut = ethers.utils.parseEther(minAmountOut)
     
-    return await this.contracts.dex.swapOracleForTrust(parsedAmountIn, parsedMinAmountOut)
+    return await this.contracts.swap.swapOracleForTrust(parsedAmountIn, parsedMinAmountOut)
   }
 
   /**
@@ -264,12 +264,12 @@ export class Web3Service {
     fee: string
     priceImpact: number
   }> {
-    if (!this.contracts.dex) {
-      throw new Error('DEX contract not initialized')
+    if (!this.contracts.swap) {
+      throw new Error('Swap contract not initialized')
     }
 
     const parsedAmountIn = ethers.utils.parseEther(amountIn)
-    const [amountOut, fee, priceImpact] = await this.contracts.dex.getSwapAmountOut(tokenIn, parsedAmountIn)
+    const [amountOut, fee, priceImpact] = await this.contracts.swap.getSwapAmountOut(tokenIn, parsedAmountIn)
     
     return {
       amountOut: ethers.utils.formatEther(amountOut),
@@ -356,21 +356,21 @@ export class Web3Service {
   }
 
   /**
-   * Get DEX statistics
+   * Get Swap statistics
    */
-  async getDEXStats(): Promise<{
+  async getSwapStats(): Promise<{
     tTrustReserve: string
     oracleReserve: string
     totalVolume: string
     totalTrades: number
     feesCollected: string
   }> {
-    if (!this.contracts.dex) {
-      throw new Error('DEX contract not initialized')
+    if (!this.contracts.swap) {
+      throw new Error('Swap contract not initialized')
     }
 
     const [tTrustReserve, oracleReserve, totalVolume, totalTrades, feesCollected] = 
-      await this.contracts.dex.getDEXStats()
+      await this.contracts.swap.getSwapStats()
 
     return {
       tTrustReserve: ethers.utils.formatEther(tTrustReserve),

@@ -141,7 +141,7 @@ export const useContract = () => {
     }
   }, [])
 
-  // Swap tokens in DEX
+  // Swap tokens
   const swap = useCallback(async (
     fromToken: 'tTRUST' | 'ORACLE',
     toToken: 'tTRUST' | 'ORACLE',

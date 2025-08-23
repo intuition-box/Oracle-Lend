@@ -189,7 +189,7 @@ export const FEATURES = {
   enableAnalytics: true,
   enableLending: true,
   enableBorrowing: true,
-  enableDEX: true,
+  enableSwap: true,
   enableLiquidation: false, // Disable liquidation for initial release
   enableGovernance: false, // Future feature
   enableStaking: false, // Future feature

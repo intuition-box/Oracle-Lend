@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import LendingBorrowing from './components/LendingBorrowing'
-import DEX from './components/DEX'
+import Swap from './components/DEX'
 import Analytics from './components/Analytics'
 import { useWallet } from './hooks/useWallet'
 
@@ -38,7 +38,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/lending" element={<LendingBorrowing />} />
-            <Route path="/dex" element={<DEX />} />
+            <Route path="/dex" element={<Swap />} />
             <Route path="/analytics" element={<Analytics />} />
           </Routes>
         </Layout>
