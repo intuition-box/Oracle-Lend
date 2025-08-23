@@ -64,12 +64,23 @@ export const useWallet = () => {
         method: 'eth_getBalance',
         params: [account, 'latest'],
       })
-      // Convert from wei to ether
+      // Convert from wei to ether (18 decimals)
       const balanceInEther = parseInt(balance, 16) / Math.pow(10, 18)
-      return balanceInEther.toFixed(4)
+      return balanceInEther.toString()
     } catch (error) {
       console.error('Failed to get balance:', error)
       return '0'
+    }
+  }
+
+  // Refresh balance function
+  const refreshBalance = async () => {
+    if (walletState.account) {
+      const newBalance = await getBalance(walletState.account)
+      setWalletState(prev => ({
+        ...prev,
+        balance: newBalance
+      }))
     }
   }
 
@@ -220,6 +231,7 @@ export const useWallet = () => {
     error,
     connect,
     disconnect,
+    refreshBalance,
     switchToIntuitionNetwork,
     isMetaMaskInstalled: isMetaMaskInstalled()
   }

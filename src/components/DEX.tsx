@@ -5,7 +5,7 @@ import { SwapQuote } from '../types'
 
 const DEX: React.FC = () => {
   const { swap, isLoading, getTokenBalances } = useContract()
-  const { isConnected, account } = useWallet()
+  const { isConnected, account, balance } = useWallet()
   
   const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
   const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('ORACLE')
@@ -21,9 +21,17 @@ const DEX: React.FC = () => {
   // Fetch balances when wallet connects
   useEffect(() => {
     if (isConnected && account) {
-      getTokenBalances(account).then(setBalances)
+      getTokenBalances(account).then(contractBalances => {
+        setBalances({
+          tTRUST: balance, // Use real wallet balance for tTRUST
+          ORACLE: contractBalances.ORACLE,
+          INTUINT: contractBalances.INTUINT
+        })
+      })
+    } else {
+      setBalances({ tTRUST: '0', ORACLE: '0', INTUINT: '0' })
     }
-  }, [isConnected, account, getTokenBalances])
+  }, [isConnected, account, balance, getTokenBalances])
 
   // Calculate quote when amounts change
   useEffect(() => {
@@ -83,10 +91,14 @@ const DEX: React.FC = () => {
     if (result.success) {
       setFromAmount('')
       setToAmount('')
-      // Refresh balances
+      // Refresh balances after swap
       if (account) {
-        const newBalances = await getTokenBalances(account)
-        setBalances(newBalances)
+        const contractBalances = await getTokenBalances(account)
+        setBalances({
+          tTRUST: balance, // Use real wallet balance for tTRUST
+          ORACLE: contractBalances.ORACLE,
+          INTUINT: contractBalances.INTUINT
+        })
       }
     }
   }
