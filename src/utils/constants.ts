@@ -15,6 +15,7 @@ export const INTUITION_TESTNET = {
     oracleLend: '0x1234567890123456789012345678901234567890', // Placeholder
     oracleToken: '0x2345678901234567890123456789012345678901', // Placeholder
     tTrustToken: '0x3456789012345678901234567890123456789012', // Placeholder - Native token wrapper
+    intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', // INTUINT token
     dex: '0x4567890123456789012345678901234567890123', // Placeholder
   }
 }
@@ -37,6 +38,15 @@ export const TOKENS = {
     decimals: 18,
     icon: '🔮',
     color: '#8B5CF6',
+    isNative: false
+  },
+  INTUINT: {
+    symbol: 'INTUINT',
+    name: 'Intuition Token',
+    address: INTUITION_TESTNET.contracts.intuintToken,
+    decimals: 18,
+    icon: '💎',
+    color: '#06B6D4',
     isNative: false
   }
 } as const

@@ -7,8 +7,8 @@ export const useContract = () => {
 
   // Mock data for development - replace with actual contract calls
   const [userPosition, setUserPosition] = useState<UserPosition>({
-    supplied: { tTRUST: '0', ORACLE: '0' },
-    borrowed: { tTRUST: '0', ORACLE: '0' },
+    supplied: { tTRUST: '0', ORACLE: '0', INTUINT: '0' },
+    borrowed: { tTRUST: '0', ORACLE: '0', INTUINT: '0' },
     collateralValue: '0',
     borrowPower: '0',
     healthFactor: 0
@@ -143,8 +143,8 @@ export const useContract = () => {
 
   // Swap tokens
   const swap = useCallback(async (
-    fromToken: 'tTRUST' | 'ORACLE',
-    toToken: 'tTRUST' | 'ORACLE',
+    fromToken: 'tTRUST' | 'ORACLE' | 'INTUINT',
+    toToken: 'tTRUST' | 'ORACLE' | 'INTUINT',
     amount: string
   ) => {
     setIsLoading(true)
@@ -177,11 +177,12 @@ export const useContract = () => {
       // Simulate getting balances from contracts
       return {
         tTRUST: '100.5',
-        ORACLE: '10050.0'
+        ORACLE: '10050.0',
+        INTUINT: '500.0'
       }
     } catch (error) {
       console.error('Failed to get token balances:', error)
-      return { tTRUST: '0', ORACLE: '0' }
+      return { tTRUST: '0', ORACLE: '0', INTUINT: '0' }
     }
   }, [])
 

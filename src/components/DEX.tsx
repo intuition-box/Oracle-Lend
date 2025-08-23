@@ -7,11 +7,11 @@ const DEX: React.FC = () => {
   const { swap, isLoading, getTokenBalances } = useContract()
   const { isConnected, account } = useWallet()
   
-  const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE'>('tTRUST')
-  const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE'>('ORACLE')
+  const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
+  const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('ORACLE')
   const [fromAmount, setFromAmount] = useState('')
   const [toAmount, setToAmount] = useState('')
-  const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0' })
+  const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0', INTUINT: '0' })
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [slippage, setSlippage] = useState(0.5)
 
@@ -29,7 +29,25 @@ const DEX: React.FC = () => {
   useEffect(() => {
     if (fromAmount && parseFloat(fromAmount) > 0) {
       const inputAmount = parseFloat(fromAmount)
-      const rate = fromToken === 'tTRUST' ? EXCHANGE_RATE : 1 / EXCHANGE_RATE
+      
+      // Define exchange rates (using tTRUST as base)
+      // 1 tTRUST = 100 ORACLE, 1 tTRUST = 50 INTUINT (example rate)
+      let rate = 1
+      
+      if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
+        rate = 100
+      } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
+        rate = 0.01
+      } else if (fromToken === 'tTRUST' && toToken === 'INTUINT') {
+        rate = 50
+      } else if (fromToken === 'INTUINT' && toToken === 'tTRUST') {
+        rate = 0.02
+      } else if (fromToken === 'ORACLE' && toToken === 'INTUINT') {
+        rate = 0.5 // 1 ORACLE = 0.5 INTUINT
+      } else if (fromToken === 'INTUINT' && toToken === 'ORACLE') {
+        rate = 2 // 1 INTUINT = 2 ORACLE
+      }
+      
       const outputAmount = inputAmount * rate
       
       // Simulate small price impact
@@ -73,7 +91,7 @@ const DEX: React.FC = () => {
     }
   }
 
-  const getTokenInfo = (token: 'tTRUST' | 'ORACLE') => {
+  const getTokenInfo = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
     return {
       tTRUST: {
         name: 'Intuition Trust Token',
@@ -86,6 +104,12 @@ const DEX: React.FC = () => {
         symbol: 'ORACLE',
         icon: '🔮',
         price: '$25.00'
+      },
+      INTUINT: {
+        name: 'Intuition Token',
+        symbol: 'INTUINT',
+        icon: '💎',
+        price: '$50.00'
       }
     }[token]
   }
@@ -115,8 +139,8 @@ const DEX: React.FC = () => {
               <i className="fas fa-wallet text-green-400 mr-3"></i>
               Your Balances
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(['tTRUST', 'ORACLE'] as const).map((token) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => {
                 const info = getTokenInfo(token)
                 return (
                   <div key={token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
@@ -209,9 +233,19 @@ const DEX: React.FC = () => {
                         >
                           MAX
                         </button>
-                        <div className="flex items-center space-x-2 bg-gray-700/50 rounded-lg px-3 py-2">
-                          <span className="text-lg">{getTokenInfo(fromToken).icon}</span>
-                          <span className="font-medium text-white">{fromToken}</span>
+                        <div className="relative">
+                          <select
+                            value={fromToken}
+                            onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUINT')}
+                            className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
+                          >
+                            {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => (
+                              <option key={token} value={token} className="bg-gray-800">
+                                {getTokenInfo(token).icon} {token}
+                              </option>
+                            ))}
+                          </select>
+                          <i className="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                         </div>
                       </div>
                     </div>
@@ -245,9 +279,19 @@ const DEX: React.FC = () => {
                         placeholder="0.00"
                         className="bg-transparent text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none"
                       />
-                      <div className="flex items-center space-x-2 bg-gray-700/50 rounded-lg px-3 py-2">
-                        <span className="text-lg">{getTokenInfo(toToken).icon}</span>
-                        <span className="font-medium text-white">{toToken}</span>
+                      <div className="relative">
+                        <select
+                          value={toToken}
+                          onChange={(e) => setToToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUINT')}
+                          className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
+                        >
+                          {(['tTRUST', 'ORACLE', 'INTUINT'] as const).map((token) => (
+                            <option key={token} value={token} className="bg-gray-800">
+                              {getTokenInfo(token).icon} {token}
+                            </option>
+                          ))}
+                        </select>
+                        <i className="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                       </div>
                     </div>
                   </div>
@@ -314,7 +358,7 @@ const DEX: React.FC = () => {
               Exchange Rate Information
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
                   <div className="text-3xl mb-2">⚡ → 🔮</div>
@@ -326,10 +370,19 @@ const DEX: React.FC = () => {
               
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2">🔮 → ⚡</div>
-                  <h3 className="font-bold text-white mb-1">ORACLE to tTRUST</h3>
-                  <p className="text-2xl font-bold text-blue-400">100 : 1</p>
-                  <p className="text-sm text-gray-400 mt-1">100 ORACLE = 1 tTRUST</p>
+                  <div className="text-3xl mb-2">⚡ → 💎</div>
+                  <h3 className="font-bold text-white mb-1">tTRUST to INTUINT</h3>
+                  <p className="text-2xl font-bold text-cyan-400">1 : 50</p>
+                  <p className="text-sm text-gray-400 mt-1">1 tTRUST = 50 INTUINT</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🔮 → 💎</div>
+                  <h3 className="font-bold text-white mb-1">ORACLE to INTUINT</h3>
+                  <p className="text-2xl font-bold text-purple-400">1 : 0.5</p>
+                  <p className="text-sm text-gray-400 mt-1">1 ORACLE = 0.5 INTUINT</p>
                 </div>
               </div>
             </div>
@@ -338,9 +391,9 @@ const DEX: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <i className="fas fa-info-circle text-blue-400 mt-1"></i>
                 <div className="text-sm">
-                  <h4 className="text-blue-300 font-medium mb-1">Fixed Exchange Rate</h4>
+                  <h4 className="text-blue-300 font-medium mb-1">Fixed Exchange Rates</h4>
                   <p className="text-gray-300">
-                    The exchange rate between tTRUST and ORACLE is fixed at 1:100. 
+                    Exchange rates are fixed: 1 tTRUST = 100 ORACLE = 50 INTUINT. 
                     Small price impacts may apply for larger trades to maintain protocol stability.
                   </p>
                 </div>
