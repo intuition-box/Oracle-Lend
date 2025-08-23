@@ -147,7 +147,7 @@ const LendingBorrowing: React.FC = () => {
 
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">Lending & Borrowing</h1>
+        <h1 className="text-3xl font-bold gradient-text mb-4">LENDING & BORROWING</h1>
       </div>
 
       {!isConnected && (
@@ -167,16 +167,16 @@ const LendingBorrowing: React.FC = () => {
               Your Position
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-plus text-green-400 text-xl"></i>
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                  <i className="fas fa-plus text-green-400 text-lg"></i>
                 </div>
-                <h4 className="font-medium text-white mb-1">Total Supplied</h4>
-                <p className="text-2xl font-bold text-green-400">
+                <h4 className="font-medium text-white mb-1 text-sm">Total Supplied</h4>
+                <p className="text-xl font-bold text-green-400">
                   ${formatCurrency(userPosition.collateralValue)}
                 </p>
-                <div className="text-sm text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.supplied.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.supplied.ORACLE)} ORACLE</div>
                   <div>{formatCurrency(userPosition.supplied.INTUINT)} INTUINT</div>
@@ -184,14 +184,14 @@ const LendingBorrowing: React.FC = () => {
               </div>
 
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-minus text-red-400 text-xl"></i>
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2">
+                  <i className="fas fa-minus text-red-400 text-lg"></i>
                 </div>
-                <h4 className="font-medium text-white mb-1">Total Borrowed</h4>
-                <p className="text-2xl font-bold text-red-400">
+                <h4 className="font-medium text-white mb-1 text-sm">Total Borrowed</h4>
+                <p className="text-xl font-bold text-red-400">
                   ${formatCurrency(userPosition.borrowPower)}
                 </p>
-                <div className="text-sm text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.borrowed.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.borrowed.ORACLE)} ORACLE</div>
                   <div>{formatCurrency(userPosition.borrowed.INTUINT)} INTUINT</div>
@@ -199,34 +199,34 @@ const LendingBorrowing: React.FC = () => {
               </div>
 
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-shield-alt text-blue-400 text-xl"></i>
+                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
+                  <i className="fas fa-shield-alt text-blue-400 text-lg"></i>
                 </div>
-                <h4 className="font-medium text-white mb-1">Available to Borrow</h4>
-                <p className="text-2xl font-bold text-blue-400">
+                <h4 className="font-medium text-white mb-1 text-sm">Available to Borrow</h4>
+                <p className="text-xl font-bold text-blue-400">
                   ${formatCurrency((parseFloat(userPosition.collateralValue) * 0.75 - parseFloat(userPosition.borrowPower)).toString())}
                 </p>
-                <p className="text-sm text-gray-400 mt-1">75% of collateral</p>
+                <p className="text-xs text-gray-400 mt-1">75% of collateral</p>
               </div>
 
               <div className="text-center">
-                <div className={`w-16 h-16 rounded-full ${
+                <div className={`w-12 h-12 rounded-full ${
                   healthFactor > 2 ? 'bg-green-500/20' : 
                   healthFactor > 1.5 ? 'bg-yellow-500/20' : 'bg-red-500/20'
-                } flex items-center justify-center mx-auto mb-3`}>
+                } flex items-center justify-center mx-auto mb-2`}>
                   <i className={`fas fa-heartbeat ${
                     healthFactor > 2 ? 'text-green-400' : 
                     healthFactor > 1.5 ? 'text-yellow-400' : 'text-red-400'
-                  } text-xl`}></i>
+                  } text-lg`}></i>
                 </div>
-                <h4 className="font-medium text-white mb-1">Health Factor</h4>
-                <p className={`text-2xl font-bold ${
+                <h4 className="font-medium text-white mb-1 text-sm">Health Factor</h4>
+                <p className={`text-xl font-bold ${
                   healthFactor > 2 ? 'text-green-400' : 
                   healthFactor > 1.5 ? 'text-yellow-400' : 'text-red-400'
                 }`}>
                   {healthFactor.toFixed(2)}
                 </p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   {healthFactor > 2 ? 'Safe' : healthFactor > 1.5 ? 'Moderate Risk' : 'High Risk'}
                 </p>
               </div>
@@ -240,42 +240,42 @@ const LendingBorrowing: React.FC = () => {
               Markets
             </h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {lendingPools.map((pool) => (
-                <div key={pool.token} className="bg-gray-800/50 rounded-lg p-6 border border-gray-600/30">
-                  <div className="flex items-center justify-between mb-4">
+                <div key={pool.token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-white font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
                           {pool.token === 'tTRUST' ? '⚡' : pool.token === 'ORACLE' ? '🔮' : '💎'}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-white">{pool.token}</h3>
-                        <p className="text-sm text-gray-400">
+                        <h3 className="text-base font-bold text-white">{pool.token}</h3>
+                        <p className="text-xs text-gray-400">
                           {pool.token === 'tTRUST' ? 'Intuition Trust Token' : 
                            pool.token === 'ORACLE' ? 'Oracle Token' : 'Intuition Token'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-400">Utilization</p>
-                      <p className="text-lg font-bold text-white">{pool.utilizationRate}%</p>
+                      <p className="text-xs text-gray-400">Utilization</p>
+                      <p className="text-base font-bold text-white">{pool.utilizationRate}%</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Supply APY</p>
-                      <p className="text-xl font-bold text-green-400">{pool.supplyAPY}%</p>
+                      <p className="text-xs text-gray-400 mb-1">Supply APY</p>
+                      <p className="text-lg font-bold text-green-400">{pool.supplyAPY}%</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Borrow APY</p>
-                      <p className="text-xl font-bold text-red-400">{pool.borrowAPY}%</p>
+                      <p className="text-xs text-gray-400 mb-1">Borrow APY</p>
+                      <p className="text-lg font-bold text-red-400">{pool.borrowAPY}%</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
                       <p className="text-gray-400 mb-1">Total Supply</p>
                       <p className="text-white">{formatCurrency(pool.totalSupply)} {pool.token}</p>
@@ -287,7 +287,7 @@ const LendingBorrowing: React.FC = () => {
                   </div>
 
                   {/* Utilization bar */}
-                  <div className="mt-4">
+                  <div className="mt-3">
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-300"
