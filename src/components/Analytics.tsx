@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAnalytics } from '../hooks/useAnalytics'
+import TokenIcon from './TokenIcon'
 
 const Analytics: React.FC = () => {
   const { analytics, isLoading, refreshAnalytics } = useAnalytics()
@@ -62,7 +63,7 @@ const Analytics: React.FC = () => {
       category: 'Lending Pools',
       stats: [
         { label: 'tTRUST Pool Size', value: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST`, icon: '⚡' },
-        { label: 'ORACLE Pool Size', value: `${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE`, icon: '🔮' },
+        { label: 'ORACLE Pool Size', value: `${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE`, icon: <TokenIcon token="ORACLE" size="sm" /> },
         { label: 'INTUIT Pool Size', value: `${formatCurrency(analytics.totalTVL.INTUIT)} INTUIT`, icon: '💎' },
         { label: 'Total Borrowed', value: `$${formatCurrency(analytics.totalBorrowed)}`, icon: 'fas fa-arrow-down' }
       ]

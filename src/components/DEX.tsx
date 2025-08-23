@@ -3,6 +3,7 @@ import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
 import { SwapQuote } from '../types'
 import { trackTransaction, initializeAnalytics } from '../utils/analyticsTracker'
+import TokenIcon from './TokenIcon'
 
 const DEX: React.FC = () => {
   const { swap, isLoading, getTokenBalances, exchangeRates } = useContract()
@@ -160,7 +161,7 @@ const DEX: React.FC = () => {
       ORACLE: {
         name: 'Oracle Token',
         symbol: 'ORACLE',
-        icon: '🔮',
+        icon: <TokenIcon token="ORACLE" size="sm" />,
         price: `$${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       INTUIT: {
@@ -508,7 +509,11 @@ const DEX: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2">⚡ → 🔮</div>
+                  <div className="text-3xl mb-2 flex items-center space-x-2">
+                    <span>⚡</span>
+                    <span>→</span>
+                    <TokenIcon token="ORACLE" size="lg" />
+                  </div>
                   <h3 className="font-bold text-white mb-1">tTRUST to ORACLE</h3>
                   <p className="text-2xl font-bold text-green-400">
                     1 : {exchangeRates.tTRUST_ORACLE.toFixed(2)}
@@ -534,7 +539,11 @@ const DEX: React.FC = () => {
 
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2">🔮 ↔ 💎</div>
+                  <div className="text-3xl mb-2 flex items-center space-x-2">
+                    <TokenIcon token="ORACLE" size="lg" />
+                    <span>↔</span>
+                    <span>💎</span>
+                  </div>
                   <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUIT</h3>
                   <p className="text-2xl font-bold text-purple-400">
                     1 : {exchangeRates.ORACLE_INTUIT.toFixed(4)}

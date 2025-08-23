@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
+import TokenIcon from './TokenIcon'
 
 const LendingBorrowing: React.FC = () => {
   const { userPosition, lendingPools, isLoading, supply, withdraw, borrow, repay } = useContract()
@@ -246,9 +247,7 @@ const LendingBorrowing: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">
-                          {pool.token === 'tTRUST' ? '⚡' : pool.token === 'ORACLE' ? '🔮' : '💎'}
-                        </span>
+                        <TokenIcon token={pool.token} size="md" className="text-white" />
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-white">{pool.token}</h3>
@@ -409,7 +408,7 @@ const LendingBorrowing: React.FC = () => {
                           : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
                       }`}
                     >
-                      <span>🔮</span>
+                      <TokenIcon token="ORACLE" size="sm" />
                       <span>ORACLE</span>
                     </button>
                     <button

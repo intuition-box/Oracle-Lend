@@ -36,7 +36,7 @@ export const TOKENS = {
     name: 'Oracle Token',
     address: INTUITION_TESTNET.contracts.oracleToken,
     decimals: 18,
-    icon: '🔮',
+    icon: 'oracle-logo.png',
     color: '#8B5CF6',
     isNative: false
   },
