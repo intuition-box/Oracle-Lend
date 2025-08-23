@@ -7,7 +7,7 @@ const LendingBorrowing: React.FC = () => {
   const { isConnected } = useWallet()
   
   const [activeTab, setActiveTab] = useState<'supply' | 'borrow'>('supply')
-  const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE'>('tTRUST')
+  const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUINT'>('tTRUST')
   const [amount, setAmount] = useState('')
   const [action, setAction] = useState<'supply' | 'withdraw' | 'borrow' | 'repay'>('supply')
 
@@ -38,7 +38,7 @@ const LendingBorrowing: React.FC = () => {
     }
   }
 
-  const getTokenPool = (token: 'tTRUST' | 'ORACLE') => {
+  const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUINT') => {
     return lendingPools.find(pool => pool.token === token)
   }
 
@@ -93,6 +93,7 @@ const LendingBorrowing: React.FC = () => {
                 <div className="text-sm text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.supplied.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.supplied.ORACLE)} ORACLE</div>
+                  <div>{formatCurrency(userPosition.supplied.INTUINT)} INTUINT</div>
                 </div>
               </div>
 
@@ -107,6 +108,7 @@ const LendingBorrowing: React.FC = () => {
                 <div className="text-sm text-gray-400 mt-1">
                   <div>{formatCurrency(userPosition.borrowed.tTRUST)} tTRUST</div>
                   <div>{formatCurrency(userPosition.borrowed.ORACLE)} ORACLE</div>
+                  <div>{formatCurrency(userPosition.borrowed.INTUINT)} INTUINT</div>
                 </div>
               </div>
 
@@ -158,12 +160,15 @@ const LendingBorrowing: React.FC = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-white font-bold">{pool.token === 'tTRUST' ? '⚡' : '🔮'}</span>
+                        <span className="text-white font-bold">
+                          {pool.token === 'tTRUST' ? '⚡' : pool.token === 'ORACLE' ? '🔮' : '💎'}
+                        </span>
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-white">{pool.token}</h3>
                         <p className="text-sm text-gray-400">
-                          {pool.token === 'tTRUST' ? 'Intuition Trust Token' : 'Oracle Token'}
+                          {pool.token === 'tTRUST' ? 'Intuition Trust Token' : 
+                           pool.token === 'ORACLE' ? 'Oracle Token' : 'Intuition Token'}
                         </p>
                       </div>
                     </div>
@@ -298,10 +303,10 @@ const LendingBorrowing: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Token</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setSelectedToken('tTRUST')}
-                      className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
                         selectedToken === 'tTRUST'
                           ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
                           : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
@@ -312,7 +317,7 @@ const LendingBorrowing: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setSelectedToken('ORACLE')}
-                      className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
                         selectedToken === 'ORACLE'
                           ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
                           : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
@@ -320,6 +325,17 @@ const LendingBorrowing: React.FC = () => {
                     >
                       <span>🔮</span>
                       <span>ORACLE</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedToken('INTUINT')}
+                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
+                        selectedToken === 'INTUINT'
+                          ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
+                          : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      }`}
+                    >
+                      <span>💎</span>
+                      <span>INTUINT</span>
                     </button>
                   </div>
                 </div>

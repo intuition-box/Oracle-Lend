@@ -30,11 +30,19 @@ export const useContract = () => {
       supplyAPY: 4.1,
       borrowAPY: 9.7,
       utilizationRate: 71.6
+    },
+    {
+      token: 'INTUINT',
+      totalSupply: '98000000',
+      totalBorrow: '72000000',
+      supplyAPY: 4.8,
+      borrowAPY: 10.2,
+      utilizationRate: 73.5
     }
   ])
 
   // Supply tokens to lending pool
-  const supply = useCallback(async (token: 'tTRUST' | 'ORACLE', amount: string) => {
+  const supply = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -61,7 +69,7 @@ export const useContract = () => {
   }, [])
 
   // Withdraw tokens from lending pool
-  const withdraw = useCallback(async (token: 'tTRUST' | 'ORACLE', amount: string) => {
+  const withdraw = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -88,7 +96,7 @@ export const useContract = () => {
   }, [])
 
   // Borrow tokens from lending pool
-  const borrow = useCallback(async (token: 'tTRUST' | 'ORACLE', amount: string) => {
+  const borrow = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -115,7 +123,7 @@ export const useContract = () => {
   }, [])
 
   // Repay borrowed tokens
-  const repay = useCallback(async (token: 'tTRUST' | 'ORACLE', amount: string) => {
+  const repay = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUINT', amount: string) => {
     setIsLoading(true)
     setError(null)
 

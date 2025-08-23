@@ -12,7 +12,7 @@ export interface TokenBalance {
 }
 
 export interface LendingPool {
-  token: 'tTRUST' | 'ORACLE'
+  token: 'tTRUST' | 'ORACLE' | 'INTUINT'
   totalSupply: string
   totalBorrow: string
   supplyAPY: number
