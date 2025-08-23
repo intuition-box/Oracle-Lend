@@ -124,8 +124,15 @@ export const useContract = () => {
         return { success: true, txHash }
       }
     } catch (error: any) {
-      setError(error.message || 'Supply transaction failed')
-      return { success: false, error: error.message }
+      const errorMessage = error.message || 'Supply transaction failed'
+      setError(errorMessage)
+      
+      // Check if user rejected the transaction
+      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
+        return { success: false, error: 'Transaction rejected by user' }
+      }
+      
+      return { success: false, error: errorMessage }
     } finally {
       setIsLoading(false)
     }
@@ -319,8 +326,15 @@ export const useContract = () => {
         }
       }
     } catch (error: any) {
-      setError(error.message || 'Swap transaction failed')
-      return { success: false, error: error.message }
+      const errorMessage = error.message || 'Swap transaction failed'
+      setError(errorMessage)
+      
+      // Check if user rejected the transaction
+      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
+        return { success: false, error: 'Transaction rejected by user' }
+      }
+      
+      return { success: false, error: errorMessage }
     } finally {
       setIsLoading(false)
     }

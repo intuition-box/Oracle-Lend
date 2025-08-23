@@ -13,7 +13,7 @@ const LendingBorrowing: React.FC = () => {
 
   const [transactionStatus, setTransactionStatus] = useState<{
     show: boolean
-    type: 'success' | 'error'
+    type: 'success' | 'error' | 'rejected'
     message: string
     txHash?: string
   } | null>(null)
@@ -48,11 +48,19 @@ const LendingBorrowing: React.FC = () => {
         txHash: result.txHash
       })
     } else {
-      setTransactionStatus({
-        show: true,
-        type: 'error',
-        message: result.error || `${action} transaction failed`
-      })
+      if (result.error && result.error.includes('rejected')) {
+        setTransactionStatus({
+          show: true,
+          type: 'rejected',
+          message: 'Transaction was rejected by user'
+        })
+      } else {
+        setTransactionStatus({
+          show: true,
+          type: 'error',
+          message: result.error || `${action} transaction failed`
+        })
+      }
     }
 
     // Auto-hide notification after 5 seconds
@@ -80,6 +88,19 @@ const LendingBorrowing: React.FC = () => {
 
   const healthFactor = calculateHealthFactor()
 
+  // Get user wallet balance for selected token
+  const getUserBalance = () => {
+    if (selectedToken === 'tTRUST') {
+      return '10.5' // This would come from the wallet hook
+    }
+    return '0' // For ORACLE and INTUINT, would need to query ERC20 balance
+  }
+
+  const handleMaxClick = () => {
+    const balance = getUserBalance()
+    setAmount(balance)
+  }
+
   return (
     <div className="space-y-8">
       {/* Transaction Status Notification */}
@@ -87,19 +108,24 @@ const LendingBorrowing: React.FC = () => {
         <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg border ${
           transactionStatus.type === 'success' 
             ? 'bg-green-900/90 border-green-500/50 text-green-100' 
+            : transactionStatus.type === 'rejected'
+            ? 'bg-yellow-900/90 border-yellow-500/50 text-yellow-100'
             : 'bg-red-900/90 border-red-500/50 text-red-100'
         } backdrop-blur-sm animate-pulse`}>
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
               {transactionStatus.type === 'success' ? (
                 <i className="fas fa-check-circle text-green-400 text-xl"></i>
+              ) : transactionStatus.type === 'rejected' ? (
+                <i className="fas fa-times-circle text-yellow-400 text-xl"></i>
               ) : (
                 <i className="fas fa-exclamation-circle text-red-400 text-xl"></i>
               )}
             </div>
             <div className="flex-1">
               <h4 className="font-bold mb-1">
-                {transactionStatus.type === 'success' ? 'Transaction Successful!' : 'Transaction Failed'}
+                {transactionStatus.type === 'success' ? 'Transaction Successful!' : 
+                 transactionStatus.type === 'rejected' ? 'Transaction Rejected' : 'Transaction Failed'}
               </h4>
               <p className="text-sm opacity-90">{transactionStatus.message}</p>
               {transactionStatus.txHash && (
@@ -409,7 +435,10 @@ const LendingBorrowing: React.FC = () => {
                       placeholder="0.00"
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20"
                     />
-                    <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 text-sm font-medium hover:text-purple-300">
+                    <button 
+                      onClick={handleMaxClick}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors"
+                    >
                       MAX
                     </button>
                   </div>
