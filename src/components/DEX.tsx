@@ -121,7 +121,7 @@ const DEX: React.FC = () => {
         name: 'Intuition Token',
         symbol: 'INTUINT',
         icon: '💎',
-        price: '$50.00'
+        price: '$25.00'
       }
     }[token]
   }
