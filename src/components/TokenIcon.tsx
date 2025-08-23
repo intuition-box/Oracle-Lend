@@ -17,7 +17,7 @@ const TokenIcon: React.FC<TokenIconProps> = ({ token, size = 'md', className = '
   if (token === 'ORACLE') {
     return (
       <img 
-        src="./src/assets/images/oracle-logo.png" 
+        src="/oracle-logo.png" 
         alt="Oracle Token" 
         className={`${sizeClasses[size]} ${className} object-cover rounded-full`}
       />

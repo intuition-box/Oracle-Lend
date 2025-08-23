@@ -177,7 +177,7 @@ const DEX: React.FC = () => {
   const getTokenTextIcon = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
     return {
       tTRUST: '⚡',
-      ORACLE: '🔮', // Text fallback for dropdown
+      ORACLE: 'ORACLE', // Use text name for dropdown since HTML options can't contain images
       INTUIT: '💎'
     }[token]
   }
@@ -263,7 +263,11 @@ const DEX: React.FC = () => {
                   <div key={token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{info.icon}</span>
+                        {token === 'ORACLE' ? (
+                          <TokenIcon token="ORACLE" size="lg" />
+                        ) : (
+                          <span className="text-2xl">{info.icon}</span>
+                        )}
                         <div>
                           <h3 className="font-bold text-white">{info.symbol}</h3>
                           <p className="text-sm text-gray-400">{info.name}</p>
@@ -369,7 +373,7 @@ const DEX: React.FC = () => {
                         >
                           {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
-                              {getTokenTextIcon(token)} {token}
+                              {token === 'ORACLE' ? '👁️ ORACLE' : `${getTokenTextIcon(token)} ${token}`}
                             </option>
                           ))}
                         </select>
@@ -440,7 +444,7 @@ const DEX: React.FC = () => {
                         >
                           {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
-                              {getTokenTextIcon(token)} {token}
+                              {token === 'ORACLE' ? '👁️ ORACLE' : `${getTokenTextIcon(token)} ${token}`}
                             </option>
                           ))}
                         </select>

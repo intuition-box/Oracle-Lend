@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { PROTOCOL_CONFIG, TOKENS } from '../utils/constants'
+import TokenIcon from './TokenIcon'
 
 const Dashboard: React.FC = () => {
   const features = [
@@ -58,7 +59,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">{TOKENS.ORACLE.icon}</span>
+                  <TokenIcon token="ORACLE" size="lg" className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">{TOKENS.ORACLE.symbol}</h3>
