@@ -200,11 +200,14 @@ const DEX: React.FC = () => {
     <div className="space-y-8">
       {/* Transaction Status Notification */}
       {transactionStatus && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] max-w-md p-4 rounded-lg border ${
+        <div 
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-auto mx-4 p-4 rounded-lg border shadow-2xl ${
           transactionStatus.type === 'success' 
             ? 'bg-green-900/90 border-green-500/50 text-green-100' 
             : 'bg-red-900/90 border-red-500/50 text-red-100'
-        } backdrop-blur-sm animate-pulse`}>
+        } backdrop-blur-sm animate-pulse`}
+          style={{ position: 'fixed', top: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}
+        >
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
               {transactionStatus.type === 'success' ? (
