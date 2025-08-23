@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({
             ORACLE LEND
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            A Decentralized lending and borrowing, with inbuilt swap protocol on Intuition testnet.
+            A comprehensive decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Experience secure, permissionless financial services with competitive interest rates, instant liquidity, and seamless cross-asset trading. Our protocol empowers users to maximize their capital efficiency through automated market making, collateralized lending positions, and real-time yield optimization. Built with cutting-edge smart contract technology, ORACLE LEND provides transparent, auditable, and gas-optimized DeFi solutions for the next generation of digital finance. Trust your Intuition.
           </p>
           
           {/* Floating cosmic elements */}
