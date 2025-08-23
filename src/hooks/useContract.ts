@@ -19,7 +19,7 @@ export const useContract = () => {
       token: 'tTRUST',
       totalSupply: '0',
       totalBorrow: '0',
-      supplyAPY: 3.5,
+      supplyAPY: 5.2,
       borrowAPY: 8.2,
       utilizationRate: 0
     },
@@ -27,7 +27,7 @@ export const useContract = () => {
       token: 'ORACLE',
       totalSupply: '0',
       totalBorrow: '0',
-      supplyAPY: 4.1,
+      supplyAPY: 4.8,
       borrowAPY: 9.7,
       utilizationRate: 0
     },
@@ -35,7 +35,7 @@ export const useContract = () => {
       token: 'INTUINT',
       totalSupply: '0',
       totalBorrow: '0',
-      supplyAPY: 4.8,
+      supplyAPY: 3.6,
       borrowAPY: 10.2,
       utilizationRate: 0
     }
