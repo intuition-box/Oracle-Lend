@@ -62,9 +62,10 @@ export const PROTOCOL_CONFIG = {
   tradingFee: 0.3, // 0.3% trading fee
   maxPriceImpact: 5, // 5% maximum price impact
   
-  // Initial token supplies
-  initialSupply: {
-    ORACLE: '10000000' // 10 million ORACLE tokens
+  // Real token supplies
+  tokenSupply: {
+    ORACLE: '10000000', // 10 million ORACLE tokens
+    INTUINT: '1000000' // 1 million INTUINT tokens
   }
 }
 

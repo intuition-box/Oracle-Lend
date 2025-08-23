@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { PROTOCOL_CONFIG, TOKENS } from '../utils/constants'
 
 const Dashboard: React.FC = () => {
   const features = [
@@ -46,11 +47,62 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Token Supply Information */}
+      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+          <i className="fas fa-coins text-green-400 mr-3"></i>
+          Token Supply
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600/30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">{TOKENS.ORACLE.icon}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{TOKENS.ORACLE.symbol}</h3>
+                  <p className="text-sm text-gray-400">{TOKENS.ORACLE.name}</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-purple-400">{parseInt(PROTOCOL_CONFIG.tokenSupply.ORACLE).toLocaleString()}</p>
+              <p className="text-sm text-gray-400 mt-1">Total Supply</p>
+            </div>
+            <div className="mt-4 text-xs text-gray-500">
+              <p>Contract: {TOKENS.ORACLE.address}</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600/30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-teal-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">{TOKENS.INTUINT.icon}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{TOKENS.INTUINT.symbol}</h3>
+                  <p className="text-sm text-gray-400">{TOKENS.INTUINT.name}</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-cyan-400">{parseInt(PROTOCOL_CONFIG.tokenSupply.INTUINT).toLocaleString()}</p>
+              <p className="text-sm text-gray-400 mt-1">Total Supply</p>
+            </div>
+            <div className="mt-4 text-xs text-gray-500">
+              <p>Contract: {TOKENS.INTUINT.address}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Protocol Information */}
       <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
           <i className="fas fa-network-wired text-cyan-400 mr-3"></i>
-          Protocol Information
+          Network Information
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">

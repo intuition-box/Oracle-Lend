@@ -17,27 +17,27 @@ export const useContract = () => {
   const [lendingPools] = useState<LendingPool[]>([
     {
       token: 'tTRUST',
-      totalSupply: '1250000',
-      totalBorrow: '850000',
+      totalSupply: '0',
+      totalBorrow: '0',
       supplyAPY: 3.5,
       borrowAPY: 8.2,
-      utilizationRate: 68
+      utilizationRate: 0
     },
     {
       token: 'ORACLE',
-      totalSupply: '125000000',
-      totalBorrow: '89500000',
+      totalSupply: '0',
+      totalBorrow: '0',
       supplyAPY: 4.1,
       borrowAPY: 9.7,
-      utilizationRate: 71.6
+      utilizationRate: 0
     },
     {
       token: 'INTUINT',
-      totalSupply: '98000000',
-      totalBorrow: '72000000',
+      totalSupply: '0',
+      totalBorrow: '0',
       supplyAPY: 4.8,
       borrowAPY: 10.2,
-      utilizationRate: 73.5
+      utilizationRate: 0
     }
   ])
 
@@ -182,12 +182,9 @@ export const useContract = () => {
   // Get token balances
   const getTokenBalances = useCallback(async (account: string): Promise<TokenBalance> => {
     try {
-      // Simulate getting balances from contracts
-      return {
-        tTRUST: '100.5',
-        ORACLE: '10050.0',
-        INTUINT: '500.0'
-      }
+      // This would connect to real contracts to get actual balances
+      // For now, returning 0 so users can see their real wallet balances when connected
+      return { tTRUST: '0', ORACLE: '0', INTUINT: '0' }
     } catch (error) {
       console.error('Failed to get token balances:', error)
       return { tTRUST: '0', ORACLE: '0', INTUINT: '0' }
