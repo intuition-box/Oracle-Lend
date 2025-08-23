@@ -12,43 +12,50 @@ const LendingBorrowing: React.FC = () => {
   const [amount, setAmount] = useState('')
   const [action, setAction] = useState<'supply' | 'withdraw' | 'borrow' | 'repay'>('supply')
 
-  const [transactionStatus, setTransactionStatus] = useState<{
-    show: boolean
-    type: 'success' | 'error' | 'rejected'
-    message: string
-    txHash?: string
-  } | null>(null)
 
   const handleTransaction = async () => {
     if (!amount || !isConnected) return
 
-    let result
-    switch (action) {
-      case 'supply':
-        result = await supply(selectedToken, amount)
-        break
-      case 'withdraw':
-        result = await withdraw(selectedToken, amount)
-        break
-      case 'borrow':
-        result = await borrow(selectedToken, amount)
-        break
-      case 'repay':
-        result = await repay(selectedToken, amount)
-        break
-      default:
-        return
-    }
+    try {
+      let result
+      switch (action) {
+        case 'supply':
+          result = await supply(selectedToken, amount)
+          break
+        case 'withdraw':
+          result = await withdraw(selectedToken, amount)
+          break
+        case 'borrow':
+          result = await borrow(selectedToken, amount)
+          break
+        case 'repay':
+          result = await repay(selectedToken, amount)
+          break
+        default:
+          return
+      }
 
-    if (result.success) {
-      setAmount('')
-      // Use global notification system
-      ;(window as any).showNotification('success', `Successfully ${action}ed ${amount} ${selectedToken}`, result.txHash)
-    } else {
-      if (result.error && result.error.includes('rejected')) {
-        ;(window as any).showNotification('rejected', 'Transaction was rejected by user')
+      if (result && result.success) {
+        setAmount('')
+        // Use global notification system
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('success', `Successfully ${action}ed ${amount} ${selectedToken}`, result.txHash)
+        }
       } else {
-        ;(window as any).showNotification('error', result.error || `${action} transaction failed`)
+        if (result && result.error && result.error.includes('rejected')) {
+          if (typeof window !== 'undefined' && (window as any).showNotification) {
+            (window as any).showNotification('rejected', 'Transaction was rejected by user')
+          }
+        } else {
+          if (typeof window !== 'undefined' && (window as any).showNotification) {
+            (window as any).showNotification('error', result?.error || `${action} transaction failed`)
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Transaction error:', error)
+      if (typeof window !== 'undefined' && (window as any).showNotification) {
+        (window as any).showNotification('error', error.message || 'Transaction failed unexpectedly')
       }
     }
   }

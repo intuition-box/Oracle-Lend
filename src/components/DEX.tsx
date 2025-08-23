@@ -16,12 +16,6 @@ const DEX: React.FC = () => {
   const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [slippage, setSlippage] = useState(0.5)
-  const [transactionStatus, setTransactionStatus] = useState<{
-    show: boolean
-    type: 'success' | 'error'
-    message: string
-    txHash?: string
-  } | null>(null)
   const [showSlippageSettings, setShowSlippageSettings] = useState(false)
 
   // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUIT, 1 ORACLE = 1 INTUIT
@@ -30,16 +24,29 @@ const DEX: React.FC = () => {
   // Initialize analytics and fetch balances when wallet connects
   useEffect(() => {
     // Initialize analytics tracking
-    initializeAnalytics()
+    try {
+      initializeAnalytics()
+    } catch (error) {
+      console.error('Failed to initialize analytics:', error)
+    }
     
     if (isConnected && account) {
-      getTokenBalances(account).then(contractBalances => {
-        setBalances({
-          tTRUST: balance, // Use real wallet balance for tTRUST
-          ORACLE: contractBalances.ORACLE,
-          INTUIT: contractBalances.INTUIT
+      getTokenBalances(account)
+        .then(contractBalances => {
+          setBalances({
+            tTRUST: balance, // Use real wallet balance for tTRUST
+            ORACLE: contractBalances.ORACLE,
+            INTUIT: contractBalances.INTUIT
+          })
         })
-      })
+        .catch(error => {
+          console.error('Failed to get token balances:', error)
+          setBalances({
+            tTRUST: balance,
+            ORACLE: '0',
+            INTUIT: '0'
+          })
+        })
     } else {
       setBalances({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
     }
@@ -97,41 +104,62 @@ const DEX: React.FC = () => {
   const handleSwap = async () => {
     if (!quote || !isConnected) return
 
-    const result = await swap(fromToken, toToken, fromAmount)
-    
-    if (result.success) {
-      // Track swap transaction for analytics
-      if (account && result.txHash) {
-        const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
-        trackTransaction(
-          result.txHash,
-          'swap',
-          account,
-          `${fromToken}→${toToken}`,
-          `${fromAmount} ${fromToken}`,
-          volumeUSD
-        )
-      }
+    try {
+      const result = await swap(fromToken, toToken, fromAmount)
       
-      setFromAmount('')
-      setToAmount('')
-      // Use global notification system
-      ;(window as any).showNotification('success', `Successfully swapped ${fromAmount} ${fromToken} for ${result.outputAmount} ${toToken}`, result.txHash)
-      
-      // Refresh balances after swap
-      if (account) {
-        const contractBalances = await getTokenBalances(account)
-        setBalances({
-          tTRUST: balance, // Use real wallet balance for tTRUST
-          ORACLE: contractBalances.ORACLE,
-          INTUIT: contractBalances.INTUIT
-        })
-      }
-    } else {
-      if (result.error && result.error.includes('rejected')) {
-        ;(window as any).showNotification('rejected', 'Transaction was rejected by user')
+      if (result && result.success) {
+        // Track swap transaction for analytics
+        try {
+          if (account && result.txHash) {
+            const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
+            trackTransaction(
+              result.txHash,
+              'swap',
+              account,
+              `${fromToken}→${toToken}`,
+              `${fromAmount} ${fromToken}`,
+              volumeUSD
+            )
+          }
+        } catch (analyticsError) {
+          console.error('Analytics tracking failed:', analyticsError)
+        }
+        
+        setFromAmount('')
+        setToAmount('')
+        // Use global notification system
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('success', `Successfully swapped ${fromAmount} ${fromToken} for ${result.outputAmount} ${toToken}`, result.txHash)
+        }
+        
+        // Refresh balances after swap
+        if (account) {
+          try {
+            const contractBalances = await getTokenBalances(account)
+            setBalances({
+              tTRUST: balance, // Use real wallet balance for tTRUST
+              ORACLE: contractBalances.ORACLE,
+              INTUIT: contractBalances.INTUIT
+            })
+          } catch (balanceError) {
+            console.error('Failed to refresh balances:', balanceError)
+          }
+        }
       } else {
-        ;(window as any).showNotification('error', result.error || 'Transaction failed')
+        if (result && result.error && result.error.includes('rejected')) {
+          if (typeof window !== 'undefined' && (window as any).showNotification) {
+            (window as any).showNotification('rejected', 'Transaction was rejected by user')
+          }
+        } else {
+          if (typeof window !== 'undefined' && (window as any).showNotification) {
+            (window as any).showNotification('error', result?.error || 'Transaction failed')
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Swap error:', error)
+      if (typeof window !== 'undefined' && (window as any).showNotification) {
+        (window as any).showNotification('error', error.message || 'Swap failed unexpectedly')
       }
     }
   }

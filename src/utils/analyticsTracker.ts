@@ -138,27 +138,36 @@ const updateLendingPools = (
 
 // Initialize analytics data on first load
 export const initializeAnalytics = () => {
-  if (!localStorage.getItem('protocol_transactions')) {
-    localStorage.setItem('protocol_transactions', JSON.stringify([]))
-  }
-  if (!localStorage.getItem('protocol_users')) {
-    localStorage.setItem('protocol_users', JSON.stringify([]))
-  }
-  if (!localStorage.getItem('protocol_swaps')) {
-    localStorage.setItem('protocol_swaps', JSON.stringify([]))
-  }
-  if (!localStorage.getItem('protocol_lending')) {
-    localStorage.setItem('protocol_lending', JSON.stringify([]))
-  }
-  if (!localStorage.getItem('protocol_borrowing')) {
-    localStorage.setItem('protocol_borrowing', JSON.stringify([]))
-  }
-  if (!localStorage.getItem('lending_pools')) {
-    localStorage.setItem('lending_pools', JSON.stringify([
-      { token: 'tTRUST', totalSupply: '0', totalBorrow: '0' },
-      { token: 'ORACLE', totalSupply: '0', totalBorrow: '0' },
-      { token: 'INTUIT', totalSupply: '0', totalBorrow: '0' }
-    ]))
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      console.warn('localStorage not available for analytics')
+      return
+    }
+
+    if (!localStorage.getItem('protocol_transactions')) {
+      localStorage.setItem('protocol_transactions', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('protocol_users')) {
+      localStorage.setItem('protocol_users', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('protocol_swaps')) {
+      localStorage.setItem('protocol_swaps', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('protocol_lending')) {
+      localStorage.setItem('protocol_lending', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('protocol_borrowing')) {
+      localStorage.setItem('protocol_borrowing', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('lending_pools')) {
+      localStorage.setItem('lending_pools', JSON.stringify([
+        { token: 'tTRUST', totalSupply: '0', totalBorrow: '0' },
+        { token: 'ORACLE', totalSupply: '0', totalBorrow: '0' },
+        { token: 'INTUIT', totalSupply: '0', totalBorrow: '0' }
+      ]))
+    }
+  } catch (error) {
+    console.error('Failed to initialize analytics:', error)
   }
 }
 
