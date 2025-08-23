@@ -428,6 +428,72 @@ const DEX: React.FC = () => {
             </div>
           </div>
 
+          {/* Live Token Rates */}
+          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+              <i className="fas fa-chart-line text-green-400 mr-3"></i>
+              Live Token Rates
+              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
+                <i className="fas fa-circle animate-pulse mr-1"></i>
+                LIVE
+              </span>
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">⚡ → 🔮</div>
+                  <h3 className="font-bold text-white mb-1">tTRUST to ORACLE</h3>
+                  <p className="text-2xl font-bold text-green-400">
+                    1 : {exchangeRates.tTRUST_ORACLE.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    1 tTRUST = {exchangeRates.tTRUST_ORACLE.toFixed(2)} ORACLE
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">⚡ → 💎</div>
+                  <h3 className="font-bold text-white mb-1">tTRUST to INTUINT</h3>
+                  <p className="text-2xl font-bold text-cyan-400">
+                    1 : {exchangeRates.tTRUST_INTUINT.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    1 tTRUST = {exchangeRates.tTRUST_INTUINT.toFixed(2)} INTUINT
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🔮 ↔ 💎</div>
+                  <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUINT</h3>
+                  <p className="text-2xl font-bold text-purple-400">
+                    1 : {exchangeRates.ORACLE_INTUINT.toFixed(4)}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    1 ORACLE = {exchangeRates.ORACLE_INTUINT.toFixed(4)} INTUINT
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <i className="fas fa-info-circle text-green-400 mt-1"></i>
+                <div className="text-sm">
+                  <h4 className="text-green-300 font-medium mb-1">Live Market Rates</h4>
+                  <p className="text-gray-300">
+                    Exchange rates fluctuate every 10 seconds based on market conditions. 
+                    Rates shown are current market prices used for swap calculations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </>
       )}
     </div>
