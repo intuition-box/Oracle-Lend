@@ -26,7 +26,7 @@ export const useContract = () => {
       totalSupply: '0',
       totalBorrow: '0',
       supplyAPY: 5.2,
-      borrowAPY: 8.2,
+      borrowAPY: 6.8,
       utilizationRate: 0
     },
     {
@@ -34,7 +34,7 @@ export const useContract = () => {
       totalSupply: '0',
       totalBorrow: '0',
       supplyAPY: 4.8,
-      borrowAPY: 9.7,
+      borrowAPY: 5.5,
       utilizationRate: 0
     },
     {
@@ -42,7 +42,7 @@ export const useContract = () => {
       totalSupply: '0',
       totalBorrow: '0',
       supplyAPY: 3.6,
-      borrowAPY: 10.2,
+      borrowAPY: 4.2,
       utilizationRate: 0
     }
   ])

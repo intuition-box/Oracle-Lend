@@ -504,9 +504,14 @@ const LendingBorrowing: React.FC = () => {
                       
                       {amount && (
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Est. Annual Earnings:</span>
-                          <span className="text-green-400">
-                            {(parseFloat(amount) * (getTokenPool(selectedToken)?.supplyAPY || 0) / 100).toFixed(4)} {selectedToken}
+                          <span className="text-gray-400">
+                            {activeTab === 'supply' ? 'Est. Annual Earnings:' : 'Est. Annual Interest Cost:'}
+                          </span>
+                          <span className={activeTab === 'supply' ? 'text-green-400' : 'text-red-400'}>
+                            {activeTab === 'supply' 
+                              ? `+${(parseFloat(amount) * (getTokenPool(selectedToken)?.supplyAPY || 0) / 100).toFixed(4)} ${selectedToken}`
+                              : `-${(parseFloat(amount) * (getTokenPool(selectedToken)?.borrowAPY || 0) / 100).toFixed(4)} ${selectedToken}`
+                            }
                           </span>
                         </div>
                       )}
