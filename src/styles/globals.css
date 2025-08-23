@@ -194,6 +194,8 @@ body {
   color: transparent;
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
+  font-family: 'Geist', sans-serif;
+  font-weight: 800;
 }
 
 @keyframes gradient-shift {
@@ -560,7 +562,7 @@ body {
 }
 
 .light .cosmic-bg {
-  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 25%, #e2e8f0 50%, #cbd5e1 75%, #ffffff 100%);
+  background: #ffffff;
 }
 
 .light .cosmic-bg::before {
