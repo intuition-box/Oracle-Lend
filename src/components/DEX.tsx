@@ -15,8 +15,8 @@ const DEX: React.FC = () => {
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [slippage, setSlippage] = useState(0.5)
 
-  // Exchange rate: 1 tTRUST = 100 ORACLE
-  const EXCHANGE_RATE = 100
+  // Exchange rate: 1 tTRUST = 1 ORACLE (same value)
+  const EXCHANGE_RATE = 1
 
   // Fetch balances when wallet connects
   useEffect(() => {
@@ -31,21 +31,21 @@ const DEX: React.FC = () => {
       const inputAmount = parseFloat(fromAmount)
       
       // Define exchange rates (using tTRUST as base)
-      // 1 tTRUST = 100 ORACLE, 1 tTRUST = 50 INTUINT (example rate)
+      // 1 tTRUST = 1 ORACLE (same value), 1 tTRUST = 50 INTUINT
       let rate = 1
       
       if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
-        rate = 100
+        rate = 1 // 1:1 same value
       } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
-        rate = 0.01
+        rate = 1 // 1:1 same value
       } else if (fromToken === 'tTRUST' && toToken === 'INTUINT') {
         rate = 50
       } else if (fromToken === 'INTUINT' && toToken === 'tTRUST') {
         rate = 0.02
       } else if (fromToken === 'ORACLE' && toToken === 'INTUINT') {
-        rate = 0.5 // 1 ORACLE = 0.5 INTUINT
+        rate = 50 // 1 ORACLE = 50 INTUINT (same as tTRUST)
       } else if (fromToken === 'INTUINT' && toToken === 'ORACLE') {
-        rate = 2 // 1 INTUINT = 2 ORACLE
+        rate = 0.02 // 1 INTUINT = 0.02 ORACLE
       }
       
       const outputAmount = inputAmount * rate
@@ -361,10 +361,10 @@ const DEX: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2">⚡ → 🔮</div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to ORACLE</h3>
-                  <p className="text-2xl font-bold text-green-400">1 : 100</p>
-                  <p className="text-sm text-gray-400 mt-1">1 tTRUST = 100 ORACLE</p>
+                  <div className="text-3xl mb-2">⚡ ↔ 🔮</div>
+                  <h3 className="font-bold text-white mb-1">tTRUST ↔ ORACLE</h3>
+                  <p className="text-2xl font-bold text-green-400">1 : 1</p>
+                  <p className="text-sm text-gray-400 mt-1">Same value tokens</p>
                 </div>
               </div>
               
@@ -381,8 +381,8 @@ const DEX: React.FC = () => {
                 <div className="text-center">
                   <div className="text-3xl mb-2">🔮 → 💎</div>
                   <h3 className="font-bold text-white mb-1">ORACLE to INTUINT</h3>
-                  <p className="text-2xl font-bold text-purple-400">1 : 0.5</p>
-                  <p className="text-sm text-gray-400 mt-1">1 ORACLE = 0.5 INTUINT</p>
+                  <p className="text-2xl font-bold text-purple-400">1 : 50</p>
+                  <p className="text-sm text-gray-400 mt-1">1 ORACLE = 50 INTUINT</p>
                 </div>
               </div>
             </div>
@@ -393,8 +393,8 @@ const DEX: React.FC = () => {
                 <div className="text-sm">
                   <h4 className="text-blue-300 font-medium mb-1">Fixed Exchange Rates</h4>
                   <p className="text-gray-300">
-                    Exchange rates are fixed: 1 tTRUST = 100 ORACLE = 50 INTUINT. 
-                    Small price impacts may apply for larger trades to maintain protocol stability.
+                    Exchange rates are fixed: 1 tTRUST = 1 ORACLE = 50 INTUINT. 
+                    tTRUST and ORACLE have the same value. Small price impacts may apply for larger trades.
                   </p>
                 </div>
               </div>

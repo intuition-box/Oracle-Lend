@@ -55,7 +55,7 @@ export const TOKENS = {
 export const PROTOCOL_CONFIG = {
   name: 'ORACLE LEND',
   description: 'A decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Trust your Intuition.',
-  exchangeRate: 100, // 1 tTRUST = 100 ORACLE
+  exchangeRate: 1, // 1 tTRUST = 1 ORACLE (same value)
   maxLTV: 75, // 75% Loan-to-Value ratio
   liquidationThreshold: 85, // 85% liquidation threshold
   liquidationBonus: 5, // 5% liquidation bonus
