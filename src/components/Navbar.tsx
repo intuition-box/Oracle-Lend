@@ -25,7 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const navigation = [
     { name: 'Dashboard', path: '/', icon: 'fas fa-home' },
-    { name: 'Lending', path: '/lending', icon: 'fas fa-coins' },
+    { name: 'Lending & Borrowing', path: '/lending', icon: 'fas fa-coins' },
     { name: 'Swap', path: '/dex', icon: 'fas fa-exchange-alt' },
     { name: 'Analytics', path: '/analytics', icon: 'fas fa-chart-line' }
   ]
