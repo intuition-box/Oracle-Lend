@@ -84,7 +84,13 @@ const LendingBorrowing: React.FC = () => {
   const calculateHealthFactor = () => {
     const collateralValue = parseFloat(userPosition.collateralValue) || 0
     const borrowValue = parseFloat(userPosition.borrowPower) || 0
-    return borrowValue > 0 ? collateralValue / borrowValue : 0
+    
+    // If no borrowed amount, return infinity (safest position)
+    if (borrowValue === 0) {
+      return collateralValue > 0 ? 999 : 0 // 999 represents "infinite" health factor
+    }
+    
+    return collateralValue / borrowValue
   }
 
   const healthFactor = calculateHealthFactor()
@@ -225,10 +231,12 @@ const LendingBorrowing: React.FC = () => {
                   healthFactor > 2 ? 'text-green-400' : 
                   healthFactor > 1.5 ? 'text-yellow-400' : 'text-red-400'
                 }`}>
-                  {healthFactor.toFixed(2)}
+                  {healthFactor >= 999 ? '∞' : healthFactor.toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {healthFactor > 2 ? 'Safe' : healthFactor > 1.5 ? 'Moderate Risk' : 'High Risk'}
+                  {healthFactor >= 999 ? 'No Debt - Safest' : 
+                   healthFactor > 2 ? 'Safe' : 
+                   healthFactor > 1.5 ? 'Moderate Risk' : 'High Risk'}
                 </p>
               </div>
             </div>
