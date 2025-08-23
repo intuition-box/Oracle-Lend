@@ -20,6 +20,7 @@ const DEX: React.FC = () => {
     message: string
     txHash?: string
   } | null>(null)
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false)
 
   // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUIT, 1 ORACLE = 1 INTUIT
   const EXCHANGE_RATE = 100
@@ -247,22 +248,32 @@ const DEX: React.FC = () => {
             <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">Swap Tokens</h2>
-                <div className="flex items-center space-x-2">
-                  <i className="fas fa-cog text-gray-400 cursor-pointer hover:text-white transition-colors"></i>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowSlippageSettings(!showSlippageSettings)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-purple-500/50 transition-all"
+                  >
+                    <i className="fas fa-cog"></i>
+                    <span className="text-sm">Settings</span>
+                  </button>
                   
-                  {/* Slippage Settings */}
-                  <div className="relative group">
-                    <button className="text-gray-400 hover:text-white transition-colors">
-                      <i className="fas fa-percentage"></i>
-                    </button>
-                    <div className="absolute right-0 top-8 w-48 glass-effect border border-gray-600/50 rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
-                      <p className="text-sm text-gray-400 mb-2">Slippage Tolerance</p>
-                      <div className="grid grid-cols-4 gap-1 mb-2">
+                  {showSlippageSettings && (
+                    <div className="absolute right-0 top-12 w-64 glass-effect border border-gray-600/50 rounded-lg p-4 z-20">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-sm font-medium text-white">Slippage Tolerance</h3>
+                        <button 
+                          onClick={() => setShowSlippageSettings(false)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 mb-3">
                         {slippageOptions.map((option) => (
                           <button
                             key={option}
                             onClick={() => setSlippage(option)}
-                            className={`px-2 py-1 text-xs rounded ${
+                            className={`px-2 py-1.5 text-xs rounded transition-colors ${
                               slippage === option
                                 ? 'bg-purple-600 text-white'
                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -272,16 +283,24 @@ const DEX: React.FC = () => {
                           </button>
                         ))}
                       </div>
-                      <input
-                        type="number"
-                        value={slippage}
-                        onChange={(e) => setSlippage(parseFloat(e.target.value) || 0)}
-                        step="0.1"
-                        className="w-full px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white"
-                        placeholder="Custom %"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={slippage}
+                          onChange={(e) => setSlippage(parseFloat(e.target.value) || 0)}
+                          step="0.1"
+                          min="0.1"
+                          max="50"
+                          className="flex-1 px-2 py-1.5 text-xs bg-gray-800 border border-gray-600 rounded text-white focus:border-purple-500 outline-none"
+                          placeholder="Custom"
+                        />
+                        <span className="text-xs text-gray-400">%</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Higher slippage = higher chance of success, but worse price
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -295,7 +314,7 @@ const DEX: React.FC = () => {
                     </span>
                   </div>
                   <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                       <input
                         type="number"
                         value={fromAmount}
@@ -303,46 +322,46 @@ const DEX: React.FC = () => {
                         placeholder="0.00"
                         className="bg-transparent text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none"
                       />
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.25).toString())}
-                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
+                      <div className="relative">
+                        <select
+                          value={fromToken}
+                          onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
+                          className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
                         >
-                          25%
-                        </button>
-                        <button
-                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.5).toString())}
-                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
-                        >
-                          50%
-                        </button>
-                        <button
-                          onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.75).toString())}
-                          className="text-xs text-purple-400 hover:text-purple-300 px-1.5 py-1 rounded bg-purple-600/20"
-                        >
-                          75%
-                        </button>
-                        <button
-                          onClick={() => setFromAmount(balances[fromToken])}
-                          className="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 rounded bg-purple-600/20"
-                        >
-                          MAX
-                        </button>
-                        <div className="relative">
-                          <select
-                            value={fromToken}
-                            onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
-                            className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
-                          >
-                            {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
-                              <option key={token} value={token} className="bg-gray-800">
-                                {getTokenInfo(token).icon} {token}
-                              </option>
-                            ))}
-                          </select>
-                          <i className="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                        </div>
+                          {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
+                            <option key={token} value={token} className="bg-gray-800">
+                              {getTokenInfo(token).icon} {token}
+                            </option>
+                          ))}
+                        </select>
+                        <i className="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                       </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.25).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors"
+                      >
+                        25%
+                      </button>
+                      <button
+                        onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.5).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors"
+                      >
+                        50%
+                      </button>
+                      <button
+                        onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.75).toString())}
+                        className="flex-1 py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors"
+                      >
+                        75%
+                      </button>
+                      <button
+                        onClick={() => setFromAmount(balances[fromToken])}
+                        className="flex-1 py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors"
+                      >
+                        MAX
+                      </button>
                     </div>
                   </div>
                 </div>
