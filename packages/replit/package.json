@@ -1,0 +1,33 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "main": "postcss.config.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "NODE_ENV=production vite build",
+    "build:github": "NODE_ENV=production vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.1",
+    "autoprefixer": "^10.4.21",
+    "cssnano": "^7.1.1",
+    "ethers": "^6.15.0",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2",
+    "tailwindcss": "^4.1.12",
+    "terser": "^5.43.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  }
+}

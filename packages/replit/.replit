@@ -1,0 +1,51 @@
+modules = ["nodejs-20", "python-3.11"]
+[agent]
+expertMode = true
+integrations = ["javascript_mem_db==1.0.0"]
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "DeFi App Server"
+
+[[workflows.workflow]]
+name = "DeFi App Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx vite --config vite.config.js"
+waitForPort = 5000
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3001
+
+[[ports]]
+localPort = 5002
+externalPort = 3002
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
