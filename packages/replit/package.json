@@ -1,6 +1,7 @@
 {
   "name": "workspace",
   "version": "1.0.0",
+  "type": "module",
   "main": "postcss.config.js",
   "scripts": {
     "dev": "vite",
