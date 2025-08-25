@@ -4,6 +4,7 @@
   "type": "module",
   "main": "postcss.config.js",
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "build": "NODE_ENV=production vite build",
     "build:github": "NODE_ENV=production vite build",
