@@ -33,7 +33,7 @@
     "hardhat:lint-staged": "yarn workspace @se-2/hardhat lint-staged",
     "hardhat:test": "yarn workspace @se-2/hardhat test",
     "hardhat:verify": "yarn workspace @se-2/hardhat verify",
-    "postinstall": "husky install",
+
     "ipfs": "yarn workspace @se-2/nextjs ipfs",
     "lint": "yarn next:lint && yarn hardhat:lint",
     "next:build": "yarn workspace @se-2/nextjs build",
@@ -51,7 +51,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.1",
-    "husky": "~9.1.6",
     "lint-staged": "~13.2.2",
     "vite": "^7.1.3"
   },
