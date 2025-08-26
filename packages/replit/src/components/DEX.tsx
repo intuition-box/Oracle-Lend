@@ -110,22 +110,37 @@ const DEX: React.FC = () => {
 
   // Fetch real balances and DEX stats
   const fetchBalances = async () => {
-    if (!isConnected || !account || !window.ethereum || !isCorrectNetwork) return
+    if (!isConnected || !account || !window.ethereum || !isCorrectNetwork) {
+      console.log('fetchBalances: Prerequisites not met', { 
+        isConnected, 
+        account: account ? 'present' : 'missing', 
+        hasEthereum: !!window.ethereum, 
+        isCorrectNetwork 
+      })
+      return
+    }
+    
+    console.log('fetchBalances: Fetching balances for account:', account)
     
     try {
       const provider = new ethers.BrowserProvider(window.ethereum)
       
       // Get native token balance (TTRUST on Intuition Testnet)
       const nativeBalance = await provider.getBalance(account)
+      console.log('fetchBalances: Native balance raw:', nativeBalance.toString())
       
       // Get ORACLE ERC20 token balance
       const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, provider)
       const oracleBalance = await oracleContract.balanceOf(account)
+      console.log('fetchBalances: Oracle balance raw:', oracleBalance.toString())
       
-      setBalances({
+      const formattedBalances = {
         TTRUST: ethers.formatEther(nativeBalance), // Native token balance
         ORACLE: ethers.formatEther(oracleBalance)  // ERC20 token balance
-      })
+      }
+      
+      console.log('fetchBalances: Setting formatted balances:', formattedBalances)
+      setBalances(formattedBalances)
     } catch (error) {
       console.error('Failed to fetch balances:', error)
     }
@@ -174,17 +189,28 @@ const DEX: React.FC = () => {
     }
     
     if (isConnected && account) {
-      checkNetwork().then(isCorrect => {
-        if (isCorrect) {
-          fetchBalances()
-          fetchDexStats()
-        }
-      })
+      // Small delay to ensure wallet connection is fully established
+      setTimeout(() => {
+        checkNetwork().then(isCorrect => {
+          if (isCorrect) {
+            fetchBalances()
+            fetchDexStats()
+          }
+        })
+      }, 100)
     } else {
       setBalances({ TTRUST: '0', ORACLE: '0' })
       setIsCorrectNetwork(false)
     }
-  }, [isConnected, account])
+  }, [isConnected, account, checkNetwork])
+
+  // Also fetch balances when network status changes
+  useEffect(() => {
+    if (isConnected && account && isCorrectNetwork) {
+      fetchBalances()
+      fetchDexStats()
+    }
+  }, [isCorrectNetwork])
 
   // Listen for network changes
   useEffect(() => {
@@ -442,10 +468,32 @@ const DEX: React.FC = () => {
         <>
           {/* Token Balances */}
           <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-              <i className="fas fa-wallet text-green-400 mr-3"></i>
-              Your Balances
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <i className="fas fa-wallet text-green-400 mr-3"></i>
+                Your Balances
+              </h2>
+              <div className="flex items-center space-x-3">
+                {/* Debug info - remove after fixing */}
+                <div className="text-xs text-gray-500 bg-gray-800/30 px-2 py-1 rounded border">
+                  Connected: {isConnected ? '✓' : '✗'} | 
+                  Network: {isCorrectNetwork ? '✓' : '✗'} | 
+                  Account: {account ? '✓' : '✗'}
+                </div>
+                <button
+                  onClick={() => {
+                    console.log('Manual refresh clicked', { isConnected, account, isCorrectNetwork })
+                    fetchBalances()
+                    fetchDexStats()
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-green-500/50 transition-all"
+                  title="Refresh balances"
+                >
+                  <i className="fas fa-sync-alt"></i>
+                  <span className="text-sm">Refresh</span>
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(['TTRUST', 'ORACLE'] as const).map((token) => {
                 const info = getTokenInfo(token)
