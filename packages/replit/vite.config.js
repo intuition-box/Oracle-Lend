@@ -28,6 +28,8 @@ export default defineConfig({
       }
     }
   },
+  // Ensure 404.html is copied to dist for GitHub Pages SPA routing
+  publicDir: 'public',
   resolve: {
     alias: {
       '@': './src',

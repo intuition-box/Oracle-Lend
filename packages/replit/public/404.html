@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Oracle Lend - Redirecting...</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script takes the current url and converts the path and query
+      // string into just a query string, and then redirects the browser
+      // to the new url with only a query string and hash fragment,
+      // e.g. https://www.foo.tld/one/two?a=b&c=d#qwe, becomes
+      // https://www.foo.tld/?/one/two&a=b~and~c=d#qwe
+      // Note: this 404.html file must be at least 512 bytes for it to work
+      // with Internet Explorer (it is currently > 512 bytes)
+
+      // Auto-detect if we're on a GitHub Pages project site (username.github.io/repo-name)
+      // or a custom domain/user site (username.github.io or custom.domain.com)
+      var pathSegmentsToKeep = 0;
+      
+      // If the hostname contains 'github.io' and there's a path segment, it's likely a project site
+      if (l.hostname.includes('github.io') && l.pathname.split('/').length > 2) {
+        pathSegmentsToKeep = 1;
+      }
+      
+      // You can also manually set this if needed:
+      // pathSegmentsToKeep = 1; // For project sites (username.github.io/repo-name)
+      // pathSegmentsToKeep = 0; // For user sites (username.github.io) or custom domains
+
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body>
+    <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
+      <h1>Oracle Lend</h1>
+      <p>Redirecting to the correct page...</p>
+      <div style="margin: 20px; font-size: 14px; opacity: 0.7;">
+        If you are not redirected automatically, 
+        <a href="/">click here to go to the homepage</a>
+      </div>
+    </div>
+  </body>
+</html>

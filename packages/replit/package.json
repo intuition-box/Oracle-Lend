@@ -7,7 +7,7 @@
     "start": "vite",
     "dev": "vite",
     "build": "NODE_ENV=production vite build",
-    "build:github": "NODE_ENV=production vite build",
+    "build:github": "NODE_ENV=production vite build && echo 'Build completed! The 404.html file has been included for GitHub Pages SPA routing.'",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
