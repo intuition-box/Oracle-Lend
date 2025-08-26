@@ -2,21 +2,21 @@
 export const INTUITION_TESTNET = {
   chainId: 13579,
   name: 'Intuition Testnet',
-  rpcUrl: 'https://testnet.rpc.intuition.systems/http',
+  rpcUrl: 'https://testnet.rpc.intuition.systems',
   wsUrl: 'wss://testnet.rpc.intuition.systems/ws',
   blockExplorer: 'https://testnet.explorer.intuition.systems',
   nativeCurrency: {
-    name: 'Intuition Token',
-    symbol: 'tTRUST',
+    name: 'Testnet TRUST',
+    symbol: 'TTRUST',
     decimals: 18,
   },
   contracts: {
-    // These would be the actual deployed contract addresses
-    oracleLend: '0x1234567890123456789012345678901234567890', // Placeholder
-    oracleToken: '0x2345678901234567890123456789012345678901', // Placeholder
-    tTrustToken: '0x3456789012345678901234567890123456789012', // Placeholder - Native token wrapper
+    // Deployed contract addresses on Intuition Testnet (Latest AMM deployment)
+    oracleLend: '0x59D61CbD345836C2243323123595023F90aD9b1E',
+    oracleToken: '0xF6231A6B4017847709E2506f6C922F53a2c2aAAc',
+    tTrustToken: '0x0000000000000000000000000000000000000000', // Native TTRUST
     intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', // INTUINT token
-    dex: '0x4567890123456789012345678901234567890123', // Placeholder
+    dex: '0xE96D0e2F84cee7e0A80B1f293E2604Ca5A6edae1', // New AMM DEX
   }
 }
 
@@ -55,12 +55,13 @@ export const TOKENS = {
 export const PROTOCOL_CONFIG = {
   name: 'ORACLE LEND',
   description: 'A decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Trust your Intuition.',
-  exchangeRate: 100, // 1 tTRUST = 100 ORACLE
+  // AMM DEX configuration (no fixed exchange rate - market driven)
+  initialPrice: 500000, // Initial: 1 tTRUST = 500,000 ORACLE (from 10 TTRUST + 5M ORACLE liquidity)
   maxLTV: 75, // 75% Loan-to-Value ratio
   liquidationThreshold: 85, // 85% liquidation threshold
   liquidationBonus: 5, // 5% liquidation bonus
-  tradingFee: 0.3, // 0.3% trading fee
-  maxPriceImpact: 5, // 5% maximum price impact
+  tradingFee: 0.3, // 0.3% AMM trading fee
+  // No maxPriceImpact - AMM determines impact naturally
   
   // Real token supplies
   tokenSupply: {

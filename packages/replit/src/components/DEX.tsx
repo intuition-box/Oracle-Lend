@@ -1,27 +1,170 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
 import { SwapQuote } from '../types'
 import { trackTransaction, initializeAnalytics } from '../utils/analyticsTracker'
 import TokenIcon from './TokenIcon'
+import { ethers } from 'ethers'
+
+import { INTUITION_TESTNET } from '../utils/constants'
+
+// Contract addresses from deployment
+const CONTRACTS = {
+  DEX: INTUITION_TESTNET.contracts.dex,
+  OracleToken: INTUITION_TESTNET.contracts.oracleToken
+}
+
+// AMM DEX Contract ABI - functions for the new AMM
+const DEX_ABI = [
+  'function swapTrustForOracle(uint256 _amountIn, uint256 _minAmountOut) external payable',
+  'function swapOracleForTrust(uint256 _amountIn, uint256 _minAmountOut) external',
+  'function getAmountOut(address _tokenIn, uint256 _amountIn) external view returns (uint256 amountOut)',
+  'function getPrice(address _token) external view returns (uint256 price)',
+  'function getDEXStats() external view returns (uint256 _tTrustReserve, uint256 _oracleReserve, uint256 _totalVolume, uint256 _totalTrades, uint256 _totalLiquidity)',
+  'function tTrustReserve() external view returns (uint256)',
+  'function oracleReserve() external view returns (uint256)',
+  'function totalSupply() external view returns (uint256)',
+  'function FEE_RATE() external view returns (uint256)'
+]
+
+// Oracle Token ABI - minimal functions needed
+const ORACLE_TOKEN_ABI = [
+  'function balanceOf(address account) external view returns (uint256)',
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function transfer(address to, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)'
+]
 
 const DEX: React.FC = () => {
-  const { swap, isLoading, getTokenBalances, exchangeRates } = useContract()
+  const { isLoading: contractLoading } = useContract()
   const { isConnected, account, balance } = useWallet()
   
-  const [fromToken, setFromToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('tTRUST')
-  const [toToken, setToToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('ORACLE')
+  const [fromToken, setFromToken] = useState<'TTRUST' | 'ORACLE'>('TTRUST')
+  const [toToken, setToToken] = useState<'TTRUST' | 'ORACLE'>('ORACLE')
   const [fromAmount, setFromAmount] = useState('')
   const [toAmount, setToAmount] = useState('')
-  const [balances, setBalances] = useState({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
+  const [balances, setBalances] = useState({ TTRUST: '0', ORACLE: '0' })
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [slippage, setSlippage] = useState(0.5)
   const [showSlippageSettings, setShowSlippageSettings] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [dexStats, setDexStats] = useState({ 
+    ethReserve: '0', 
+    oracleReserve: '0', 
+    totalVolume: '0', 
+    totalTrades: '0', 
+    totalLiquidity: '0',
+    currentPrice: 0 // Dynamic price: 1 TTRUST = X ORACLE
+  })
+  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false)
 
-  // Exchange rate: 1 tTRUST = 100 ORACLE = 100 INTUIT, 1 ORACLE = 1 INTUIT
-  const EXCHANGE_RATE = 100
+  // Check if user is on correct network
+  const checkNetwork = useCallback(async (): Promise<boolean> => {
+    if (!window.ethereum) return false
+    
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const network = await provider.getNetwork()
+      const isCorrect = Number(network.chainId) === INTUITION_TESTNET.chainId
+      setIsCorrectNetwork(isCorrect)
+      return isCorrect
+    } catch (error) {
+      console.error('Failed to check network:', error)
+      setIsCorrectNetwork(false)
+      return false
+    }
+  }, [])
 
-  // Initialize analytics and fetch balances when wallet connects
+  // Switch to Intuition Testnet
+  const switchToIntuitionTestnet = async () => {
+    if (!window.ethereum) return
+    
+    try {
+      // Try to switch to the network
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${INTUITION_TESTNET.chainId.toString(16)}` }],
+      })
+    } catch (switchError: any) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: `0x${INTUITION_TESTNET.chainId.toString(16)}`,
+              chainName: INTUITION_TESTNET.name,
+              nativeCurrency: INTUITION_TESTNET.nativeCurrency,
+              rpcUrls: [INTUITION_TESTNET.rpcUrl],
+              blockExplorerUrls: [INTUITION_TESTNET.blockExplorer],
+            }],
+          })
+        } catch (addError) {
+          console.error('Failed to add network:', addError)
+        }
+      } else {
+        console.error('Failed to switch network:', switchError)
+      }
+    }
+  }
+
+  // Fetch real balances and DEX stats
+  const fetchBalances = async () => {
+    if (!isConnected || !account || !window.ethereum || !isCorrectNetwork) return
+    
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      
+      // Get ETH balance (TTRUST on Intuition Testnet)
+      const ethBalance = await provider.getBalance(account)
+      
+      // Get ORACLE token balance
+      const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, provider)
+      const oracleBalance = await oracleContract.balanceOf(account)
+      
+      setBalances({
+        TTRUST: ethers.formatEther(ethBalance),
+        ORACLE: ethers.formatEther(oracleBalance)
+      })
+    } catch (error) {
+      console.error('Failed to fetch balances:', error)
+    }
+  }
+
+  // Fetch AMM DEX stats
+  const fetchDexStats = async () => {
+    if (!window.ethereum) return
+    
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const dexContract = new ethers.Contract(CONTRACTS.DEX, DEX_ABI, provider)
+      
+      // Get AMM stats
+      const [tTrustReserve, oracleReserve, totalVolume, totalTrades, totalLiquidity] = await dexContract.getDEXStats()
+      
+      // Calculate current market price (1 TTRUST = X ORACLE)
+      let currentPrice = 0
+      const tTrustAmount = Number(ethers.formatEther(tTrustReserve))
+      const oracleAmount = Number(ethers.formatEther(oracleReserve))
+      
+      if (tTrustAmount > 0 && oracleAmount > 0) {
+        currentPrice = oracleAmount / tTrustAmount
+      }
+      
+      setDexStats({
+        ethReserve: ethers.formatEther(tTrustReserve),
+        oracleReserve: ethers.formatEther(oracleReserve),
+        totalVolume: ethers.formatEther(totalVolume),
+        totalTrades: totalTrades.toString(),
+        totalLiquidity: ethers.formatEther(totalLiquidity),
+        currentPrice: currentPrice
+      })
+    } catch (error) {
+      console.error('Failed to fetch AMM DEX stats:', error)
+    }
+  }
+
+  // Initialize analytics and fetch data when wallet connects
   useEffect(() => {
     // Initialize analytics tracking
     try {
@@ -31,68 +174,99 @@ const DEX: React.FC = () => {
     }
     
     if (isConnected && account) {
-      getTokenBalances(account)
-        .then(contractBalances => {
-          setBalances({
-            tTRUST: balance, // Use real wallet balance for tTRUST
-            ORACLE: contractBalances.ORACLE,
-            INTUIT: contractBalances.INTUIT
-          })
-        })
-        .catch(error => {
-          console.error('Failed to get token balances:', error)
-          setBalances({
-            tTRUST: balance,
-            ORACLE: '0',
-            INTUIT: '0'
-          })
-        })
-    } else {
-      setBalances({ tTRUST: '0', ORACLE: '0', INTUIT: '0' })
-    }
-  }, [isConnected, account, balance, getTokenBalances])
-
-  // Calculate quote when amounts change
-  useEffect(() => {
-    if (fromAmount && parseFloat(fromAmount) > 0) {
-      const inputAmount = parseFloat(fromAmount)
-      
-      // Use dynamic exchange rates
-      let rate = 1
-      
-      if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
-        rate = exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'tTRUST' && toToken === 'INTUIT') {
-        rate = exchangeRates.tTRUST_INTUIT
-      } else if (fromToken === 'INTUIT' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_INTUIT
-      } else if (fromToken === 'ORACLE' && toToken === 'INTUIT') {
-        rate = exchangeRates.ORACLE_INTUIT
-      } else if (fromToken === 'INTUIT' && toToken === 'ORACLE') {
-        rate = 1 / exchangeRates.ORACLE_INTUIT
-      }
-      
-      const outputAmount = inputAmount * rate
-      
-      // Simulate small price impact
-      const priceImpact = Math.min(inputAmount * 0.001, 0.05) // Max 5% impact
-      const adjustedOutput = outputAmount * (1 - priceImpact)
-      
-      setToAmount(adjustedOutput.toFixed(6))
-      setQuote({
-        inputAmount: fromAmount,
-        outputAmount: adjustedOutput.toFixed(6),
-        priceImpact: priceImpact * 100,
-        minimumReceived: (adjustedOutput * (1 - slippage / 100)).toFixed(6),
-        exchangeRate: rate
+      checkNetwork().then(isCorrect => {
+        if (isCorrect) {
+          fetchBalances()
+          fetchDexStats()
+        }
       })
     } else {
+      setBalances({ TTRUST: '0', ORACLE: '0' })
+      setIsCorrectNetwork(false)
+    }
+  }, [isConnected, account])
+
+  // Listen for network changes
+  useEffect(() => {
+    if (window.ethereum) {
+      const handleChainChanged = () => {
+        checkNetwork()
+      }
+      
+      window.ethereum.on('chainChanged', handleChainChanged)
+      return () => window.ethereum.removeListener('chainChanged', handleChainChanged)
+    }
+    return undefined
+  }, [checkNetwork])
+
+  // Get real quote from AMM DEX contract
+  const getQuote = async () => {
+    if (!fromAmount || parseFloat(fromAmount) <= 0 || !window.ethereum || !isCorrectNetwork) {
+      setToAmount('')
+      setQuote(null)
+      return
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const dexContract = new ethers.Contract(CONTRACTS.DEX, DEX_ABI, provider)
+      
+      const inputAmount = ethers.parseEther(fromAmount)
+      
+      // IMPORTANT: Since both tTRUST and ORACLE use the same address in our testing setup,
+      // the contract's getAmountOut() can't distinguish between swap directions.
+      // We manually calculate quotes using the same AMM formula (constant product with 0.3% fee)
+      let amountOut
+      
+      if (fromToken === 'TTRUST') {
+        // TTRUST → ORACLE swap calculation
+        // Using the same formula as in the contract: (amountIn * 9970 * oracleReserve) / (tTrustReserve * 10000 + amountIn * 9970)
+        const amountInWithFee = inputAmount * BigInt(9970) // 0.3% fee = 99.7% remains
+        const numerator = amountInWithFee * ethers.parseEther(dexStats.oracleReserve)
+        const denominator = ethers.parseEther(dexStats.ethReserve) * BigInt(10000) + amountInWithFee
+        amountOut = numerator / denominator
+      } else {
+        // ORACLE → TTRUST swap calculation  
+        // Using the same formula as in the contract: (amountIn * 9970 * tTrustReserve) / (oracleReserve * 10000 + amountIn * 9970)
+        const amountInWithFee = inputAmount * BigInt(9970) // 0.3% fee = 99.7% remains
+        const numerator = amountInWithFee * ethers.parseEther(dexStats.ethReserve)
+        const denominator = ethers.parseEther(dexStats.oracleReserve) * BigInt(10000) + amountInWithFee
+        amountOut = numerator / denominator
+      }
+      const outputAmount = ethers.formatEther(amountOut)
+      
+      // Calculate price impact based on current reserves
+      const currentRate = dexStats.currentPrice
+      const expectedOutput = fromToken === 'TTRUST' 
+        ? parseFloat(fromAmount) * currentRate
+        : parseFloat(fromAmount) / currentRate
+      
+      const actualOutput = parseFloat(outputAmount)
+      const priceImpact = Math.abs((expectedOutput - actualOutput) / expectedOutput) * 100
+      
+      setToAmount(outputAmount)
+      setQuote({
+        inputAmount: fromAmount,
+        outputAmount: outputAmount,
+        priceImpact: priceImpact,
+        minimumReceived: (parseFloat(outputAmount) * (1 - slippage / 100)).toFixed(6),
+        exchangeRate: fromToken === 'TTRUST' ? dexStats.currentPrice : 1 / dexStats.currentPrice
+      })
+    } catch (error) {
+      console.error('Failed to get AMM quote:', error)
       setToAmount('')
       setQuote(null)
     }
-  }, [fromAmount, fromToken, toToken, slippage, exchangeRates])
+  }
+
+  // Calculate quote when amounts change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      getQuote()
+    }, 500) // Debounce API calls
+    
+    return () => clearTimeout(timeoutId)
+  }, [fromAmount, fromToken, toToken, slippage, dexStats])
 
   const handleSwapTokens = () => {
     setFromToken(toToken)
@@ -102,102 +276,119 @@ const DEX: React.FC = () => {
   }
 
   const handleSwap = async () => {
-    if (!quote || !isConnected) return
+    if (!quote || !isConnected || !account || !window.ethereum) return
 
+    setIsLoading(true)
+    
     try {
-      const result = await swap(fromToken, toToken, fromAmount)
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+      const dexContract = new ethers.Contract(CONTRACTS.DEX, DEX_ABI, signer)
       
-      if (result && result.success) {
-        // Track swap transaction for analytics
-        try {
-          if (account && result.txHash) {
-            const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
-            trackTransaction(
-              result.txHash,
-              'swap',
-              account,
-              `${fromToken}→${toToken}`,
-              `${fromAmount} ${fromToken}`,
-              volumeUSD
-            )
-          }
-        } catch (analyticsError) {
-          console.error('Analytics tracking failed:', analyticsError)
-        }
-        
-        setFromAmount('')
-        setToAmount('')
-        // Use global notification system
-        if (typeof window !== 'undefined' && (window as any).showNotification) {
-          (window as any).showNotification('success', `Successfully swapped ${fromAmount} ${fromToken} for ${result.outputAmount} ${toToken}`, result.txHash)
-        }
-        
-        // Refresh balances after swap
-        if (account) {
-          try {
-            const contractBalances = await getTokenBalances(account)
-            setBalances({
-              tTRUST: balance, // Use real wallet balance for tTRUST
-              ORACLE: contractBalances.ORACLE,
-              INTUIT: contractBalances.INTUIT
-            })
-          } catch (balanceError) {
-            console.error('Failed to refresh balances:', balanceError)
-          }
-        }
+      const inputAmount = ethers.parseEther(fromAmount)
+      const minAmountOut = ethers.parseEther(quote.minimumReceived)
+      
+      let tx
+
+      if (fromToken === 'TTRUST') {
+        // TTRUST → ORACLE swap
+        tx = await dexContract.swapTrustForOracle(0, minAmountOut, {
+          value: inputAmount,
+          gasLimit: 200000
+        })
       } else {
-        if (result && result.error && result.error.includes('rejected')) {
-          if (typeof window !== 'undefined' && (window as any).showNotification) {
-            (window as any).showNotification('rejected', 'Transaction was rejected by user')
-          }
-        } else {
-          if (typeof window !== 'undefined' && (window as any).showNotification) {
-            (window as any).showNotification('error', result?.error || 'Transaction failed')
-          }
+        // ORACLE → TTRUST swap
+        // First check/approve allowance
+        const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, signer)
+        const allowance = await oracleContract.allowance(account, CONTRACTS.DEX)
+        
+        if (allowance < inputAmount) {
+          const approveTx = await oracleContract.approve(CONTRACTS.DEX, inputAmount)
+          await approveTx.wait()
         }
+        
+        tx = await dexContract.swapOracleForTrust(inputAmount, minAmountOut, {
+          gasLimit: 200000
+        })
       }
+
+      // Wait for transaction confirmation
+      const receipt = await tx.wait()
+      
+      // Track swap transaction for analytics
+      try {
+        if (account && receipt.hash) {
+          const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
+          trackTransaction(
+            receipt.hash,
+            'swap',
+            account,
+            `${fromToken}→${toToken}`,
+            `${fromAmount} ${fromToken}`,
+            volumeUSD
+          )
+        }
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed:', analyticsError)
+      }
+      
+      // Success notification
+      if (typeof window !== 'undefined' && (window as any).showNotification) {
+        (window as any).showNotification('success', `Successfully swapped ${fromAmount} ${fromToken} for ${quote.outputAmount} ${toToken}`, receipt.hash)
+      }
+      
+      // Reset form and refresh data
+      setFromAmount('')
+      setToAmount('')
+      setQuote(null)
+      
+      // Refresh balances and DEX stats
+      await fetchBalances()
+      await fetchDexStats()
+      
     } catch (error: any) {
       console.error('Swap error:', error)
-      if (typeof window !== 'undefined' && (window as any).showNotification) {
-        (window as any).showNotification('error', error.message || 'Swap failed unexpectedly')
+      
+      if (error.code === 4001 || error.message.includes('rejected')) {
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('rejected', 'Transaction was rejected by user')
+        }
+      } else {
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('error', error.message || 'Swap failed unexpectedly')
+        }
       }
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getTokenInfo = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
-    // Calculate dynamic prices based on exchange rates
-    const basePrice = 2500 // Base tTRUST price
-    const oraclePrice = basePrice / exchangeRates.tTRUST_ORACLE
-    const intuintPrice = basePrice / exchangeRates.tTRUST_INTUIT
+  const getTokenInfo = (token: 'TTRUST' | 'ORACLE') => {
+    // Calculate dynamic prices based on AMM reserves
+    const ttrustPrice = 2500 // Base TTRUST price in USD
+    const oraclePrice = dexStats.currentPrice > 0 ? ttrustPrice / dexStats.currentPrice : 0.005
     
     return {
-      tTRUST: {
-        name: 'Intuition Token',
-        symbol: 'tTRUST',
+      TTRUST: {
+        name: 'Testnet TRUST',
+        symbol: 'TTRUST',
         icon: '⚡',
-        price: `${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        price: `${ttrustPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       ORACLE: {
         name: 'Oracle Token',
         symbol: 'ORACLE',
         icon: <TokenIcon token="ORACLE" size="sm" />,
-        price: `${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      },
-      INTUIT: {
-        name: 'INTUIT',
-        symbol: 'INTUIT',
-        icon: '💎',
-        price: `${intuintPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        price: `${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
       }
     }[token]
   }
 
   // For dropdown options (text only)
-  const getTokenTextIcon = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
+  const getTokenTextIcon = (token: 'TTRUST' | 'ORACLE') => {
     return {
-      tTRUST: '⚡',
-      ORACLE: 'ORACLE', // Use text name for dropdown since HTML options can't contain images
-      INTUIT: '💎'
+      TTRUST: '⚡',
+      ORACLE: 'ORACLE' // Use text name for dropdown since HTML options can't contain images
     }[token]
   }
 
@@ -207,9 +398,8 @@ const DEX: React.FC = () => {
   const calculateVolumeUSD = (token: string, amount: string) => {
     const amountFloat = parseFloat(amount)
     const prices = {
-      tTRUST: 2500,
-      ORACLE: 25,
-      INTUIT: 25
+      TTRUST: 2500,
+      ORACLE: dexStats.currentPrice > 0 ? 2500 / dexStats.currentPrice : 0.005
     }
     const price = prices[token as keyof typeof prices] || 0
     return (amountFloat * price).toFixed(2)
@@ -232,7 +422,21 @@ const DEX: React.FC = () => {
         </div>
       )}
 
-      {isConnected && (
+      {isConnected && !isCorrectNetwork && (
+        <div className="glass-effect rounded-xl p-8 border border-red-500/30 text-center">
+          <i className="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
+          <h3 className="text-xl font-bold text-white mb-2">Wrong Network</h3>
+          <p className="text-gray-400 mb-4">Please switch to Intuition Testnet to use this DEX.</p>
+          <button
+            onClick={switchToIntuitionTestnet}
+            className="btn-primary px-6 py-3 rounded-lg font-medium"
+          >
+            Switch to Intuition Testnet
+          </button>
+        </div>
+      )}
+
+      {isConnected && isCorrectNetwork && (
         <>
           {/* Token Balances */}
           <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
@@ -240,8 +444,8 @@ const DEX: React.FC = () => {
               <i className="fas fa-wallet text-green-400 mr-3"></i>
               Your Balances
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(['TTRUST', 'ORACLE'] as const).map((token) => {
                 const info = getTokenInfo(token)
                 return (
                   <div key={token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
@@ -351,10 +555,10 @@ const DEX: React.FC = () => {
                       <div className="relative">
                         <select
                           value={fromToken}
-                          onChange={(e) => setFromToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
+                          onChange={(e) => setFromToken(e.target.value as 'TTRUST' | 'ORACLE')}
                           className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
                         >
-                          {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
+                          {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
                               {token === 'ORACLE' ? '👁️ ORACLE' : `${getTokenTextIcon(token)} ${token}`}
                             </option>
@@ -422,10 +626,10 @@ const DEX: React.FC = () => {
                       <div className="relative">
                         <select
                           value={toToken}
-                          onChange={(e) => setToToken(e.target.value as 'tTRUST' | 'ORACLE' | 'INTUIT')}
+                          onChange={(e) => setToToken(e.target.value as 'TTRUST' | 'ORACLE')}
                           className="appearance-none bg-gray-700/50 rounded-lg px-3 py-2 text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none"
                         >
-                          {(['tTRUST', 'ORACLE', 'INTUIT'] as const).map((token) => (
+                          {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
                               {token === 'ORACLE' ? '👁️ ORACLE' : `${getTokenTextIcon(token)} ${token}`}
                             </option>
@@ -443,7 +647,7 @@ const DEX: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-400">Exchange Rate:</span>
                       <span className="text-white">
-                        1 {fromToken} = {quote.exchangeRate.toFixed(fromToken === 'tTRUST' ? 0 : 6)} {toToken}
+                        1 {fromToken} = {quote.exchangeRate.toFixed(fromToken === 'TTRUST' ? 0 : 6)} {toToken}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -466,9 +670,9 @@ const DEX: React.FC = () => {
                 {/* Swap Button */}
                 <button
                   onClick={handleSwap}
-                  disabled={!fromAmount || !toAmount || !quote || isLoading}
+                  disabled={!fromAmount || !toAmount || !quote || isLoading || fromToken === toToken}
                   className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-200 ${
-                    !fromAmount || !toAmount || !quote || isLoading
+                    !fromAmount || !toAmount || !quote || isLoading || fromToken === toToken
                       ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-purple-500/25'
                   } flex items-center justify-center space-x-2`}
@@ -478,6 +682,8 @@ const DEX: React.FC = () => {
                       <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                       <span>Swapping...</span>
                     </>
+                  ) : fromToken === toToken ? (
+                    <span>Select Different Tokens</span>
                   ) : !fromAmount || !toAmount ? (
                     <span>Enter Amount</span>
                   ) : (
@@ -502,63 +708,69 @@ const DEX: React.FC = () => {
               </span>
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2 flex items-center space-x-2">
+                  <div className="text-3xl mb-2 flex items-center justify-center space-x-2">
                     <span>⚡</span>
                     <span>→</span>
                     <TokenIcon token="ORACLE" size="lg" />
                   </div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to ORACLE</h3>
+                  <h3 className="font-bold text-white mb-1">TTRUST to ORACLE</h3>
                   <p className="text-2xl font-bold text-green-400">
-                    1 : {exchangeRates.tTRUST_ORACLE.toFixed(2)}
+                    1 : {dexStats.currentPrice > 0 ? dexStats.currentPrice.toFixed(0) : '500,000'}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    1 tTRUST = {exchangeRates.tTRUST_ORACLE.toFixed(2)} ORACLE
+                    1 TTRUST = {dexStats.currentPrice > 0 ? dexStats.currentPrice.toFixed(0) : '500,000'} ORACLE
                   </p>
                 </div>
               </div>
               
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
-                  <div className="text-3xl mb-2">⚡ → 💎</div>
-                  <h3 className="font-bold text-white mb-1">tTRUST to INTUIT</h3>
-                  <p className="text-2xl font-bold text-cyan-400">
-                    1 : {exchangeRates.tTRUST_INTUIT.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    1 tTRUST = {exchangeRates.tTRUST_INTUIT.toFixed(2)} INTUIT
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                <div className="text-center">
-                  <div className="text-3xl mb-2 flex items-center space-x-2">
+                  <div className="text-3xl mb-2 flex items-center justify-center space-x-2">
                     <TokenIcon token="ORACLE" size="lg" />
-                    <span>↔</span>
-                    <span>💎</span>
+                    <span>→</span>
+                    <span>⚡</span>
                   </div>
-                  <h3 className="font-bold text-white mb-1">ORACLE ↔ INTUIT</h3>
-                  <p className="text-2xl font-bold text-purple-400">
-                    1 : {exchangeRates.ORACLE_INTUIT.toFixed(4)}
+                  <h3 className="font-bold text-white mb-1">ORACLE to TTRUST</h3>
+                  <p className="text-2xl font-bold text-cyan-400">
+                    {dexStats.currentPrice > 0 ? dexStats.currentPrice.toFixed(0) : '500,000'} : 1
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    1 ORACLE = {exchangeRates.ORACLE_INTUIT.toFixed(4)} INTUIT
+                    {dexStats.currentPrice > 0 ? dexStats.currentPrice.toFixed(0) : '500,000'} ORACLE = 1 TTRUST
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+            <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
               <div className="flex items-start space-x-3">
-                <i className="fas fa-info-circle text-green-400 mt-1"></i>
+                <i className="fas fa-pool text-blue-400 mt-1"></i>
                 <div className="text-sm">
-                  <h4 className="text-green-300 font-medium mb-1">Live Market Rates</h4>
-                  <p className="text-gray-300">
-                    Exchange rates fluctuate every 10 seconds based on market conditions. 
-                    Rates shown are current market prices used for swap calculations.
+                  <h4 className="text-blue-300 font-medium mb-2">AMM Liquidity Pool</h4>
+                  <div className="grid grid-cols-2 gap-4 text-gray-300">
+                    <div>
+                      <p className="text-blue-200">TTRUST Reserve:</p>
+                      <p className="font-mono">{parseFloat(dexStats.ethReserve).toFixed(4)} TTRUST</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-200">ORACLE Reserve:</p>
+                      <p className="font-mono">{parseFloat(dexStats.oracleReserve).toLocaleString()} ORACLE</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-gray-300 mt-2">
+                    <div>
+                      <p className="text-blue-200">Total Volume:</p>
+                      <p className="font-mono">{parseFloat(dexStats.totalVolume).toFixed(2)} TTRUST</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-200">Total Trades:</p>
+                      <p className="font-mono">{dexStats.totalTrades}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 mt-2">
+                    Real AMM liquidity with dynamic pricing. Market-driven exchange rates using constant product formula (x × y = k).
                   </p>
                 </div>
               </div>

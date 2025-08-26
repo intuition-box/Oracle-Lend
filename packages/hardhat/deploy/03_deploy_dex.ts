@@ -38,18 +38,9 @@ const deployDEX: DeployFunction = async function (hre: HardhatRuntimeEnvironment
   const dex = await hre.ethers.getContract<Contract>("DEX", deployer);
   console.log("🔄 DEX deployed at:", await dex.getAddress());
 
-  // Log DEX configuration
-  const stats = await dex.getDEXStats();
-  const limits = await dex.getTradingLimits();
-  
-  console.log("📊 DEX Configuration:");
-  console.log(`   Exchange Rate: 1 tTRUST = ${await dex.EXCHANGE_RATE()} ORACLE`);
-  console.log(`   Fee Rate: ${(await dex.FEE_RATE()).toString() / 100}%`);
-  console.log(`   Max Price Impact: ${(await dex.MAX_PRICE_IMPACT()).toString() / 100}%`);
-  console.log(`   Min Trade Amount: ${limits[0].toString()}`);
-  console.log(`   Max Trade Amount: ${limits[1].toString()}`);
   
   console.log("⚠️  Note: DEX is using placeholder tTRUST address. Update with actual tTRUST token address when available.");
+  console.log("ℹ️  Ownership transfer and liquidity provision will be handled by the orchestrator deployment script");
 };
 
 export default deployDEX;

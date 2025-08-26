@@ -1,0 +1,32 @@
+{
+  "tokens": {
+    "oracleToken": {
+      "name": "Oracle Token",
+      "symbol": "ORACLE",
+      "totalSupply": "10000000",
+      "maxSupply": "10000000"
+    }
+  },
+  "distribution": {
+    "dexLiquidity": {
+      "ttrust": "10",
+      "oracle": "5000000",
+      "description": "10 TTRUST + 5M ORACLE - sets initial market price (1 TTRUST = 500,000 ORACLE)"
+    },
+    "lendingProtocol": {
+      "oracle": "5000000",
+      "description": "5M ORACLE tokens for lending protocol"
+    },
+    "remaining": {
+      "oracle": "0",
+      "description": "All tokens distributed"
+    }
+  },
+  "lendingConfig": {
+    "oracleMarket": {
+      "supplyRate": "3.5",
+      "borrowRate": "8.0",
+      "collateralFactor": "75"
+    }
+  }
+}

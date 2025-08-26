@@ -29,25 +29,32 @@ const deployOracleLend: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const oracleToken = await hre.ethers.getContract<Contract>("OracleToken", deployer);
   const oracleTokenAddress = await oracleToken.getAddress();
 
-  // Add ORACLE token market to OracleLend
-  console.log("Adding ORACLE token market to OracleLend...");
+  // Check if ORACLE token market already exists
+  const marketExists = await oracleLend.marketExists(oracleTokenAddress);
   
-  const supplyRate = 350; // 3.5% APY
-  const borrowRate = 800; // 8% APY
-  const collateralFactor = 7500; // 75% collateral factor
+  if (!marketExists) {
+    // Add ORACLE token market to OracleLend
+    console.log("Adding ORACLE token market to OracleLend...");
+    
+    const supplyRate = 350; // 3.5% APY
+    const borrowRate = 800; // 8% APY
+    const collateralFactor = 7500; // 75% collateral factor
 
-  const tx = await oracleLend.addMarket(
-    oracleTokenAddress,
-    supplyRate,
-    borrowRate,
-    collateralFactor
-  );
-  await tx.wait();
+    const tx = await oracleLend.addMarket(
+      oracleTokenAddress,
+      supplyRate,
+      borrowRate,
+      collateralFactor
+    );
+    await tx.wait();
 
-  console.log("✅ ORACLE token market added to OracleLend");
-  console.log(`   Supply Rate: ${supplyRate / 100}%`);
-  console.log(`   Borrow Rate: ${borrowRate / 100}%`);
-  console.log(`   Collateral Factor: ${collateralFactor / 100}%`);
+    console.log("✅ ORACLE token market added to OracleLend");
+    console.log(`   Supply Rate: ${supplyRate / 100}%`);
+    console.log(`   Borrow Rate: ${borrowRate / 100}%`);
+    console.log(`   Collateral Factor: ${collateralFactor / 100}%`);
+  } else {
+    console.log("ℹ️  ORACLE token market already exists in OracleLend");
+  }
 };
 
 export default deployOracleLend;

@@ -25,6 +25,9 @@ const deployOracleToken: DeployFunction = async function (hre: HardhatRuntimeEnv
   const oracleToken = await hre.ethers.getContract<Contract>("OracleToken", deployer);
   console.log("🪙 OracleToken deployed at:", await oracleToken.getAddress());
   
+  console.log("🪙 OracleToken deployed with 1M total supply");
+  console.log("ℹ️  Distribution will be handled by the orchestrator deployment script");
+  
   // Log initial token info
   const tokenInfo = await oracleToken.getTokenInfo();
   console.log("📊 Token Info:");
