@@ -24,21 +24,21 @@ export const INTUITION_TESTNET = {
 export const TOKENS = {
   tTRUST: {
     symbol: 'tTRUST',
-    name: 'Intuition Token',
-    address: INTUITION_TESTNET.contracts.tTrustToken,
+    name: 'Testnet TRUST (Native Token)',
+    address: INTUITION_TESTNET.contracts.tTrustToken, // Native token (address(0))
     decimals: 18,
     icon: '⚡',
     color: '#3B82F6',
-    isNative: true
+    isNative: true // This is the native blockchain token
   },
   ORACLE: {
     symbol: 'ORACLE',
-    name: 'Oracle Token',
-    address: INTUITION_TESTNET.contracts.oracleToken,
+    name: 'Oracle Token (ERC20)',
+    address: INTUITION_TESTNET.contracts.oracleToken, // Our deployed ERC20 contract
     decimals: 18,
     icon: 'oracle-logo.png',
     color: '#8B5CF6',
-    isNative: false
+    isNative: false // This is our custom ERC20 token
   },
   INTUIT: {
     symbol: 'INTUIT',

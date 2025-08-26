@@ -115,16 +115,16 @@ const DEX: React.FC = () => {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum)
       
-      // Get ETH balance (TTRUST on Intuition Testnet)
-      const ethBalance = await provider.getBalance(account)
+      // Get native token balance (TTRUST on Intuition Testnet)
+      const nativeBalance = await provider.getBalance(account)
       
-      // Get ORACLE token balance
+      // Get ORACLE ERC20 token balance
       const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, provider)
       const oracleBalance = await oracleContract.balanceOf(account)
       
       setBalances({
-        TTRUST: ethers.formatEther(ethBalance),
-        ORACLE: ethers.formatEther(oracleBalance)
+        TTRUST: ethers.formatEther(nativeBalance), // Native token balance
+        ORACLE: ethers.formatEther(oracleBalance)  // ERC20 token balance
       })
     } catch (error) {
       console.error('Failed to fetch balances:', error)
@@ -213,21 +213,21 @@ const DEX: React.FC = () => {
       
       const inputAmount = ethers.parseEther(fromAmount)
       
-      // IMPORTANT: Since both tTRUST and ORACLE use the same address in our testing setup,
-      // the contract's getAmountOut() can't distinguish between swap directions.
-      // We manually calculate quotes using the same AMM formula (constant product with 0.3% fee)
+      // TTRUST is the native token, ORACLE is our ERC20 token
+      // Since the AMM contract uses the same address for both tokens as a placeholder,
+      // we manually calculate quotes using the AMM formula (constant product with 0.3% fee)
       let amountOut
       
       if (fromToken === 'TTRUST') {
-        // TTRUST → ORACLE swap calculation
-        // Using the same formula as in the contract: (amountIn * 9970 * oracleReserve) / (tTrustReserve * 10000 + amountIn * 9970)
+        // TTRUST (native) → ORACLE (ERC20) swap calculation
+        // Formula: (amountIn * 9970 * oracleReserve) / (tTrustReserve * 10000 + amountIn * 9970)
         const amountInWithFee = inputAmount * BigInt(9970) // 0.3% fee = 99.7% remains
         const numerator = amountInWithFee * ethers.parseEther(dexStats.oracleReserve)
         const denominator = ethers.parseEther(dexStats.ethReserve) * BigInt(10000) + amountInWithFee
         amountOut = numerator / denominator
       } else {
-        // ORACLE → TTRUST swap calculation  
-        // Using the same formula as in the contract: (amountIn * 9970 * tTrustReserve) / (oracleReserve * 10000 + amountIn * 9970)
+        // ORACLE (ERC20) → TTRUST (native) swap calculation  
+        // Formula: (amountIn * 9970 * tTrustReserve) / (oracleReserve * 10000 + amountIn * 9970)
         const amountInWithFee = inputAmount * BigInt(9970) // 0.3% fee = 99.7% remains
         const numerator = amountInWithFee * ethers.parseEther(dexStats.ethReserve)
         const denominator = ethers.parseEther(dexStats.oracleReserve) * BigInt(10000) + amountInWithFee
@@ -291,14 +291,15 @@ const DEX: React.FC = () => {
       let tx
 
       if (fromToken === 'TTRUST') {
-        // TTRUST → ORACLE swap
+        // TTRUST (native) → ORACLE (ERC20) swap
+        // Send native token via msg.value
         tx = await dexContract.swapTrustForOracle(0, minAmountOut, {
-          value: inputAmount,
+          value: inputAmount, // Native token sent via value
           gasLimit: 200000
         })
       } else {
-        // ORACLE → TTRUST swap
-        // First check/approve allowance
+        // ORACLE (ERC20) → TTRUST (native) swap
+        // First check/approve ERC20 allowance
         const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, signer)
         const allowance = await oracleContract.allowance(account, CONTRACTS.DEX)
         
@@ -307,6 +308,7 @@ const DEX: React.FC = () => {
           await approveTx.wait()
         }
         
+        // Swap ERC20 for native token
         tx = await dexContract.swapOracleForTrust(inputAmount, minAmountOut, {
           gasLimit: 200000
         })
@@ -370,13 +372,13 @@ const DEX: React.FC = () => {
     
     return {
       TTRUST: {
-        name: 'Testnet TRUST',
+        name: 'Testnet TRUST (Native)',
         symbol: 'TTRUST',
         icon: '⚡',
         price: `${ttrustPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       },
       ORACLE: {
-        name: 'Oracle Token',
+        name: 'Oracle Token (ERC20)',
         symbol: 'ORACLE',
         icon: <TokenIcon token="ORACLE" size="sm" />,
         price: `${oraclePrice.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
@@ -770,7 +772,7 @@ const DEX: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-gray-300 mt-2">
-                    Real AMM liquidity with dynamic pricing. Market-driven exchange rates using constant product formula (x × y = k).
+                    Real AMM liquidity with dynamic pricing. Native TTRUST ↔ ERC20 ORACLE using constant product formula (x × y = k).
                   </p>
                 </div>
               </div>
