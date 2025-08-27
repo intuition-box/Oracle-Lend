@@ -5,13 +5,15 @@ interface WalletConnectProps {
   account: string | null
   connectWallet: () => void
   disconnectWallet: () => void
+  isInitializing?: boolean
 }
 
 const WalletConnect: React.FC<WalletConnectProps> = ({
   isConnected,
   account,
   connectWallet,
-  disconnectWallet
+  disconnectWallet,
+  isInitializing = false
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
@@ -26,6 +28,19 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
     } catch (err) {
       console.error('Failed to copy to clipboard:', err)
     }
+  }
+
+  // Show loading state during initialization
+  if (isInitializing) {
+    return (
+      <button
+        disabled
+        className="flex items-center space-x-2 px-4 py-2 bg-gray-600/50 text-gray-400 rounded-lg cursor-not-allowed"
+      >
+        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        <span className="font-medium">Checking...</span>
+      </button>
+    )
   }
 
   if (!isConnected) {

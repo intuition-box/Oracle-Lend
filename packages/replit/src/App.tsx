@@ -9,7 +9,7 @@ import { useWallet } from './hooks/useWallet'
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(true)
-  const { isConnected, account, connect, disconnect } = useWallet()
+  const { isConnected, account, connect, disconnect, isInitializing } = useWallet()
   const [notification, setNotification] = useState<{
     show: boolean
     type: 'success' | 'error' | 'rejected'
@@ -128,6 +128,7 @@ function App() {
           account={account}
           connectWallet={connect}
           disconnectWallet={disconnect}
+          isInitializing={isInitializing}
         >
           <Routes>
             <Route path="/" element={<Dashboard />} />

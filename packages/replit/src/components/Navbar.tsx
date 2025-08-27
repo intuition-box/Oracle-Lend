@@ -10,6 +10,7 @@ interface NavbarProps {
   account: string | null
   connectWallet: () => void
   disconnectWallet: () => void
+  isInitializing?: boolean
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -18,7 +19,8 @@ const Navbar: React.FC<NavbarProps> = ({
   isConnected,
   account,
   connectWallet,
-  disconnectWallet
+  disconnectWallet,
+  isInitializing
 }) => {
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -88,6 +90,7 @@ const Navbar: React.FC<NavbarProps> = ({
               account={account}
               connectWallet={connectWallet}
               disconnectWallet={disconnectWallet}
+              isInitializing={isInitializing}
             />
 
             {/* Mobile menu button */}

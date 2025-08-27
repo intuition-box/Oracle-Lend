@@ -21,6 +21,7 @@ const DEX_ABI = [
   'function getAmountOut(address _tokenIn, uint256 _amountIn) external view returns (uint256 amountOut)',
   'function getPrice(address _token) external view returns (uint256 price)',
   'function getDEXStats() external view returns (uint256 _tTrustReserve, uint256 _oracleReserve, uint256 _totalVolume, uint256 _totalTrades, uint256 _totalLiquidity)',
+  'function getAnalytics() external view returns (uint256 _totalVolume, uint256 _totalTrades, uint256 _volume24h, uint256 _trades24h, uint256 _uniqueTraders, uint256 _totalFeesCollected, uint256 _tTrustReserve, uint256 _oracleReserve)',
   'function tTrustReserve() external view returns (uint256)',
   'function oracleReserve() external view returns (uint256)',
   'function totalSupply() external view returns (uint256)',
@@ -37,7 +38,7 @@ const ORACLE_TOKEN_ABI = [
 
 const DEX: React.FC = () => {
   const { isLoading: contractLoading } = useContract()
-  const { isConnected, account, balance } = useWallet()
+  const { isConnected, account, balance, isInitializing } = useWallet()
   
   const [fromToken, setFromToken] = useState<'TTRUST' | 'ORACLE'>('TTRUST')
   const [toToken, setToToken] = useState<'TTRUST' | 'ORACLE'>('ORACLE')
@@ -346,14 +347,15 @@ const DEX: React.FC = () => {
       // Track swap transaction for analytics
       try {
         if (account && receipt.hash) {
-          const volumeUSD = calculateVolumeUSD(fromToken, fromAmount)
+          // Track volume as the TTRUST amount involved in the swap
+          const volumeTTRUST = fromToken === 'TTRUST' ? fromAmount : toAmount
           trackTransaction(
             receipt.hash,
             'swap',
             account,
             `${fromToken}→${toToken}`,
             `${fromAmount} ${fromToken}`,
-            volumeUSD
+            volumeTTRUST
           )
         }
       } catch (analyticsError) {
@@ -442,7 +444,15 @@ const DEX: React.FC = () => {
         <p className="text-gray-400">Live market rates with real-time fluctuation</p>
       </div>
 
-      {!isConnected && (
+      {isInitializing && (
+        <div className="glass-effect rounded-xl p-8 border border-blue-500/30 text-center">
+          <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-xl font-bold text-white mb-2">Checking Wallet Connection</h3>
+          <p className="text-gray-400">Please wait while we check for existing wallet connections...</p>
+        </div>
+      )}
+
+      {!isInitializing && !isConnected && (
         <div className="glass-effect rounded-xl p-8 border border-yellow-500/30 text-center">
           <i className="fas fa-wallet text-yellow-400 text-4xl mb-4"></i>
           <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>

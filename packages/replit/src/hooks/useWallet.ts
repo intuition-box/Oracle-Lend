@@ -3,19 +3,62 @@ import { WalletState } from '../types'
 import { INTUITION_TESTNET } from '../utils/constants'
 
 export const useWallet = () => {
-  const [walletState, setWalletState] = useState<WalletState>({
-    isConnected: false,
-    account: null,
-    chainId: null,
-    balance: '0'
+  // Initialize with potentially cached connection state to reduce flashing
+  const [walletState, setWalletState] = useState<WalletState>(() => {
+    if (typeof window !== 'undefined') {
+      const cachedState = localStorage.getItem('walletState')
+      if (cachedState) {
+        try {
+          const parsed = JSON.parse(cachedState)
+          // Only use cached state if it was set recently (within last 10 minutes)
+          const cacheTime = localStorage.getItem('walletStateTime')
+          if (cacheTime && Date.now() - parseInt(cacheTime) < 10 * 60 * 1000) {
+            return parsed
+          }
+        } catch (e) {
+          // Ignore invalid cached state
+        }
+      }
+    }
+    return {
+      isConnected: false,
+      account: null,
+      chainId: null,
+      balance: '0'
+    }
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true) // Add initialization state
   const [error, setError] = useState<string | null>(null)
 
   // Check if MetaMask is installed
   const isMetaMaskInstalled = () => {
     return typeof window !== 'undefined' && window.ethereum && window.ethereum.isMetaMask
+  }
+
+  // Cache wallet state to localStorage
+  const cacheWalletState = (state: WalletState) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('walletState', JSON.stringify(state))
+        localStorage.setItem('walletStateTime', Date.now().toString())
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+    }
+  }
+
+  // Clear wallet state cache
+  const clearWalletStateCache = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('walletState')
+        localStorage.removeItem('walletStateTime')
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+    }
   }
 
   // Switch to Intuition testnet
@@ -122,12 +165,14 @@ export const useWallet = () => {
       const account = accounts[0]
       const balance = await getBalance(account)
 
-      setWalletState({
+      const newState = {
         isConnected: true,
         account,
         chainId: INTUITION_TESTNET.chainId,
         balance
-      })
+      }
+      setWalletState(newState)
+      cacheWalletState(newState)
 
     } catch (error: any) {
       console.error('Failed to connect wallet:', error)
@@ -139,12 +184,14 @@ export const useWallet = () => {
 
   // Disconnect wallet
   const disconnect = useCallback(() => {
-    setWalletState({
+    const newState = {
       isConnected: false,
       account: null,
       chainId: null,
       balance: '0'
-    })
+    }
+    setWalletState(newState)
+    clearWalletStateCache()
     setError(null)
   }, [])
 
@@ -189,15 +236,27 @@ export const useWallet = () => {
 
   // Check if already connected on mount
   useEffect(() => {
+    let retryCount = 0
+    const maxRetries = 3
+    
     const checkConnection = async () => {
-      if (!isMetaMaskInstalled()) return
+      if (!isMetaMaskInstalled()) {
+        console.log('MetaMask not installed')
+        setIsInitializing(false)
+        return
+      }
 
       try {
+        // Add a delay to ensure MetaMask is fully loaded
+        await new Promise(resolve => setTimeout(resolve, Math.min(100 + retryCount * 100, 500)))
+        
         const accounts = await window.ethereum.request({
           method: 'eth_accounts',
         })
 
-        if (accounts.length > 0) {
+        if (accounts && accounts.length > 0) {
+          console.log('Found existing wallet connection:', accounts[0])
+          
           const chainId = await window.ethereum.request({
             method: 'eth_chainId',
           })
@@ -205,29 +264,53 @@ export const useWallet = () => {
           const currentChainId = parseInt(chainId, 16)
           const balance = await getBalance(accounts[0])
 
-          setWalletState({
+          const newState = {
             isConnected: true,
             account: accounts[0],
             chainId: currentChainId,
             balance
-          })
+          }
+          setWalletState(newState)
+          cacheWalletState(newState)
 
           // Show warning if not on Intuition testnet
           if (currentChainId !== INTUITION_TESTNET.chainId) {
             setError('Please switch to Intuition testnet to use the app')
+          } else {
+            setError(null)
           }
+        } else {
+          console.log('No existing wallet connection found')
         }
       } catch (error) {
-        console.error('Failed to check connection:', error)
+        console.error(`Failed to check connection (attempt ${retryCount + 1}):`, error)
+        
+        // Retry if we haven't reached max retries and it's a potentially transient error
+        if (retryCount < maxRetries && (error as any)?.code !== 4001) {
+          retryCount++
+          setTimeout(() => checkConnection(), 500)
+          return
+        }
+      } finally {
+        // Only set initializing to false if we're not retrying
+        if (retryCount >= maxRetries || !error) {
+          setIsInitializing(false)
+        }
       }
     }
 
-    checkConnection()
+    // Start the initial check with a delay
+    const timeoutId = setTimeout(() => {
+      checkConnection()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
   }, [])
 
   return {
     ...walletState,
     isLoading,
+    isInitializing,
     error,
     connect,
     disconnect,

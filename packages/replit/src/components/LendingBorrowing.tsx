@@ -5,7 +5,7 @@ import TokenIcon from './TokenIcon'
 
 const LendingBorrowing: React.FC = () => {
   const { userPosition, lendingPools, isLoading, supply, withdraw, borrow, repay } = useContract()
-  const { isConnected, balance } = useWallet()
+  const { isConnected, balance, isInitializing } = useWallet()
   
   const [activeTab, setActiveTab] = useState<'supply' | 'borrow'>('supply')
   const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('tTRUST')
@@ -117,7 +117,15 @@ const LendingBorrowing: React.FC = () => {
         <h1 className="text-3xl font-bold gradient-text mb-4">LENDING & BORROWING</h1>
       </div>
 
-      {!isConnected && (
+      {isInitializing && (
+        <div className="glass-effect rounded-xl p-8 border border-blue-500/30 text-center">
+          <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-xl font-bold text-white mb-2">Checking Wallet Connection</h3>
+          <p className="text-gray-400">Please wait while we check for existing wallet connections...</p>
+        </div>
+      )}
+
+      {!isInitializing && !isConnected && (
         <div className="glass-effect rounded-xl p-8 border border-yellow-500/30 text-center">
           <i className="fas fa-wallet text-yellow-400 text-4xl mb-4"></i>
           <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>

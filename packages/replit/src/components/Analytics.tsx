@@ -50,7 +50,7 @@ const Analytics: React.FC = () => {
     },
     {
       title: '24h Volume',
-      value: `$${formatCurrency(analytics.volume24h)}`,
+      value: `${formatCurrency(analytics.volume24h)} TTRUST`,
       change: null,
       icon: 'fas fa-chart-line',
       color: 'text-yellow-400',
@@ -110,7 +110,7 @@ const Analytics: React.FC = () => {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">Protocol Analytics</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-4">My activity</h1>
       </div>
 
       {/* Main Metrics */}

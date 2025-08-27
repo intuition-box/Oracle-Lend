@@ -10,6 +10,7 @@ interface LayoutProps {
   account: string | null
   connectWallet: () => void
   disconnectWallet: () => void
+  isInitializing?: boolean
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -19,7 +20,8 @@ const Layout: React.FC<LayoutProps> = ({
   isConnected,
   account,
   connectWallet,
-  disconnectWallet
+  disconnectWallet,
+  isInitializing
 }) => {
   const location = useLocation()
   const isDashboard = location.pathname === '/'
@@ -33,6 +35,7 @@ const Layout: React.FC<LayoutProps> = ({
         account={account}
         connectWallet={connectWallet}
         disconnectWallet={disconnectWallet}
+        isInitializing={isInitializing}
       />
       
       {/* Hero Section - Only show on Dashboard */}
