@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   13579: {
     DEX: {
-      address: "0x072c2b3f3937aD47Da25dE0de1e36E4C366d5FED",
+      address: "0x216cCe003Be533D11Fd4B6d87F066Eef48B42568",
       abi: [
         {
           inputs: [
@@ -956,10 +956,10 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1569158,
+      deployedOnBlock: 1748255,
     },
     OracleLend: {
-      address: "0x5CdfBB614F07DA297fBfCb0Dcc9765463F2cCE9e",
+      address: "0x552948CC80f3D757E4c18a702F5DdD42a06E7039",
       abi: [
         {
           inputs: [
@@ -1675,10 +1675,10 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1569163,
+      deployedOnBlock: 1748262,
     },
     OracleToken: {
-      address: "0xF840731096FAeD511eFda466ACaD39531101fBAc",
+      address: "0x1AA6ad0A70Dd90796F2936BD11F0d4DEF7553b04",
       abi: [
         {
           inputs: [],
@@ -2548,7 +2548,7 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1569152,
+      deployedOnBlock: 1748241,
     },
   },
   31337: {

@@ -9,17 +9,17 @@
   },
   "distribution": {
     "dexLiquidity": {
-      "ttrust": "0.1",
-      "oracle": "50000",
-      "description": "0.1 TTRUST + 50K ORACLE - minimal liquidity for price discovery (1 TTRUST = 500,000 ORACLE)"
+      "ttrust": "2000",
+      "oracle": "5000000",
+      "description": "2k TTRUST + 5M ORACLE "
     },
     "lendingProtocol": {
-      "oracle": "100000",
+      "oracle": "4000000",
       "description": "100K ORACLE tokens for lending protocol (minimal for testing)"
     },
     "remaining": {
-      "oracle": "9850000",
-      "description": "9.85M ORACLE tokens remaining for future use"
+      "oracle": "1000000",
+      "description": "1000000 ORACLE tokens remaining for future use"
     }
   },
   "lendingConfig": {
