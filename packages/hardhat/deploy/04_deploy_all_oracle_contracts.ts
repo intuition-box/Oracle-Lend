@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Load deployment configuration
-const configPath = path.join(__dirname, "config.json");
+const configPath = path.join(__dirname, "..", "config.json");
 const deploymentConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
 /**
@@ -36,7 +36,7 @@ const setupOracleEcosystem: DeployFunction = async function (hre: HardhatRuntime
 
   console.log("🔧 Distributing Oracle Token Supply...");
   
-  const halfSupply = hre.ethers.parseEther(deploymentConfig.distribution.lendingProtocol.oracle); // 5M tokens (half of 10M)
+  const lendingSupply = hre.ethers.parseEther(deploymentConfig.distribution.lendingProtocol.oracle); // From config.json
   
   // 1. Set up DEX liquidity with ETH + ORACLE
   console.log("💱 Setting up DEX liquidity...");
@@ -55,10 +55,29 @@ const setupOracleEcosystem: DeployFunction = async function (hre: HardhatRuntime
   
   console.log(`✅ Added liquidity: ${hre.ethers.formatEther(ethForLiquidity)} TTRUST + ${hre.ethers.formatEther(oracleForLiquidity)} ORACLE`);
   
-  // 2. Transfer 5M tokens to OracleLend for lending supply
-  console.log("🏦 Providing supply to Lending Protocol...");
-  await oracleToken.transfer(oracleLendAddress, halfSupply);
-  console.log(`✅ Transferred ${hre.ethers.formatEther(halfSupply)} ORACLE tokens to OracleLend`);
+  // 2. Fund OracleLend with ORACLE tokens for lending
+  console.log("🏦 Funding Lending Protocol...");
+  console.log(`   Funding with: ${deploymentConfig.distribution.lendingProtocol.oracle} ORACLE tokens`);
+  
+  // Check current balance first
+  const currentLendingBalance = await oracleLend.getContractOracleBalance();
+  console.log(`   Current balance: ${hre.ethers.formatEther(currentLendingBalance)} ORACLE`);
+  
+  if (currentLendingBalance < lendingSupply) {
+    const neededAmount = lendingSupply - currentLendingBalance;
+    console.log(`   Need to add: ${hre.ethers.formatEther(neededAmount)} ORACLE`);
+    
+    // Approve OracleLend to spend ORACLE tokens
+    await oracleToken.approve(oracleLendAddress, neededAmount);
+    
+    // Fund the contract
+    await oracleLend.fundContract(neededAmount);
+    
+    const newBalance = await oracleLend.getContractOracleBalance();
+    console.log(`✅ OracleLend funded with ${hre.ethers.formatEther(newBalance)} ORACLE tokens for lending`);
+  } else {
+    console.log("✅ OracleLend already has sufficient ORACLE tokens for lending");
+  }
   
   // 3. Add OracleLend as a minter for OracleToken (if needed for rewards/incentives)
   const isMinter = await oracleToken.isMinter(oracleLendAddress);
@@ -78,23 +97,30 @@ const setupOracleEcosystem: DeployFunction = async function (hre: HardhatRuntime
   // Log final distribution
   const deployerBalance = await oracleToken.balanceOf(deployer);
   const dexBalance = await oracleToken.balanceOf(dexAddress);
-  const lendBalance = await oracleToken.balanceOf(oracleLendAddress);
+  const lendBalance = await oracleLend.getContractOracleBalance(); // Use the contract's method
   const dexEthBalance = await hre.ethers.provider.getBalance(dexAddress);
   
   console.log("📊 Final Token Distribution:");
   console.log(`   Deployer: ${hre.ethers.formatEther(deployerBalance)} ORACLE`);
-  console.log(`   DEX: ${hre.ethers.formatEther(dexBalance)} ORACLE + ${hre.ethers.formatEther(dexEthBalance)} TTRUST`);
+  console.log(`   DEX: ${hre.ethers.formatEther(dexBalance)} ORACLE + ${hre.ethers.formatEther(dexEthBalance)} ETH`);
   console.log(`   OracleLend: ${hre.ethers.formatEther(lendBalance)} ORACLE`);
 
   // Log final ecosystem status
   console.log("✨ Oracle Lend Ecosystem Setup Complete!");
   console.log("");
   console.log("🎯 Ready to use:");
-  console.log("1. DEX has 10 TTRUST + 1000 ORACLE tokens for liquidity");
-  console.log("2. OracleLend has 5M ORACLE tokens for lending");
-  console.log("3. DEX owner remains deployer address (ownership not transferred)");
-  console.log("4. You can now swap TTRUST ↔ ORACLE on the DEX");
-  console.log("5. All contracts are ready for interaction");
+  console.log("1. 💱 DEX has liquidity for ETH ↔ ORACLE price discovery");
+  console.log(`2. 🏦 OracleLend has ${deploymentConfig.distribution.lendingProtocol.oracle} ORACLE tokens available for borrowing`);
+  console.log("3. 📈 Users can deposit ETH as collateral (120% ratio required)");
+  console.log("4. 💰 Users can borrow ORACLE tokens against ETH collateral");
+  console.log("5. ⚡ Liquidators earn 10% bonus for liquidating unsafe positions");
+  console.log("6. 🔄 All contracts use DEX for real-time price oracle");
+  console.log("");
+  console.log("📋 How to use:");
+  console.log("• Send ETH to OracleLend.addCollateral() to add collateral");
+  console.log("• Call OracleLend.borrowOracle(amount) to borrow ORACLE tokens");
+  console.log("• Call OracleLend.repayOracle(amount) to repay debt");
+  console.log("• Call OracleLend.liquidate(user) to liquidate unsafe positions");
 };
 
 export default setupOracleEcosystem;

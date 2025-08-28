@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   13579: {
     DEX: {
-      address: "0xF226E99d3B411943bB1376e3BF50ac285176D746",
+      address: "0x072c2b3f3937aD47Da25dE0de1e36E4C366d5FED",
       abi: [
         {
           inputs: [
@@ -45,6 +45,92 @@ const deployedContracts = {
             },
           ],
           name: "AddressInsufficientBalance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "allowance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientAllowance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "balance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientBalance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "approver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidApprover",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "receiver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidReceiver",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSender",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSpender",
           type: "error",
         },
         {
@@ -106,17 +192,23 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "address",
-              name: "collector",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "spender",
               type: "address",
             },
             {
               indexed: false,
               internalType: "uint256",
-              name: "amount",
+              name: "value",
               type: "uint256",
             },
           ],
-          name: "FeesCollected",
+          name: "Approval",
           type: "event",
         },
         {
@@ -138,6 +230,12 @@ const deployedContracts = {
               indexed: false,
               internalType: "uint256",
               name: "oracleAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "liquidity",
               type: "uint256",
             },
           ],
@@ -163,6 +261,12 @@ const deployedContracts = {
               indexed: false,
               internalType: "uint256",
               name: "oracleAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "liquidity",
               type: "uint256",
             },
           ],
@@ -240,12 +344,6 @@ const deployedContracts = {
               name: "fee",
               type: "uint256",
             },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "priceImpact",
-              type: "uint256",
-            },
           ],
           name: "Swap",
           type: "event",
@@ -254,19 +352,25 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
-              indexed: false,
-              internalType: "uint256",
-              name: "minAmount",
-              type: "uint256",
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
             },
             {
               indexed: false,
               internalType: "uint256",
-              name: "maxAmount",
+              name: "value",
               type: "uint256",
             },
           ],
-          name: "TradingLimitsUpdated",
+          name: "Transfer",
           type: "event",
         },
         {
@@ -297,19 +401,6 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "EXCHANGE_RATE",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
           name: "FEE_RATE",
           outputs: [
             {
@@ -323,7 +414,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "MAX_PRICE_IMPACT",
+          name: "MINIMUM_LIQUIDITY",
           outputs: [
             {
               internalType: "uint256",
@@ -361,21 +452,94 @@ const deployedContracts = {
             },
           ],
           name: "addLiquidity",
-          outputs: [],
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "liquidity",
+              type: "uint256",
+            },
+          ],
           stateMutability: "payable",
           type: "function",
         },
         {
           inputs: [
             {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "allowance",
+          outputs: [
+            {
               internalType: "uint256",
-              name: "_amount",
+              name: "",
               type: "uint256",
             },
           ],
-          name: "collectFees",
-          outputs: [],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "approve",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "balanceOf",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "decimals",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -397,12 +561,23 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "feesCollected",
+          inputs: [
+            {
+              internalType: "address",
+              name: "_tokenIn",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_amountIn",
+              type: "uint256",
+            },
+          ],
+          name: "getAmountOut",
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amountOut",
               type: "uint256",
             },
           ],
@@ -435,7 +610,7 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "_feesCollected",
+              name: "_totalLiquidity",
               type: "uint256",
             },
           ],
@@ -446,39 +621,15 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_tokenIn",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amountIn",
-              type: "uint256",
-            },
-          ],
-          name: "getExchangeRate",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "rate",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_tokenIn",
+              name: "_token",
               type: "address",
             },
           ],
-          name: "getLiquidityDepth",
+          name: "getPrice",
           outputs: [
             {
               internalType: "uint256",
-              name: "depth",
+              name: "price",
               type: "uint256",
             },
           ],
@@ -487,96 +638,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "getReservesRatio",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_tokenIn",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amountIn",
-              type: "uint256",
-            },
-          ],
-          name: "getSwapAmountOut",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "amountOut",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "fee",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "priceImpact",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getTradingLimits",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "min",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "max",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_tokenIn",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amountIn",
-              type: "uint256",
-            },
-          ],
-          name: "isTradeValid",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "maxTradeAmount",
+          name: "kLast",
           outputs: [
             {
               internalType: "uint256",
@@ -589,12 +651,12 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "minTradeAmount",
+          name: "name",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "string",
               name: "",
-              type: "uint256",
+              type: "string",
             },
           ],
           stateMutability: "view",
@@ -650,17 +712,33 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "_tTrustAmount",
+              name: "_liquidity",
               type: "uint256",
             },
             {
               internalType: "uint256",
-              name: "_oracleAmount",
+              name: "_minTTrust",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_minOracle",
               type: "uint256",
             },
           ],
           name: "removeLiquidity",
-          outputs: [],
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "tTrustAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "oracleAmount",
+              type: "uint256",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "function",
         },
@@ -709,6 +787,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "symbol",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "tTRUST",
           outputs: [
             {
@@ -723,6 +814,19 @@ const deployedContracts = {
         {
           inputs: [],
           name: "tTrustReserve",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalSupply",
           outputs: [
             {
               internalType: "uint256",
@@ -763,6 +867,59 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transfer",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transferFrom",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
               name: "newOwner",
               type: "address",
             },
@@ -780,37 +937,43 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_minAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_maxAmount",
-              type: "uint256",
-            },
-          ],
-          name: "updateTradingLimits",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
+          stateMutability: "payable",
+          type: "receive",
         },
       ],
       inheritedFunctions: {
+        allowance: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        approve: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        balanceOf: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        decimals: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        name: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        symbol: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        totalSupply: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        transfer: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        transferFrom: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         owner: "@openzeppelin/contracts/access/Ownable.sol",
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1395280,
+      deployedOnBlock: 1569158,
     },
     OracleLend: {
-      address: "0x002de6bD83A003B27D33E2cC54Ea202D350BAB41",
+      address: "0x5CdfBB614F07DA297fBfCb0Dcc9765463F2cCE9e",
       abi: [
         {
-          inputs: [],
+          inputs: [
+            {
+              internalType: "address",
+              name: "_dex",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_oracleToken",
+              type: "address",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "constructor",
         },
@@ -849,6 +1012,41 @@ const deployedContracts = {
         {
           inputs: [],
           name: "FailedInnerCall",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__BorrowingFailed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__InsufficientLiquidatorORACLE",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__InvalidAmount",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__NotLiquidatable",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__RepayingFailed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__TransferFailed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "OracleLend__UnsafePositionRatio",
           type: "error",
         },
         {
@@ -900,23 +1098,104 @@ const deployedContracts = {
             },
             {
               indexed: true,
-              internalType: "address",
-              name: "token",
-              type: "address",
-            },
-            {
-              indexed: false,
               internalType: "uint256",
               name: "amount",
               type: "uint256",
             },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
           ],
-          name: "Borrow",
+          name: "AssetBorrowed",
           type: "event",
         },
         {
           anonymous: false,
           inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
+          ],
+          name: "AssetRepaid",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
+          ],
+          name: "CollateralAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
+          ],
+          name: "CollateralWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
             {
               indexed: true,
               internalType: "address",
@@ -924,62 +1203,25 @@ const deployedContracts = {
               type: "address",
             },
             {
-              indexed: true,
-              internalType: "address",
-              name: "borrower",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "tokenCollateral",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "tokenBorrowed",
-              type: "address",
-            },
-            {
               indexed: false,
               internalType: "uint256",
-              name: "amountCollateral",
+              name: "amountForLiquidator",
               type: "uint256",
             },
             {
               indexed: false,
               internalType: "uint256",
-              name: "amountBorrowed",
+              name: "liquidatedUserDebt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "price",
               type: "uint256",
             },
           ],
           name: "Liquidation",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "token",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "supplyRate",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "borrowRate",
-              type: "uint256",
-            },
-          ],
-          name: "MarketAdded",
           type: "event",
         },
         {
@@ -1018,56 +1260,6 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
-              indexed: true,
-              internalType: "address",
-              name: "user",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "token",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256",
-            },
-          ],
-          name: "Repay",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "user",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "token",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256",
-            },
-          ],
-          name: "Supply",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
               indexed: false,
               internalType: "address",
               name: "account",
@@ -1078,93 +1270,66 @@ const deployedContracts = {
           type: "event",
         },
         {
-          anonymous: false,
+          inputs: [],
+          name: "addCollateral",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
           inputs: [
             {
-              indexed: true,
-              internalType: "address",
-              name: "user",
+              internalType: "uint256",
+              name: "borrowAmount",
+              type: "uint256",
+            },
+          ],
+          name: "borrowOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "collateralAmount",
+              type: "uint256",
+            },
+          ],
+          name: "calculateCollateralValue",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "dex",
+          outputs: [
+            {
+              internalType: "contract IDEX",
+              name: "",
               type: "address",
             },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
             {
-              indexed: true,
-              internalType: "address",
-              name: "token",
-              type: "address",
-            },
-            {
-              indexed: false,
               internalType: "uint256",
               name: "amount",
               type: "uint256",
             },
           ],
-          name: "Withdraw",
-          type: "event",
-        },
-        {
-          inputs: [],
-          name: "BASIS_POINTS",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "LIQUIDATION_BONUS",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "SECONDS_PER_YEAR",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_token",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_supplyRate",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_borrowRate",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_collateralFactor",
-              type: "uint256",
-            },
-          ],
-          name: "addMarket",
+          name: "emergencyWithdrawETH",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -1173,35 +1338,11 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
-          name: "allMarkets",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_token",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amount",
-              type: "uint256",
-            },
-          ],
-          name: "borrow",
+          name: "emergencyWithdrawOracle",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -1209,47 +1350,49 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "address",
-              name: "_token",
-              type: "address",
-            },
-            {
               internalType: "uint256",
-              name: "_amount",
+              name: "amount",
               type: "uint256",
             },
           ],
-          name: "emergencyWithdraw",
+          name: "fundContract",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
         },
         {
           inputs: [],
-          name: "getAllMarkets",
+          name: "getContractETHBalance",
           outputs: [
             {
-              internalType: "address[]",
-              name: "",
-              type: "address[]",
+              internalType: "uint256",
+              name: "balance",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_user",
-              type: "address",
-            },
-          ],
-          name: "getBorrowPower",
+          inputs: [],
+          name: "getContractOracleBalance",
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "balance",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getCurrentPrice",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "price",
               type: "uint256",
             },
           ],
@@ -1260,15 +1403,15 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_user",
+              name: "user",
               type: "address",
             },
           ],
-          name: "getHealthFactor",
+          name: "getHealthRatio",
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "ratio",
               type: "uint256",
             },
           ],
@@ -1279,15 +1422,15 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_user",
+              name: "user",
               type: "address",
             },
           ],
-          name: "getTotalBorrowValue",
+          name: "getMaxBorrowAmount",
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "maxBorrow",
               type: "uint256",
             },
           ],
@@ -1298,20 +1441,34 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_user",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_token",
+              name: "user",
               type: "address",
             },
           ],
-          name: "getUserAccount",
+          name: "getMaxWithdrawableCollateral",
           outputs: [
             {
               internalType: "uint256",
-              name: "supplied",
+              name: "maxWithdraw",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getUserPosition",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "collateral",
               type: "uint256",
             },
             {
@@ -1319,6 +1476,21 @@ const deployedContracts = {
               name: "borrowed",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "collateralValue",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "healthRatio",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "liquidatable",
+              type: "bool",
+            },
           ],
           stateMutability: "view",
           type: "function",
@@ -1327,16 +1499,16 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_token",
+              name: "user",
               type: "address",
             },
           ],
-          name: "getUtilizationRate",
+          name: "isLiquidatable",
           outputs: [
             {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
+              internalType: "bool",
+              name: "liquidatable",
+              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -1346,23 +1518,8 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_borrower",
+              name: "user",
               type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_tokenCollateral",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_tokenBorrowed",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amount",
-              type: "uint256",
             },
           ],
           name: "liquidate",
@@ -1371,73 +1528,13 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "marketExists",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "markets",
+          inputs: [],
+          name: "oracleToken",
           outputs: [
             {
               internalType: "contract IERC20",
-              name: "token",
+              name: "",
               type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "totalSupply",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "totalBorrow",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "supplyRate",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "borrowRate",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "collateralFactor",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "liquidationThreshold",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "isActive",
-              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -1486,35 +1583,12 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "address",
-              name: "_token",
-              type: "address",
-            },
-            {
               internalType: "uint256",
-              name: "_amount",
+              name: "repayAmount",
               type: "uint256",
             },
           ],
-          name: "repay",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_token",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_amount",
-              type: "uint256",
-            },
-          ],
-          name: "supply",
+          name: "repayOracle",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -1543,52 +1617,56 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "address",
-              name: "_token",
+              name: "",
               type: "address",
             },
+          ],
+          name: "userBorrowed",
+          outputs: [
             {
               internalType: "uint256",
-              name: "_supplyRate",
+              name: "",
               type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_borrowRate",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_collateralFactor",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "_isActive",
-              type: "bool",
             },
           ],
-          name: "updateMarket",
-          outputs: [],
-          stateMutability: "nonpayable",
+          stateMutability: "view",
           type: "function",
         },
         {
           inputs: [
             {
               internalType: "address",
-              name: "_token",
+              name: "",
               type: "address",
             },
+          ],
+          name: "userCollateral",
+          outputs: [
             {
               internalType: "uint256",
-              name: "_amount",
+              name: "",
               type: "uint256",
             },
           ],
-          name: "withdraw",
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawCollateral",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
         },
       ],
       inheritedFunctions: {
@@ -1597,10 +1675,10 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1395271,
+      deployedOnBlock: 1569163,
     },
     OracleToken: {
-      address: "0xd43126942790Dd43c745Cf919f2843687cDA2951",
+      address: "0xF840731096FAeD511eFda466ACaD39531101fBAc",
       abi: [
         {
           inputs: [],
@@ -2470,7 +2548,7 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 1395268,
+      deployedOnBlock: 1569152,
     },
   },
   31337: {

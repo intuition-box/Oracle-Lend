@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title OracleToken
@@ -14,8 +14,8 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract OracleToken is ERC20, ERC20Burnable, Ownable, Pausable {
     
     // Constants
-    uint256 public constant INITIAL_SUPPLY = 500_000_000_000_000 * 10**18; // 500 trillion tokens
-    uint256 public constant MAX_SUPPLY = 1_000_000_000_000_000 * 10**18; // 1 quadrillion max supply
+    uint256 public constant INITIAL_SUPPLY = 10_000_000 * 10**18; // 10 million tokens
+    uint256 public constant MAX_SUPPLY = 10_000_000 * 10**18; // 10 million max supply
     
     // State variables
     mapping(address => bool) public minters;
@@ -32,7 +32,7 @@ contract OracleToken is ERC20, ERC20Burnable, Ownable, Pausable {
     /**
      * @dev Constructor that gives msg.sender all of existing tokens
      */
-    constructor() ERC20("Oracle Token", "ORACLE") {
+    constructor() ERC20("Oracle Token", "ORACLE") Ownable(msg.sender) {
         _mint(msg.sender, INITIAL_SUPPLY);
         minters[msg.sender] = true;
         emit MinterAdded(msg.sender);
@@ -86,7 +86,7 @@ contract OracleToken is ERC20, ERC20Burnable, Ownable, Pausable {
     function mint(address _to, uint256 _amount) external onlyMinter whenNotPaused {
         require(_to != address(0), "Cannot mint to zero address");
         require(_amount > 0, "Amount must be greater than 0");
-        require(totalSupply() + _amount <= MAX_SUPPLY, "Would exceed max supply");
+        require(super.totalSupply() + _amount <= MAX_SUPPLY, "Would exceed max supply");
         
         _mint(_to, _amount);
         emit TokensMinted(_to, _amount);
@@ -203,10 +203,10 @@ contract OracleToken is ERC20, ERC20Burnable, Ownable, Pausable {
         uint256 initialSupply
     ) {
         return (
-            name(),
-            symbol(),
-            decimals(),
-            totalSupply(),
+            super.name(),
+            super.symbol(),
+            super.decimals(),
+            super.totalSupply(),
             MAX_SUPPLY,
             INITIAL_SUPPLY
         );
@@ -230,7 +230,7 @@ contract OracleToken is ERC20, ERC20Burnable, Ownable, Pausable {
      * @dev Get circulating supply (total supply minus burned tokens)
      */
     function getCirculatingSupply() external view returns (uint256) {
-        return totalSupply();
+        return super.totalSupply();
     }
 
     /**

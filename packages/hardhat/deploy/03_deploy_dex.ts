@@ -20,12 +20,11 @@ const deployDEX: DeployFunction = async function (hre: HardhatRuntimeEnvironment
   const oracleTokenAddress = await oracleToken.getAddress();
 
   // TTRUST is the native token (ETH equivalent on Intuition testnet)
-  // We use the ORACLE token address as a placeholder since the contract expects an address
-  // but the contract logic handles native token transfers via msg.value
-  const tTrustAddress = oracleTokenAddress; // Using ORACLE address as placeholder for native token logic
+  // For native tokens, we should use a special address (like 0x0 or a dedicated native token address)
+  const tTrustAddress = "0x0000000000000000000000000000000000000000"; // Zero address for native token
   
   console.log(`Using ORACLE token at: ${oracleTokenAddress}`);
-  console.log(`Using tTRUST as native token (placeholder address: ${tTrustAddress})`);
+  console.log(`Using tTRUST as native token (zero address): ${tTrustAddress}`);
 
   await deploy("DEX", {
     from: deployer,

@@ -1,23 +1,98 @@
 import { useState, useCallback, useEffect } from 'react'
-import { TokenBalance, UserPosition, LendingPool } from '../types'
-import { TOKENS } from '../utils/constants'
+import { ethers } from 'ethers'
+import { TokenBalance, UserPosition, LendingPool, UserLendingPosition, LendingProtocolStats } from '../types'
+import { INTUITION_TESTNET, LENDING_CONFIG, PROTOCOL_CONFIG, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../utils/constants'
+
+// Contract ABIs - simplified versions with only the functions we need
+const ORACLE_LEND_ABI = [
+  // View functions
+  "function userCollateral(address) external view returns (uint256)",
+  "function userBorrowed(address) external view returns (uint256)", 
+  "function getCurrentPrice() external view returns (uint256)",
+  "function getUserPosition(address) external view returns (uint256 collateral, uint256 borrowed, uint256 collateralValue, uint256 healthRatio, bool liquidatable)",
+  "function getHealthRatio(address) external view returns (uint256)",
+  "function getMaxBorrowAmount(address) external view returns (uint256)",
+  "function getMaxWithdrawableCollateral(address) external view returns (uint256)",
+  "function getContractOracleBalance() external view returns (uint256)",
+  "function getContractETHBalance() external view returns (uint256)",
+  "function isLiquidatable(address) external view returns (bool)",
+  
+  // State changing functions
+  "function addCollateral() external payable",
+  "function withdrawCollateral(uint256 amount) external",
+  "function borrowOracle(uint256 borrowAmount) external", 
+  "function repayOracle(uint256 repayAmount) external",
+  "function liquidate(address user) external",
+  
+  // Events
+  "event CollateralAdded(address indexed user, uint256 indexed amount, uint256 price)",
+  "event CollateralWithdrawn(address indexed user, uint256 indexed amount, uint256 price)",
+  "event AssetBorrowed(address indexed user, uint256 indexed amount, uint256 price)",
+  "event AssetRepaid(address indexed user, uint256 indexed amount, uint256 price)",
+  "event Liquidation(address indexed user, address indexed liquidator, uint256 amountForLiquidator, uint256 liquidatedUserDebt, uint256 price)"
+]
+
+const ORACLE_TOKEN_ABI = [
+  "function balanceOf(address) external view returns (uint256)",
+  "function approve(address spender, uint256 amount) external returns (bool)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
+  "function transfer(address to, uint256 amount) external returns (bool)",
+  "function transferFrom(address from, address to, uint256 amount) external returns (bool)"
+]
+
+const DEX_ABI = [
+  "function getPrice(address token) external view returns (uint256)",
+  "function tTrustReserve() external view returns (uint256)",
+  "function oracleReserve() external view returns (uint256)",
+  "function swapTrustForOracle(uint256 amountIn, uint256 minAmountOut) external payable",
+  "function swapOracleForTrust(uint256 amountIn, uint256 minAmountOut) external"
+]
 
 export const useContract = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [exchangeRates, setExchangeRates] = useState({
-    tTRUST_ORACLE: 100,
-    tTRUST_INTUIT: 100,
-    ORACLE_INTUIT: 1
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null)
+  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null)
+  const [userAddress, setUserAddress] = useState<string>('')
+  
+  // Real contract instances
+  const [oracleLendContract, setOracleLendContract] = useState<ethers.Contract | null>(null)
+  const [oracleTokenContract, setOracleTokenContract] = useState<ethers.Contract | null>(null)
+  const [dexContract, setDexContract] = useState<ethers.Contract | null>(null)
+  
+  // Real state from contracts
+  const [userLendingPosition, setUserLendingPosition] = useState<UserLendingPosition>({
+    collateral: '0',
+    borrowed: '0',
+    collateralValue: '0',
+    healthRatio: 0,
+    status: 'none',
+    maxBorrow: '0',
+    maxWithdraw: '0'
   })
 
-  // Mock data for development - replace with actual contract calls
+  const [protocolStats, setProtocolStats] = useState<LendingProtocolStats>({
+    oracleBalance: '0',
+    ethBalance: '0',
+    currentPrice: '0',
+    totalCollateral: '0',
+    totalBorrowed: '0',
+    utilizationRate: 0
+  })
+
+  // Legacy state for backwards compatibility
+  const [exchangeRates, setExchangeRates] = useState({
+    tTRUST_ORACLE: 1,
+    tTRUST_INTUIT: 100,
+    ORACLE_INTUIT: 0.0002
+  })
+
   const [userPosition, setUserPosition] = useState<UserPosition>({
     supplied: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
     borrowed: { tTRUST: '0', ORACLE: '0', INTUIT: '0' },
     collateralValue: '0',
     borrowPower: '0',
-    healthFactor: 999 // Initialize as safe (999 represents infinite health factor)
+    healthFactor: 999
   })
 
   const [lendingPools] = useState<LendingPool[]>([
@@ -25,487 +100,588 @@ export const useContract = () => {
       token: 'tTRUST',
       totalSupply: '0',
       totalBorrow: '0',
-      supplyAPY: 5.2,
-      borrowAPY: 6.8,
+      supplyAPY: 0,
+      borrowAPY: 0,
       utilizationRate: 0
     },
     {
       token: 'ORACLE',
       totalSupply: '0',
       totalBorrow: '0',
-      supplyAPY: 4.8,
-      borrowAPY: 5.5,
-      utilizationRate: 0
-    },
-    {
-      token: 'INTUIT',
-      totalSupply: '0',
-      totalBorrow: '0',
-      supplyAPY: 3.6,
-      borrowAPY: 4.2,
+      supplyAPY: 0,
+      borrowAPY: 0,
       utilizationRate: 0
     }
   ])
 
-  // Supply tokens to lending pool
-  const supply = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
-    setIsLoading(true)
-    setError(null)
-
+  // Initialize Web3 connection
+  const initializeWeb3 = useCallback(async () => {
     try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
-
-      // Get current accounts
-      const accounts = await window.ethereum.request({
-        method: 'eth_accounts'
-      })
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts connected')
-      }
-
-      const fromAddress = accounts[0]
-      const inputAmount = parseFloat(amount)
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
-
-      // For tTRUST (native token), send value directly
-      if (token === 'tTRUST') {
-        const txParams = {
-          from: fromAddress,
-          to: '0x1234567890123456789012345678901234567890', // Lending pool contract address
-          value: `0x${amountInWei}`,
-          data: '0x', // Supply function call data
-          gas: '0x186A0', // 100k gas limit
-        }
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        // Update user position with calculated collateral value
-        setUserPosition(prev => {
-          const newSupplied = {
-            ...prev.supplied,
-            [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
-          }
-          
-          const newCollateralValue = (
-            parseFloat(newSupplied.tTRUST) * 2500 + 
-            parseFloat(newSupplied.ORACLE) * 25 + 
-            parseFloat(newSupplied.INTUIT) * 25
-          ).toString()
-          
-          return {
-            ...prev,
-            supplied: newSupplied,
-            collateralValue: newCollateralValue
-          }
-        })
-
-        return { success: true, txHash }
-      } else {
-        // For ERC20 tokens (ORACLE, INTUIT)
-        const txParams = {
-          from: fromAddress,
-          to: TOKENS[token].address,
-          value: '0x0',
-          data: '0xa9059cbb' + // transfer function selector
-                '1234567890123456789012345678901234567890'.padStart(64, '0') + // lending pool address
-                amountInWei.padStart(64, '0'), // amount
-          gas: '0x186A0',
-        }
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        // Update user position with calculated collateral value  
-        setUserPosition(prev => {
-          const newSupplied = {
-            ...prev.supplied,
-            [token]: (parseFloat(prev.supplied[token]) + parseFloat(amount)).toString()
-          }
-          
-          const newCollateralValue = (
-            parseFloat(newSupplied.tTRUST) * 2500 + 
-            parseFloat(newSupplied.ORACLE) * 25 + 
-            parseFloat(newSupplied.INTUIT) * 25
-          ).toString()
-          
-          return {
-            ...prev,
-            supplied: newSupplied,
-            collateralValue: newCollateralValue
-          }
-        })
-
-        return { success: true, txHash }
-      }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Supply transaction failed'
-      setError(errorMessage)
-      
-      // Check if user rejected the transaction
-      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
-        return { success: false, error: 'Transaction rejected by user' }
-      }
-      
-      return { success: false, error: errorMessage }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Withdraw tokens from lending pool
-  const withdraw = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
-
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-      if (accounts.length === 0) throw new Error('No accounts connected')
-
-      const fromAddress = accounts[0]
-      const inputAmount = parseFloat(amount)
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
-
-      const txParams = {
-        from: fromAddress,
-        to: '0x1234567890123456789012345678901234567890', // Lending pool contract
-        value: '0x0',
-        data: '0x', // Withdraw function call data
-        gas: '0x186A0',
-      }
-
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [txParams],
-      })
-      
-      // Update user position with recalculated collateral value
-      setUserPosition(prev => {
-        const newSupplied = {
-          ...prev.supplied,
-          [token]: Math.max(0, parseFloat(prev.supplied[token]) - parseFloat(amount)).toString()
-        }
+      if (typeof window !== 'undefined' && window.ethereum) {
+        console.log('🔄 Initializing Web3 connection...')
         
-        const newCollateralValue = (
-          parseFloat(newSupplied.tTRUST) * 2500 + 
-          parseFloat(newSupplied.ORACLE) * 25 + 
-          parseFloat(newSupplied.INTUIT) * 25
-        ).toString()
+        const provider = new ethers.BrowserProvider(window.ethereum)
+        const network = await provider.getNetwork()
+        const signer = await provider.getSigner()
+        const address = await signer.getAddress()
         
-        return {
-          ...prev,
-          supplied: newSupplied,
-          collateralValue: newCollateralValue
-        }
-      })
-
-      return { success: true, txHash }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Withdraw transaction failed'
-      setError(errorMessage)
-      
-      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
-        return { success: false, error: 'Transaction rejected by user' }
-      }
-      
-      return { success: false, error: errorMessage }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Borrow tokens from lending pool
-  const borrow = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
-
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-      if (accounts.length === 0) throw new Error('No accounts connected')
-
-      const fromAddress = accounts[0]
-      const inputAmount = parseFloat(amount)
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
-
-      const txParams = {
-        from: fromAddress,
-        to: '0x1234567890123456789012345678901234567890', // Lending pool contract
-        value: '0x0',
-        data: '0x', // Borrow function call data
-        gas: '0x186A0',
-      }
-
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [txParams],
-      })
-      
-      // Update user position with recalculated borrow power
-      setUserPosition(prev => {
-        const newBorrowed = {
-          ...prev.borrowed,
-          [token]: (parseFloat(prev.borrowed[token]) + parseFloat(amount)).toString()
-        }
+        console.log('🌐 Connected to network:', {
+          chainId: network.chainId,
+          name: network.name,
+          userAddress: address
+        })
         
-        // Calculate borrow power based on collateral (75% LTV)
-        const newBorrowPower = (parseFloat(prev.collateralValue) * 0.75).toString()
-        
-        return {
-          ...prev,
-          borrowed: newBorrowed,
-          borrowPower: newBorrowPower
-        }
-      })
+        setProvider(provider)
+        setSigner(signer)
+        setUserAddress(address)
 
-      return { success: true, txHash }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Borrow transaction failed'
-      setError(errorMessage)
-      
-      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
-        return { success: false, error: 'Transaction rejected by user' }
-      }
-      
-      return { success: false, error: errorMessage }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+        // Initialize contracts with error handling
+        try {
+          const oracleLend = new ethers.Contract(
+            INTUITION_TESTNET.contracts.oracleLend,
+            ORACLE_LEND_ABI,
+            signer
+          )
+          
+          const oracleToken = new ethers.Contract(
+            INTUITION_TESTNET.contracts.oracleToken,
+            ORACLE_TOKEN_ABI,
+            signer
+          )
+          
+          const dex = new ethers.Contract(
+            INTUITION_TESTNET.contracts.dex,
+            DEX_ABI,
+            signer
+          )
 
-  // Repay borrowed tokens
-  const repay = useCallback(async (token: 'tTRUST' | 'ORACLE' | 'INTUIT', amount: string) => {
-    setIsLoading(true)
-    setError(null)
+          // Test contract connections with simple calls
+          console.log('🧪 Testing contract connections...')
+          
+          try {
+            const oracleBalance = await oracleToken.balanceOf(address)
+            console.log('✅ OracleToken contract working, user balance:', ethers.formatEther(oracleBalance))
+          } catch (tokenError) {
+            console.warn('⚠️ OracleToken contract issue:', tokenError.message)
+          }
 
-    try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
+          try {
+            const userCollateral = await oracleLend.userCollateral(address)
+            console.log('✅ OracleLend contract working, user collateral:', ethers.formatEther(userCollateral))
+          } catch (lendError) {
+            console.warn('⚠️ OracleLend contract issue:', lendError.message)
+          }
 
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-      if (accounts.length === 0) throw new Error('No accounts connected')
+          setOracleLendContract(oracleLend)
+          setOracleTokenContract(oracleToken)
+          setDexContract(dex)
 
-      const fromAddress = accounts[0]
-      const inputAmount = parseFloat(amount)
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
+          console.log('✅ All contracts initialized:', {
+            oracleLend: INTUITION_TESTNET.contracts.oracleLend,
+            oracleToken: INTUITION_TESTNET.contracts.oracleToken,
+            dex: INTUITION_TESTNET.contracts.dex,
+            userAddress: address,
+            network: `${network.name} (${network.chainId})`
+          })
 
-      let txParams
-      if (token === 'tTRUST') {
-        txParams = {
-          from: fromAddress,
-          to: '0x1234567890123456789012345678901234567890', // Lending pool contract
-          value: `0x${amountInWei}`,
-          data: '0x', // Repay function call data
-          gas: '0x186A0',
+          return true
+        } catch (contractError) {
+          console.error('❌ Contract initialization failed:', contractError)
+          setError(`Contract initialization failed: ${contractError.message}`)
+          return false
         }
       } else {
-        txParams = {
-          from: fromAddress,
-          to: TOKENS[token].address,
-          value: '0x0',
-          data: '0xa9059cbb' + // transfer function selector
-                '1234567890123456789012345678901234567890'.padStart(64, '0') + // lending pool address
-                amountInWei.padStart(64, '0'), // amount
-          gas: '0x186A0',
-        }
+        console.warn('No Web3 provider found')
+        setError('Please install MetaMask or another Web3 wallet')
+        return false
       }
-
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [txParams],
-      })
-      
-      // Update user position with recalculated borrow power
-      setUserPosition(prev => {
-        const newBorrowed = {
-          ...prev.borrowed,
-          [token]: Math.max(0, parseFloat(prev.borrowed[token]) - parseFloat(amount)).toString()
-        }
-        
-        // Calculate borrow power based on collateral (75% LTV)
-        const newBorrowPower = (parseFloat(prev.collateralValue) * 0.75).toString()
-        
-        return {
-          ...prev,
-          borrowed: newBorrowed,
-          borrowPower: newBorrowPower
-        }
-      })
-
-      return { success: true, txHash }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Repay transaction failed'
-      setError(errorMessage)
-      
-      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
-        return { success: false, error: 'Transaction rejected by user' }
-      }
-      
-      return { success: false, error: errorMessage }
-    } finally {
-      setIsLoading(false)
+    } catch (err) {
+      console.error('Failed to initialize Web3:', err)
+      setError(`Failed to connect to wallet: ${err.message}`)
+      return false
     }
   }, [])
 
-  // Dynamic exchange rate system
-  useEffect(() => {
-    const updateRates = () => {
+  // Fetch real data from contracts with error handling
+  const fetchContractData = useCallback(async () => {
+    if (!oracleLendContract || !oracleTokenContract || !dexContract || !userAddress) return
+
+    try {
+      console.log('🔄 Fetching contract data for:', userAddress)
+
+      // Get user position with individual error handling
+      let userPosition = {
+        collateral: '0',
+        borrowed: '0', 
+        collateralValue: '0',
+        healthRatio: 0,
+        liquidatable: false
+      }
+
+      try {
+        const [collateral, borrowed, collateralValue, healthRatio, liquidatable] = 
+          await oracleLendContract.getUserPosition(userAddress)
+        
+        userPosition = {
+          collateral: collateral.toString(),
+          borrowed: borrowed.toString(),
+          collateralValue: collateralValue.toString(),
+          healthRatio: Number(healthRatio),
+          liquidatable
+        }
+        console.log('✅ User position fetched:', userPosition)
+      } catch (positionError) {
+        console.error('❌ Error fetching user position:', positionError)
+        // Try individual calls as fallback
+        try {
+          const collateral = await oracleLendContract.userCollateral(userAddress)
+          const borrowed = await oracleLendContract.userBorrowed(userAddress)
+          userPosition.collateral = collateral.toString()
+          userPosition.borrowed = borrowed.toString()
+          console.log('✅ Fallback position data:', { collateral: userPosition.collateral, borrowed: userPosition.borrowed })
+        } catch (fallbackError) {
+          console.error('❌ Fallback position fetch failed:', fallbackError)
+        }
+      }
+
+      // Get protocol stats with individual error handling
+      let protocolData = {
+        oracleBalance: '0',
+        ethBalance: '0',
+        currentPrice: '0'
+      }
+
+      try {
+        const oracleBalance = await oracleLendContract.getContractOracleBalance()
+        protocolData.oracleBalance = oracleBalance.toString()
+        console.log('✅ Oracle balance:', protocolData.oracleBalance)
+      } catch (err) {
+        console.error('❌ Error fetching oracle balance:', err)
+      }
+
+      try {
+        const ethBalance = await oracleLendContract.getContractETHBalance()
+        protocolData.ethBalance = ethBalance.toString()
+        console.log('✅ ETH balance:', protocolData.ethBalance)
+      } catch (err) {
+        console.error('❌ Error fetching ETH balance:', err)
+      }
+
+      try {
+        const currentPrice = await oracleLendContract.getCurrentPrice()
+        protocolData.currentPrice = currentPrice.toString()
+        console.log('✅ Current price:', protocolData.currentPrice)
+      } catch (err) {
+        console.error('❌ Error fetching current price (likely no DEX liquidity):', err)
+        // Set a default price if DEX has no liquidity
+        protocolData.currentPrice = '500000000000000000000000' // 500k ORACLE per ETH as fallback
+      }
+
+      // Update user lending position
+      setUserLendingPosition({
+        collateral: userPosition.collateral,
+        borrowed: userPosition.borrowed,
+        collateralValue: userPosition.collateralValue,
+        healthRatio: userPosition.healthRatio,
+        status: userPosition.liquidatable ? 'danger' : userPosition.healthRatio >= 150 ? 'safe' : userPosition.healthRatio >= 130 ? 'warning' : 'danger',
+        maxBorrow: '0', // Skip complex calculations for now
+        maxWithdraw: '0' // Skip complex calculations for now
+      })
+
+      // Update protocol stats
+      setProtocolStats({
+        oracleBalance: protocolData.oracleBalance,
+        ethBalance: protocolData.ethBalance,
+        currentPrice: protocolData.currentPrice,
+        totalCollateral: protocolData.ethBalance, // Simplified
+        totalBorrowed: '0', // Would need additional contract call
+        utilizationRate: 0 // Would need calculation
+      })
+
+      // Update exchange rates
+      const priceInNumber = Number(ethers.formatEther(protocolData.currentPrice))
       setExchangeRates(prev => ({
-        tTRUST_ORACLE: prev.tTRUST_ORACLE * (1 + (Math.random() - 0.5) * 0.02), // ±1% fluctuation
-        tTRUST_INTUIT: prev.tTRUST_INTUIT * (1 + (Math.random() - 0.5) * 0.02), // ±1% fluctuation
-        ORACLE_INTUIT: prev.ORACLE_INTUIT * (1 + (Math.random() - 0.5) * 0.01) // ±0.5% fluctuation
+        ...prev,
+        tTRUST_ORACLE: priceInNumber
       }))
+
+      // Update legacy position for backwards compatibility
+      setUserPosition({
+        supplied: { 
+          tTRUST: ethers.formatEther(userPosition.collateral), 
+          ORACLE: '0', 
+          INTUIT: '0' 
+        },
+        borrowed: { 
+          tTRUST: '0', 
+          ORACLE: ethers.formatEther(userPosition.borrowed), 
+          INTUIT: '0' 
+        },
+        collateralValue: ethers.formatEther(userPosition.collateralValue),
+        borrowPower: '0', // Would need calculation
+        healthFactor: userPosition.healthRatio / 100
+      })
+
+    } catch (err) {
+      console.error('Error fetching contract data:', err)
+      setError('Failed to fetch contract data')
+    }
+  }, [oracleLendContract, oracleTokenContract, dexContract, userAddress])
+
+  // Real contract functions
+
+  /**
+   * Add ETH collateral to the lending protocol
+   */
+  const addCollateral = useCallback(async (amount: string) => {
+    if (!oracleLendContract || !signer) {
+      throw new Error('Contract not initialized')
     }
 
-    // Update rates every 10 seconds
-    const interval = setInterval(updateRates, 10000)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Swap tokens with real wallet transactions
-  const swap = useCallback(async (
-    fromToken: 'tTRUST' | 'ORACLE' | 'INTUIT',
-    toToken: 'tTRUST' | 'ORACLE' | 'INTUIT',
-    amount: string
-  ) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not installed')
-      }
-
-      // Get current accounts
-      const accounts = await window.ethereum.request({
-        method: 'eth_accounts'
-      })
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts connected')
-      }
-
-      const fromAddress = accounts[0]
-
-      // Calculate output amount using dynamic rates
-      let rate = 1
-      const inputAmount = parseFloat(amount)
+      const value = ethers.parseEther(amount)
+      const tx = await oracleLendContract.addCollateral({ value })
       
-      if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
-        rate = exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_ORACLE
-      } else if (fromToken === 'tTRUST' && toToken === 'INTUIT') {
-        rate = exchangeRates.tTRUST_INTUIT
-      } else if (fromToken === 'INTUIT' && toToken === 'tTRUST') {
-        rate = 1 / exchangeRates.tTRUST_INTUIT
-      } else if (fromToken === 'ORACLE' && toToken === 'INTUIT') {
-        rate = exchangeRates.ORACLE_INTUIT
-      } else if (fromToken === 'INTUIT' && toToken === 'ORACLE') {
-        rate = 1 / exchangeRates.ORACLE_INTUIT
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.COLLATERAL_ADDED
       }
-
-      const outputAmount = inputAmount * rate
-      const amountInWei = (inputAmount * Math.pow(10, 18)).toString(16)
-
-      // For swapping from tTRUST (native token)
-      if (fromToken === 'tTRUST') {
-        // Create transaction to swap contract (this would be the real swap contract)
-        const txParams = {
-          from: fromAddress,
-          to: TOKENS[toToken].address,
-          value: `0x${amountInWei}`,
-          data: '0x', // This would contain actual swap contract call data
-          gas: '0x186A0', // 100k gas limit
-        }
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        return { 
-          success: true, 
-          txHash,
-          outputAmount: outputAmount.toString()
-        }
-      } else {
-        // For ERC20 tokens, would need to call transfer/approve functions
-        // For now, simulate the transaction but show real MetaMask prompt
-        const txParams = {
-          from: fromAddress,
-          to: TOKENS[fromToken].address,
-          value: '0x0',
-          data: '0xa9059cbb' + // transfer function selector
-                TOKENS[toToken].address.slice(2).padStart(64, '0') + // to address
-                amountInWei.padStart(64, '0'), // amount
-          gas: '0x186A0',
-        }
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        })
-
-        return { 
-          success: true, 
-          txHash,
-          outputAmount: outputAmount.toString()
-        }
-      }
-    } catch (error: any) {
-      const errorMessage = error.message || 'Swap transaction failed'
-      setError(errorMessage)
-      
-      // Check if user rejected the transaction
-      if (errorMessage.includes('rejected') || errorMessage.includes('denied') || error.code === 4001) {
-        return { success: false, error: 'Transaction rejected by user' }
-      }
-      
-      return { success: false, error: errorMessage }
+    } catch (err: any) {
+      console.error('Add collateral error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
     } finally {
       setIsLoading(false)
     }
-  }, [exchangeRates])
+  }, [oracleLendContract, signer, fetchContractData])
 
-  // Get token balances
-  const getTokenBalances = useCallback(async (account: string): Promise<TokenBalance> => {
-    try {
-      // This would connect to real contracts to get actual balances
-      // For now, returning 0 so users can see their real wallet balances when connected
-      return { tTRUST: '0', ORACLE: '0', INTUIT: '0' }
-    } catch (error) {
-      console.error('Failed to get token balances:', error)
-      return { tTRUST: '0', ORACLE: '0', INTUIT: '0' }
+  /**
+   * Withdraw ETH collateral from the lending protocol
+   */
+  const withdrawCollateral = useCallback(async (amount: string) => {
+    if (!oracleLendContract || !signer) {
+      throw new Error('Contract not initialized')
     }
-  }, [])
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const value = ethers.parseEther(amount)
+      const tx = await oracleLendContract.withdrawCollateral(value)
+      
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.COLLATERAL_WITHDRAWN
+      }
+    } catch (err: any) {
+      console.error('Withdraw collateral error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [oracleLendContract, signer, fetchContractData])
+
+  /**
+   * Borrow ORACLE tokens against ETH collateral
+   */
+  const borrowOracle = useCallback(async (amount: string) => {
+    if (!oracleLendContract || !signer) {
+      throw new Error('Contract not initialized')
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const value = ethers.parseEther(amount)
+      const tx = await oracleLendContract.borrowOracle(value)
+      
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.BORROW_SUCCESS
+      }
+    } catch (err: any) {
+      console.error('Borrow ORACLE error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [oracleLendContract, signer, fetchContractData])
+
+  /**
+   * Repay ORACLE token debt
+   */
+  const repayOracle = useCallback(async (amount: string) => {
+    if (!oracleLendContract || !oracleTokenContract || !signer) {
+      throw new Error('Contract not initialized')
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const value = ethers.parseEther(amount)
+      
+      // First check allowance
+      const allowance = await oracleTokenContract.allowance(userAddress, INTUITION_TESTNET.contracts.oracleLend)
+      
+      if (allowance < value) {
+        console.log('Approving ORACLE spending...')
+        const approveTx = await oracleTokenContract.approve(INTUITION_TESTNET.contracts.oracleLend, value)
+        await approveTx.wait()
+        console.log('Approval confirmed')
+      }
+
+      // Now repay
+      const tx = await oracleLendContract.repayOracle(value)
+      
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.REPAY_SUCCESS
+      }
+    } catch (err: any) {
+      console.error('Repay ORACLE error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [oracleLendContract, oracleTokenContract, signer, userAddress, fetchContractData])
+
+  /**
+   * Liquidate an unsafe position
+   */
+  const liquidate = useCallback(async (userAddress: string) => {
+    if (!oracleLendContract || !oracleTokenContract || !signer) {
+      throw new Error('Contract not initialized')
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // First check if position is liquidatable
+      const isLiquidatable = await oracleLendContract.isLiquidatable(userAddress)
+      if (!isLiquidatable) {
+        throw new Error('Position is not liquidatable')
+      }
+
+      // Get user debt to determine approval amount
+      const userDebt = await oracleLendContract.userBorrowed(userAddress)
+      
+      // Check and approve if needed
+      const allowance = await oracleTokenContract.allowance(signer.address, INTUITION_TESTNET.contracts.oracleLend)
+      
+      if (allowance < userDebt) {
+        console.log('Approving ORACLE spending for liquidation...')
+        const approveTx = await oracleTokenContract.approve(INTUITION_TESTNET.contracts.oracleLend, userDebt)
+        await approveTx.wait()
+        console.log('Approval confirmed')
+      }
+
+      // Liquidate
+      const tx = await oracleLendContract.liquidate(userAddress)
+      
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.LIQUIDATION_SUCCESS
+      }
+    } catch (err: any) {
+      console.error('Liquidation error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [oracleLendContract, oracleTokenContract, signer, fetchContractData])
+
+  // Legacy functions for backwards compatibility
+  const supply = useCallback(async (token: string, amount: string) => {
+    if (token === 'tTRUST') {
+      return addCollateral(amount)
+    }
+    return { success: false, error: 'Only ETH collateral is supported in the new protocol' }
+  }, [addCollateral])
+
+  const withdraw = useCallback(async (token: string, amount: string) => {
+    if (token === 'tTRUST') {
+      return withdrawCollateral(amount)
+    }
+    return { success: false, error: 'Only ETH collateral withdrawal is supported' }
+  }, [withdrawCollateral])
+
+  const borrow = useCallback(async (token: string, amount: string) => {
+    if (token === 'ORACLE') {
+      return borrowOracle(amount)
+    }
+    return { success: false, error: 'Only ORACLE token borrowing is supported' }
+  }, [borrowOracle])
+
+  const repay = useCallback(async (token: string, amount: string) => {
+    if (token === 'ORACLE') {
+      return repayOracle(amount)
+    }
+    return { success: false, error: 'Only ORACLE token repayment is supported' }
+  }, [repayOracle])
+
+  // Swap function (DEX interaction)
+  const swap = useCallback(async (fromToken: string, toToken: string, amount: string) => {
+    if (!dexContract || !signer) {
+      throw new Error('DEX contract not initialized')
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      let tx
+      if (fromToken === 'tTRUST' && toToken === 'ORACLE') {
+        const value = ethers.parseEther(amount)
+        tx = await dexContract.swapTrustForOracle(0, 0, { value }) // 0 minAmountOut for now
+      } else if (fromToken === 'ORACLE' && toToken === 'tTRUST') {
+        const value = ethers.parseEther(amount)
+        
+        // Approve DEX to spend ORACLE
+        const allowance = await oracleTokenContract!.allowance(userAddress, INTUITION_TESTNET.contracts.dex)
+        if (allowance < value) {
+          const approveTx = await oracleTokenContract!.approve(INTUITION_TESTNET.contracts.dex, value)
+          await approveTx.wait()
+        }
+        
+        tx = await dexContract.swapOracleForTrust(value, 0) // 0 minAmountOut for now
+      } else {
+        throw new Error('Unsupported swap pair')
+      }
+
+      console.log('Swap transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Swap transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: SUCCESS_MESSAGES.SWAP_SUCCESS
+      }
+    } catch (err: any) {
+      console.error('Swap error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [dexContract, oracleTokenContract, signer, userAddress, fetchContractData])
+
+  // Initialize on mount and when wallet connects
+  useEffect(() => {
+    initializeWeb3()
+  }, [initializeWeb3])
+
+  // Fetch data when contracts are ready
+  useEffect(() => {
+    if (oracleLendContract && oracleTokenContract && dexContract && userAddress) {
+      fetchContractData()
+    }
+  }, [fetchContractData, oracleLendContract, oracleTokenContract, dexContract, userAddress])
+
+  // Refresh data periodically
+  useEffect(() => {
+    if (!oracleLendContract || !userAddress) return
+
+    const interval = setInterval(() => {
+      fetchContractData()
+    }, 30000) // Refresh every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [fetchContractData, oracleLendContract, userAddress])
 
   return {
+    // New lending protocol
+    userLendingPosition,
+    protocolStats,
+    addCollateral,
+    withdrawCollateral,
+    borrowOracle,
+    repayOracle,
+    liquidate,
+    
+    // Legacy interface
     userPosition,
     lendingPools,
     exchangeRates,
-    isLoading,
-    error,
     supply,
     withdraw,
     borrow,
     repay,
     swap,
-    getTokenBalances
+    
+    // Web3 state
+    provider,
+    signer,
+    userAddress,
+    isConnected: !!signer && !!userAddress,
+    
+    // Common state
+    isLoading,
+    error,
+    setError,
+    
+    // Contract management
+    initializeWeb3,
+    fetchContractData
   }
 }

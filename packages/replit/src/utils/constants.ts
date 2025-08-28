@@ -11,12 +11,12 @@ export const INTUITION_TESTNET = {
     decimals: 18,
   },
   contracts: {
-    // Deployed contract addresses on Intuition Testnet (Latest AMM deployment)
-    oracleLend: '0x59D61CbD345836C2243323123595023F90aD9b1E',
-    oracleToken: '0xF6231A6B4017847709E2506f6C922F53a2c2aAAc',
+    // ✅ WORKING: Real Intuition testnet addresses with liquidity and funding
+    oracleLend: '0x5CdfBB614F07DA297fBfCb0Dcc9765463F2cCE9e', // OracleLend contract (5M ORACLE funded)
+    oracleToken: '0xF840731096FAeD511eFda466ACaD39531101fBAc', // OracleToken contract (10M supply)
+    dex: '0x072c2b3f3937aD47Da25dE0de1e36E4C366d5FED', // DEX contract (10 TTRUST + 5M ORACLE liquidity)
     tTrustToken: '0x0000000000000000000000000000000000000000', // Native TTRUST
-    intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', // INTUINT token
-    dex: '0xE96D0e2F84cee7e0A80B1f293E2604Ca5A6edae1', // New AMM DEX
+    intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', // INTUINT token (legacy)
   }
 }
 
@@ -54,19 +54,38 @@ export const TOKENS = {
 // Protocol constants
 export const PROTOCOL_CONFIG = {
   name: 'ORACLE LEND',
-  description: 'A decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Trust your Intuition.',
-  // AMM DEX configuration (no fixed exchange rate - market driven)
-  initialPrice: 500000, // Initial: 1 tTRUST = 500,000 ORACLE (from 10 TTRUST + 5M ORACLE liquidity)
-  maxLTV: 75, // 75% Loan-to-Value ratio
-  liquidationThreshold: 85, // 85% liquidation threshold
-  liquidationBonus: 5, // 5% liquidation bonus
-  tradingFee: 0.3, // 0.3% AMM trading fee
-  // No maxPriceImpact - AMM determines impact naturally
+  description: 'Over-collateralized lending protocol on Intuition testnet. Deposit ETH as collateral, borrow ORACLE tokens. Based on SpeedRunEthereum challenge with DEX-based price oracle.',
   
-  // Real token supplies
+  // Lending Protocol Configuration (SpeedRunEthereum model)
+  collateralRatio: 120, // 120% collateralization required (over-collateralized)
+  liquidationBonus: 10, // 10% liquidation bonus for liquidators
+  maxLTV: 83.33, // Max 83.33% LTV (100/120 = 83.33%)
+  
+  // DEX Configuration (for price oracle)
+  tradingFee: 0.3, // 0.3% AMM trading fee
+  initialPrice: 500000, // Initial: 1 tTRUST = 500,000 ORACLE (from 10 TTRUST + 5M ORACLE liquidity)
+  
+  // Contract Balances (from deployment)
+  contractBalances: {
+    oracleLendSupply: '5000000', // 5M ORACLE tokens available for borrowing
+    dexLiquidity: {
+      ttrust: '10', // 10 TTRUST in DEX
+      oracle: '5000000' // 5M ORACLE in DEX
+    }
+  },
+  
+  // Token supplies
   tokenSupply: {
-    ORACLE: '10000000', // 10 million ORACLE tokens
+    ORACLE: '10000000', // 10 million ORACLE tokens total
     INTUIT: '1000000' // 1 million INTUIT tokens
+  },
+  
+  // Health factor thresholds
+  healthFactor: {
+    safe: 150, // >150% is very safe
+    warning: 130, // 120-130% is warning zone
+    danger: 120, // <120% can be liquidated
+    critical: 110 // <110% is critical
   }
 }
 
@@ -180,6 +199,19 @@ export const ERROR_MESSAGES = {
   MARKET_CLOSED: 'Market is currently closed',
   INSUFFICIENT_LIQUIDITY: 'Insufficient liquidity for this trade',
   UNHEALTHY_POSITION: 'This action would make your position unhealthy',
+  
+  // New lending-specific errors
+  UNSAFE_POSITION_RATIO: 'This action would make your collateral ratio unsafe (below 120%)',
+  BORROWING_FAILED: 'Borrowing failed. Check your collateral ratio',
+  REPAYING_FAILED: 'Repayment failed. Check your ORACLE token balance and allowance',
+  POSITION_SAFE: 'This position is healthy and cannot be liquidated',
+  NOT_LIQUIDATABLE: 'This position cannot be liquidated',
+  INSUFFICIENT_LIQUIDATOR_ORACLE: 'Insufficient ORACLE tokens to liquidate this position',
+  INSUFFICIENT_COLLATERAL: 'Insufficient collateral for this borrow amount',
+  NO_DEBT_TO_REPAY: 'No debt to repay',
+  CANNOT_LIQUIDATE_SELF: 'You cannot liquidate your own position',
+  ORACLE_LIQUIDITY_LOW: 'Insufficient ORACLE tokens available for borrowing',
+  
   UNKNOWN_ERROR: 'An unknown error occurred. Please try again'
 } as const
 
@@ -189,27 +221,37 @@ export const SUCCESS_MESSAGES = {
   TRANSACTION_SUBMITTED: 'Transaction submitted successfully',
   TRANSACTION_CONFIRMED: 'Transaction confirmed',
   TOKENS_APPROVED: 'Tokens approved successfully',
-  SUPPLY_SUCCESS: 'Tokens supplied successfully',
-  WITHDRAW_SUCCESS: 'Tokens withdrawn successfully',
-  BORROW_SUCCESS: 'Tokens borrowed successfully',
-  REPAY_SUCCESS: 'Loan repaid successfully',
-  SWAP_SUCCESS: 'Tokens swapped successfully'
+  
+  // Lending-specific success messages
+  COLLATERAL_ADDED: 'ETH collateral added successfully',
+  COLLATERAL_WITHDRAWN: 'ETH collateral withdrawn successfully',
+  BORROW_SUCCESS: 'ORACLE tokens borrowed successfully',
+  REPAY_SUCCESS: 'ORACLE debt repaid successfully',
+  LIQUIDATION_SUCCESS: 'Position liquidated successfully - bonus earned!',
+  
+  // DEX success messages
+  SWAP_SUCCESS: 'Tokens swapped successfully',
+  LIQUIDITY_ADDED: 'Liquidity added successfully',
+  LIQUIDITY_REMOVED: 'Liquidity removed successfully'
 } as const
 
 // Feature flags
 export const FEATURES = {
   enableAnalytics: true,
-  enableLending: true,
-  enableBorrowing: true,
-  enableSwap: true,
-  enableLiquidation: false, // Disable liquidation for initial release
+  enableLending: true, // ETH collateral deposits/withdrawals
+  enableBorrowing: true, // ORACLE token borrowing/repaying
+  enableSwap: true, // DEX token swapping
+  enableLiquidation: true, // Liquidation of unsafe positions (now enabled!)
   enableGovernance: false, // Future feature
   enableStaking: false, // Future feature
   enableMobile: true,
   enableNotifications: true,
   enableDarkMode: true,
   enableAdvancedTrading: false, // Advanced trading features
-  enableBatchTransactions: false // Batch transaction support
+  enableBatchTransactions: false, // Batch transaction support
+  enableHealthMonitoring: true, // Real-time health factor monitoring
+  enablePriceAlerts: true, // Price alerts for liquidation risk
+  enableAutoLiquidation: true // Auto-liquidation bot integration
 } as const
 
 // Chart configuration
@@ -309,13 +351,30 @@ export const NETWORK_STATUS = {
 
 // Transaction types
 export const TRANSACTION_TYPES = {
-  SUPPLY: 'supply',
-  WITHDRAW: 'withdraw',
-  BORROW: 'borrow',
-  REPAY: 'repay',
-  SWAP: 'swap',
-  APPROVE: 'approve',
-  LIQUIDATION: 'liquidation'
+  // Lending Protocol (OracleLend contract)
+  ADD_COLLATERAL: 'addCollateral', // addCollateral() - deposit ETH
+  WITHDRAW_COLLATERAL: 'withdrawCollateral', // withdrawCollateral() - withdraw ETH
+  BORROW_ORACLE: 'borrowOracle', // borrowOracle() - borrow ORACLE tokens
+  REPAY_ORACLE: 'repayOracle', // repayOracle() - repay ORACLE debt
+  LIQUIDATE: 'liquidate', // liquidate() - liquidate unsafe position
+  
+  // DEX Protocol (DEX contract)
+  SWAP_TRUST_FOR_ORACLE: 'swapTrustForOracle', // swapTrustForOracle()
+  SWAP_ORACLE_FOR_TRUST: 'swapOracleForTrust', // swapOracleForTrust()
+  ADD_LIQUIDITY: 'addLiquidity', // addLiquidity()
+  REMOVE_LIQUIDITY: 'removeLiquidity', // removeLiquidity()
+  
+  // Token operations
+  APPROVE: 'approve', // ERC20 approve
+  TRANSFER: 'transfer', // ERC20 transfer
+  
+  // Legacy (for backwards compatibility)
+  SUPPLY: 'supply', // Deprecated - use ADD_COLLATERAL
+  WITHDRAW: 'withdraw', // Deprecated - use WITHDRAW_COLLATERAL
+  BORROW: 'borrow', // Deprecated - use BORROW_ORACLE
+  REPAY: 'repay', // Deprecated - use REPAY_ORACLE
+  SWAP: 'swap', // Deprecated - use specific swap functions
+  LIQUIDATION: 'liquidation' // Deprecated - use LIQUIDATE
 } as const
 
 // Default values
@@ -334,10 +393,58 @@ export const DEFAULTS = {
   // Table defaults
   tablePageSize: 10,
   tableSortBy: 'timestamp',
-  tableSortOrder: 'desc'
+  tableSortOrder: 'desc',
+  
+  // Lending defaults
+  minCollateralETH: '0.01', // Minimum 0.01 ETH collateral
+  minBorrowORACLE: '1', // Minimum 1 ORACLE token borrow
+  healthFactorRefreshInterval: 10000, // 10 seconds
+  priceRefreshInterval: 5000, // 5 seconds for price updates
+  
+  // Safety margins
+  safeCollateralRatio: 150, // Recommend 150% for safety
+  warningCollateralRatio: 130 // Warning at 130%
+} as const
+
+// Lending-specific constants
+export const LENDING_CONFIG = {
+  // Contract function names (for ABI calls)
+  FUNCTIONS: {
+    ADD_COLLATERAL: 'addCollateral',
+    WITHDRAW_COLLATERAL: 'withdrawCollateral',
+    BORROW_ORACLE: 'borrowOracle',
+    REPAY_ORACLE: 'repayOracle',
+    LIQUIDATE: 'liquidate',
+    GET_CURRENT_PRICE: 'getCurrentPrice',
+    GET_USER_POSITION: 'getUserPosition',
+    GET_HEALTH_RATIO: 'getHealthRatio',
+    IS_LIQUIDATABLE: 'isLiquidatable',
+    GET_MAX_BORROW_AMOUNT: 'getMaxBorrowAmount',
+    GET_MAX_WITHDRAWABLE_COLLATERAL: 'getMaxWithdrawableCollateral'
+  },
+  
+  // Events to listen for
+  EVENTS: {
+    COLLATERAL_ADDED: 'CollateralAdded',
+    COLLATERAL_WITHDRAWN: 'CollateralWithdrawn',
+    ASSET_BORROWED: 'AssetBorrowed',
+    ASSET_REPAID: 'AssetRepaid',
+    LIQUIDATION: 'Liquidation'
+  },
+  
+  // Position status
+  POSITION_STATUS: {
+    SAFE: 'safe',        // Health ratio > 150%
+    WARNING: 'warning',  // Health ratio 120-150%
+    DANGER: 'danger',    // Health ratio < 120% (liquidatable)
+    NO_POSITION: 'none'  // No collateral or debt
+  }
 } as const
 
 export type NetworkStatus = typeof NETWORK_STATUS[keyof typeof NETWORK_STATUS]
 export type TransactionType = typeof TRANSACTION_TYPES[keyof typeof TRANSACTION_TYPES]
 export type TokenSymbol = keyof typeof TOKENS
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
+export type PositionStatus = typeof LENDING_CONFIG.POSITION_STATUS[keyof typeof LENDING_CONFIG.POSITION_STATUS]
+export type LendingFunction = typeof LENDING_CONFIG.FUNCTIONS[keyof typeof LENDING_CONFIG.FUNCTIONS]
+export type LendingEvent = typeof LENDING_CONFIG.EVENTS[keyof typeof LENDING_CONFIG.EVENTS]

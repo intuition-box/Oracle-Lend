@@ -11,6 +11,37 @@ export interface TokenBalance {
   INTUIT: string
 }
 
+// New lending protocol types
+export interface UserLendingPosition {
+  // ETH collateral (in wei)
+  collateral: string
+  // ORACLE debt (in 18 decimals)
+  borrowed: string
+  // Collateral value in ORACLE terms
+  collateralValue: string
+  // Health ratio (percentage)
+  healthRatio: number
+  // Position status
+  status: 'safe' | 'warning' | 'danger' | 'none'
+  // Max borrowable amount
+  maxBorrow: string
+  // Max withdrawable collateral
+  maxWithdraw: string
+}
+
+export interface LendingProtocolStats {
+  // Contract balances
+  oracleBalance: string // Available ORACLE for borrowing
+  ethBalance: string // Total ETH collateral
+  // Current price from DEX
+  currentPrice: string // ORACLE per 1 ETH
+  // Protocol totals
+  totalCollateral: string
+  totalBorrowed: string
+  utilizationRate: number
+}
+
+// Legacy types (for backwards compatibility)
 export interface LendingPool {
   token: 'tTRUST' | 'ORACLE' | 'INTUIT'
   totalSupply: string
@@ -49,7 +80,7 @@ export interface AnalyticsData {
   activeUsers24h: number
   chartData: Array<{ timestamp: number; value: string }>
   recentTransactions: Array<{
-    type: 'supply' | 'withdraw' | 'borrow' | 'repay' | 'swap'
+    type: 'addCollateral' | 'withdrawCollateral' | 'borrowOracle' | 'repayOracle' | 'liquidate' | 'swap' | 'supply' | 'withdraw' | 'borrow' | 'repay'
     user: string
     amount: string
     time: string
@@ -70,7 +101,7 @@ export interface SwapQuote {
 
 export interface Transaction {
   hash: string
-  type: 'supply' | 'borrow' | 'withdraw' | 'repay' | 'swap'
+  type: 'addCollateral' | 'withdrawCollateral' | 'borrowOracle' | 'repayOracle' | 'liquidate' | 'swap' | 'supply' | 'borrow' | 'withdraw' | 'repay'
   amount: string
   token: string
   timestamp: number

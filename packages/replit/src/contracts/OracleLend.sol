@@ -4,421 +4,406 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+
+// Import our DEX contract for price oracle
+interface IDEX {
+    function getPrice(address _token) external view returns (uint256 price);
+    function tTRUST() external view returns (address);
+    function ORACLE() external view returns (address);
+    function tTrustReserve() external view returns (uint256);
+    function oracleReserve() external view returns (uint256);
+}
+
+// Custom errors for gas efficiency
+error OracleLend__InvalidAmount();
+error OracleLend__TransferFailed();
+error OracleLend__UnsafePositionRatio();
+error OracleLend__BorrowingFailed();
+error OracleLend__RepayingFailed();
+error OracleLend__PositionSafe();
+error OracleLend__NotLiquidatable();
+error OracleLend__InsufficientLiquidatorORACLE();
 
 /**
  * @title OracleLend
- * @dev Decentralized lending and borrowing protocol on Intuition testnet
- * @notice Allows users to supply assets to earn interest and borrow against collateral
+ * @dev Over-collateralized lending protocol using ETH as collateral and ORACLE as borrowable asset
+ * @notice Based on SpeedRunEthereum lending challenge - uses DEX for price discovery
  */
 contract OracleLend is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
-
-    // State variables
-    struct Market {
-        IERC20 token;
-        uint256 totalSupply;
-        uint256 totalBorrow;
-        uint256 supplyRate; // Annual percentage rate in basis points (e.g., 350 = 3.5%)
-        uint256 borrowRate; // Annual percentage rate in basis points
-        uint256 collateralFactor; // Percentage in basis points (e.g., 7500 = 75%)
-        uint256 liquidationThreshold; // Percentage in basis points
-        bool isActive;
-    }
-
-    struct UserAccount {
-        mapping(address => uint256) supplied; // token => amount
-        mapping(address => uint256) borrowed; // token => amount
-        mapping(address => uint256) supplyIndex; // For interest calculation
-        mapping(address => uint256) borrowIndex; // For interest calculation
-    }
 
     // Constants
-    uint256 public constant BASIS_POINTS = 10000;
-    uint256 public constant SECONDS_PER_YEAR = 365 days;
-    uint256 public constant LIQUIDATION_BONUS = 500; // 5% bonus for liquidators
+    uint256 private constant COLLATERAL_RATIO = 120; // 120% collateralization required
+    uint256 private constant LIQUIDATION_BONUS = 10; // 10% bonus for liquidators
+    
+    // Contract references
+    IERC20 public immutable oracleToken;    // ORACLE token (borrowable asset)
+    IDEX public immutable dex;              // DEX contract for price oracle
 
-    // State mappings
-    mapping(address => Market) public markets;
-    mapping(address => UserAccount) public userAccounts;
-    mapping(address => bool) public marketExists;
-    address[] public allMarkets;
+    // User positions
+    mapping(address => uint256) public userCollateral;  // ETH collateral in wei
+    mapping(address => uint256) public userBorrowed;    // ORACLE tokens borrowed (18 decimals)
 
     // Events
-    event MarketAdded(address indexed token, uint256 supplyRate, uint256 borrowRate);
-    event Supply(address indexed user, address indexed token, uint256 amount);
-    event Withdraw(address indexed user, address indexed token, uint256 amount);
-    event Borrow(address indexed user, address indexed token, uint256 amount);
-    event Repay(address indexed user, address indexed token, uint256 amount);
+    event CollateralAdded(address indexed user, uint256 indexed amount, uint256 price);
+    event CollateralWithdrawn(address indexed user, uint256 indexed amount, uint256 price);
+    event AssetBorrowed(address indexed user, uint256 indexed amount, uint256 price);
+    event AssetRepaid(address indexed user, uint256 indexed amount, uint256 price);
     event Liquidation(
+        address indexed user,
         address indexed liquidator,
-        address indexed borrower,
-        address indexed tokenCollateral,
-        address tokenBorrowed,
-        uint256 amountCollateral,
-        uint256 amountBorrowed
+        uint256 amountForLiquidator,
+        uint256 liquidatedUserDebt,
+        uint256 price
     );
 
-    constructor() {}
-
-    /**
-     * @dev Add a new lending market
-     * @param _token Token contract address
-     * @param _supplyRate Supply interest rate in basis points
-     * @param _borrowRate Borrow interest rate in basis points
-     * @param _collateralFactor Collateral factor in basis points
-     */
-    function addMarket(
-        address _token,
-        uint256 _supplyRate,
-        uint256 _borrowRate,
-        uint256 _collateralFactor
-    ) external onlyOwner {
-        require(_token != address(0), "Invalid token address");
-        require(!marketExists[_token], "Market already exists");
-        require(_collateralFactor <= BASIS_POINTS, "Invalid collateral factor");
-        require(_borrowRate > _supplyRate, "Borrow rate must be higher than supply rate");
-
-        markets[_token] = Market({
-            token: IERC20(_token),
-            totalSupply: 0,
-            totalBorrow: 0,
-            supplyRate: _supplyRate,
-            borrowRate: _borrowRate,
-            collateralFactor: _collateralFactor,
-            liquidationThreshold: _collateralFactor.add(1000), // +10% buffer
-            isActive: true
-        });
-
-        marketExists[_token] = true;
-        allMarkets.push(_token);
-
-        emit MarketAdded(_token, _supplyRate, _borrowRate);
+    constructor(address _dex, address _oracleToken) Ownable(msg.sender) {
+        require(_dex != address(0) && _oracleToken != address(0), "Invalid addresses");
+        dex = IDEX(_dex);
+        oracleToken = IERC20(_oracleToken);
+        
+        // Pre-approve for efficiency in liquidations
+        oracleToken.approve(address(this), type(uint256).max);
     }
 
     /**
-     * @dev Supply tokens to the lending pool
-     * @param _token Token address to supply
-     * @param _amount Amount to supply
+     * @notice Deposit ETH as collateral
+     * @dev Users send ETH which is stored as collateral for borrowing ORACLE tokens
      */
-    function supply(address _token, uint256 _amount) external nonReentrant whenNotPaused {
-        require(marketExists[_token], "Market does not exist");
-        require(_amount > 0, "Amount must be greater than 0");
+    function addCollateral() external payable nonReentrant whenNotPaused {
+        if (msg.value == 0) revert OracleLend__InvalidAmount();
         
-        Market storage market = markets[_token];
-        require(market.isActive, "Market is not active");
-
-        // Update interest before changing balances
-        _updateSupplyIndex(_token, msg.sender);
-
-        // Transfer tokens from user
-        market.token.safeTransferFrom(msg.sender, address(this), _amount);
-
-        // Update user balance
-        userAccounts[msg.sender].supplied[_token] = userAccounts[msg.sender].supplied[_token].add(_amount);
-        
-        // Update market totals
-        market.totalSupply = market.totalSupply.add(_amount);
-
-        emit Supply(msg.sender, _token, _amount);
+        userCollateral[msg.sender] += msg.value;
+        emit CollateralAdded(msg.sender, msg.value, getCurrentPrice());
     }
 
     /**
-     * @dev Withdraw supplied tokens
-     * @param _token Token address to withdraw
-     * @param _amount Amount to withdraw
+     * @notice Withdraw ETH collateral (if position remains healthy)
+     * @param amount Amount of ETH to withdraw in wei
      */
-    function withdraw(address _token, uint256 _amount) external nonReentrant whenNotPaused {
-        require(marketExists[_token], "Market does not exist");
-        require(_amount > 0, "Amount must be greater than 0");
+    function withdrawCollateral(uint256 amount) external nonReentrant whenNotPaused {
+        if (amount == 0 || userCollateral[msg.sender] < amount) revert OracleLend__InvalidAmount();
 
-        UserAccount storage account = userAccounts[msg.sender];
-        require(account.supplied[_token] >= _amount, "Insufficient supply balance");
+        uint256 currentCollateral = userCollateral[msg.sender];
+        uint256 newCollateral = currentCollateral - amount;
+        uint256 debt = userBorrowed[msg.sender];
 
-        // Update interest before changing balances
-        _updateSupplyIndex(_token, msg.sender);
+        // Check if withdrawal would make position unsafe
+        if (debt > 0) {
+            uint256 newCollateralValue = calculateCollateralValue(newCollateral);
+            uint256 newRatio = (newCollateralValue * 100) / debt;
+            if (newRatio < COLLATERAL_RATIO) revert OracleLend__UnsafePositionRatio();
+        }
 
-        // Check if withdrawal would make account unhealthy
-        uint256 newSupplyBalance = account.supplied[_token].sub(_amount);
-        require(_isAccountHealthy(msg.sender, _token, newSupplyBalance, account.supplied[_token]), "Withdrawal would make account unhealthy");
+        userCollateral[msg.sender] = newCollateral;
 
-        // Update balances
-        account.supplied[_token] = newSupplyBalance;
-        markets[_token].totalSupply = markets[_token].totalSupply.sub(_amount);
+        // Transfer ETH back to user
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        if (!success) revert OracleLend__TransferFailed();
 
-        // Transfer tokens to user
-        markets[_token].token.safeTransfer(msg.sender, _amount);
-
-        emit Withdraw(msg.sender, _token, _amount);
+        emit CollateralWithdrawn(msg.sender, amount, getCurrentPrice());
     }
 
     /**
-     * @dev Borrow tokens against collateral
-     * @param _token Token address to borrow
-     * @param _amount Amount to borrow
+     * @notice Borrow ORACLE tokens against ETH collateral
+     * @param borrowAmount Amount of ORACLE tokens to borrow (18 decimals)
      */
-    function borrow(address _token, uint256 _amount) external nonReentrant whenNotPaused {
-        require(marketExists[_token], "Market does not exist");
-        require(_amount > 0, "Amount must be greater than 0");
-        
-        Market storage market = markets[_token];
-        require(market.isActive, "Market is not active");
-        require(market.token.balanceOf(address(this)) >= _amount, "Insufficient liquidity");
+    function borrowOracle(uint256 borrowAmount) external nonReentrant whenNotPaused {
+        if (borrowAmount == 0) revert OracleLend__InvalidAmount();
 
-        // Update interest before changing balances
-        _updateBorrowIndex(_token, msg.sender);
+        // Check if contract has enough ORACLE tokens to lend
+        require(oracleToken.balanceOf(address(this)) >= borrowAmount, "Insufficient ORACLE liquidity");
 
-        // Check if user can borrow this amount
-        uint256 borrowPower = getBorrowPower(msg.sender);
-        uint256 currentBorrowValue = getTotalBorrowValue(msg.sender);
-        uint256 newBorrowValue = currentBorrowValue.add(_amount); // Simplified: assumes token price = 1
+        // Optimistically increase debt then validate position (gas efficient pattern)
+        userBorrowed[msg.sender] += borrowAmount;
+        _validatePosition(msg.sender);
 
-        require(newBorrowValue <= borrowPower, "Insufficient collateral");
+        // Transfer ORACLE tokens to borrower
+        bool success = oracleToken.transfer(msg.sender, borrowAmount);
+        if (!success) {
+            // Revert the debt increase if transfer fails
+            userBorrowed[msg.sender] -= borrowAmount;
+            revert OracleLend__BorrowingFailed();
+        }
 
-        // Update user balance
-        userAccounts[msg.sender].borrowed[_token] = userAccounts[msg.sender].borrowed[_token].add(_amount);
-        
-        // Update market totals
-        market.totalBorrow = market.totalBorrow.add(_amount);
-
-        // Transfer tokens to user
-        market.token.safeTransfer(msg.sender, _amount);
-
-        emit Borrow(msg.sender, _token, _amount);
+        emit AssetBorrowed(msg.sender, borrowAmount, getCurrentPrice());
     }
 
     /**
-     * @dev Repay borrowed tokens
-     * @param _token Token address to repay
-     * @param _amount Amount to repay
+     * @notice Repay ORACLE token debt
+     * @param repayAmount Amount of ORACLE tokens to repay (user must approve first)
      */
-    function repay(address _token, uint256 _amount) external nonReentrant whenNotPaused {
-        require(marketExists[_token], "Market does not exist");
-        require(_amount > 0, "Amount must be greater than 0");
+    function repayOracle(uint256 repayAmount) external nonReentrant whenNotPaused {
+        if (repayAmount == 0) revert OracleLend__InvalidAmount();
+        
+        uint256 debt = userBorrowed[msg.sender];
+        if (repayAmount > debt) revert OracleLend__InvalidAmount();
 
-        UserAccount storage account = userAccounts[msg.sender];
-        uint256 borrowBalance = account.borrowed[_token];
-        require(borrowBalance > 0, "No debt to repay");
+        // Transfer ORACLE from user to contract
+        bool success = oracleToken.transferFrom(msg.sender, address(this), repayAmount);
+        if (!success) revert OracleLend__RepayingFailed();
 
-        // Update interest before changing balances
-        _updateBorrowIndex(_token, msg.sender);
-
-        // Cap amount to borrowed balance
-        uint256 repayAmount = _amount > borrowBalance ? borrowBalance : _amount;
-
-        // Transfer tokens from user
-        markets[_token].token.safeTransferFrom(msg.sender, address(this), repayAmount);
-
-        // Update balances
-        account.borrowed[_token] = borrowBalance.sub(repayAmount);
-        markets[_token].totalBorrow = markets[_token].totalBorrow.sub(repayAmount);
-
-        emit Repay(msg.sender, _token, repayAmount);
+        userBorrowed[msg.sender] = debt - repayAmount;
+        emit AssetRepaid(msg.sender, repayAmount, getCurrentPrice());
     }
 
     /**
-     * @dev Liquidate an unhealthy account
-     * @param _borrower Address of the borrower to liquidate
-     * @param _tokenCollateral Token address of collateral to seize
-     * @param _tokenBorrowed Token address of borrowed asset to repay
-     * @param _amount Amount to repay
+     * @notice Liquidate an unsafe position
+     * @param user Address of the user to liquidate
+     * @dev Liquidator must approve ORACLE tokens to this contract first
      */
-    function liquidate(
-        address _borrower,
-        address _tokenCollateral,
-        address _tokenBorrowed,
-        uint256 _amount
-    ) external nonReentrant whenNotPaused {
-        require(_borrower != msg.sender, "Cannot liquidate yourself");
-        require(marketExists[_tokenCollateral] && marketExists[_tokenBorrowed], "Invalid markets");
+    function liquidate(address user) external nonReentrant whenNotPaused {
+        if (!isLiquidatable(user)) revert OracleLend__NotLiquidatable();
         
-        // Check if account is liquidatable
-        require(!_isAccountHealthy(_borrower, address(0), 0, 0), "Account is healthy");
+        uint256 userDebt = userBorrowed[user];
+        if (userDebt == 0) revert OracleLend__NotLiquidatable();
+
+        // Ensure liquidator has enough ORACLE tokens
+        if (oracleToken.balanceOf(msg.sender) < userDebt) revert OracleLend__InsufficientLiquidatorORACLE();
+
+        // Pull ORACLE tokens from liquidator to repay debt
+        bool pulled = oracleToken.transferFrom(msg.sender, address(this), userDebt);
+        if (!pulled) revert OracleLend__RepayingFailed();
+
+        uint256 userCollateralAmount = userCollateral[user];
+        uint256 collateralValue = calculateCollateralValue(userCollateralAmount);
+
+        // Clear user's debt
+        userBorrowed[user] = 0;
+
+        // Calculate ETH collateral to give to liquidator
+        uint256 collateralPurchased;
+        if (collateralValue == 0) {
+            collateralPurchased = userCollateralAmount;
+        } else {
+            // collateralPurchased = (userDebt * userCollateralAmount) / collateralValue
+            collateralPurchased = (userDebt * userCollateralAmount) / collateralValue;
+        }
+
+        // Add liquidation bonus (10%)
+        uint256 liquidationReward = (collateralPurchased * LIQUIDATION_BONUS) / 100;
+        uint256 amountForLiquidator = collateralPurchased + liquidationReward;
         
-        UserAccount storage borrowerAccount = userAccounts[_borrower];
-        uint256 borrowBalance = borrowerAccount.borrowed[_tokenBorrowed];
-        require(borrowBalance > 0, "No debt to liquidate");
-        
-        // Cap liquidation amount
-        uint256 liquidateAmount = _amount > borrowBalance ? borrowBalance : _amount;
-        
-        // Calculate collateral to seize (with liquidation bonus)
-        uint256 collateralAmount = liquidateAmount.mul(BASIS_POINTS.add(LIQUIDATION_BONUS)).div(BASIS_POINTS);
-        require(borrowerAccount.supplied[_tokenCollateral] >= collateralAmount, "Insufficient collateral");
-        
-        // Transfer repayment from liquidator
-        markets[_tokenBorrowed].token.safeTransferFrom(msg.sender, address(this), liquidateAmount);
-        
-        // Update borrower balances
-        borrowerAccount.borrowed[_tokenBorrowed] = borrowBalance.sub(liquidateAmount);
-        borrowerAccount.supplied[_tokenCollateral] = borrowerAccount.supplied[_tokenCollateral].sub(collateralAmount);
-        
-        // Update market totals
-        markets[_tokenBorrowed].totalBorrow = markets[_tokenBorrowed].totalBorrow.sub(liquidateAmount);
-        markets[_tokenCollateral].totalSupply = markets[_tokenCollateral].totalSupply.sub(collateralAmount);
-        
-        // Transfer collateral to liquidator
-        markets[_tokenCollateral].token.safeTransfer(msg.sender, collateralAmount);
-        
-        emit Liquidation(msg.sender, _borrower, _tokenCollateral, _tokenBorrowed, collateralAmount, liquidateAmount);
+        // Cap at available collateral
+        if (amountForLiquidator > userCollateralAmount) {
+            amountForLiquidator = userCollateralAmount;
+        }
+
+        userCollateral[user] = userCollateralAmount - amountForLiquidator;
+
+        // Send ETH collateral to liquidator
+        (bool sent, ) = payable(msg.sender).call{value: amountForLiquidator}("");
+        if (!sent) revert OracleLend__TransferFailed();
+
+        emit Liquidation(user, msg.sender, amountForLiquidator, userDebt, getCurrentPrice());
     }
 
     // View functions
 
     /**
-     * @dev Get user's borrow power (maximum amount they can borrow)
+     * @notice Get current ORACLE price in terms of ETH from DEX
+     * @return price ORACLE per 1 ETH (18 decimals)
      */
-    function getBorrowPower(address _user) public view returns (uint256) {
-        uint256 totalCollateralValue = 0;
-        
-        for (uint256 i = 0; i < allMarkets.length; i++) {
-            address token = allMarkets[i];
-            uint256 supplied = userAccounts[_user].supplied[token];
-            if (supplied > 0) {
-                uint256 collateralValue = supplied.mul(markets[token].collateralFactor).div(BASIS_POINTS);
-                totalCollateralValue = totalCollateralValue.add(collateralValue);
+    function getCurrentPrice() public view returns (uint256 price) {
+        // Get tTRUST price in ORACLE (since we're using tTRUST as ETH equivalent)
+        try dex.getPrice(dex.tTRUST()) returns (uint256 _price) {
+            return _price;
+        } catch {
+            // Fallback: calculate from reserves if getPrice fails
+            uint256 tTrustReserve = dex.tTrustReserve();
+            uint256 oracleReserve = dex.oracleReserve();
+            if (tTrustReserve > 0 && oracleReserve > 0) {
+                return (oracleReserve * 1e18) / tTrustReserve;
             }
+            return 0; // No liquidity
         }
-        
-        return totalCollateralValue;
     }
 
     /**
-     * @dev Get user's total borrow value
+     * @notice Calculate collateral value in ORACLE terms
+     * @param collateralAmount ETH collateral amount in wei
+     * @return value Collateral value in ORACLE tokens (18 decimals)
      */
-    function getTotalBorrowValue(address _user) public view returns (uint256) {
-        uint256 totalBorrowValue = 0;
+    function calculateCollateralValue(uint256 collateralAmount) public view returns (uint256 value) {
+        uint256 price = getCurrentPrice(); // ORACLE per 1 ETH
+        return (collateralAmount * price) / 1e18;
+    }
+
+    /**
+     * @notice Check if a position is liquidatable (health ratio < 120%)
+     * @param user Address to check
+     * @return liquidatable True if position can be liquidated
+     */
+    function isLiquidatable(address user) public view returns (bool liquidatable) {
+        uint256 debt = userBorrowed[user];
+        if (debt == 0) return false;
         
-        for (uint256 i = 0; i < allMarkets.length; i++) {
-            address token = allMarkets[i];
-            uint256 borrowed = userAccounts[_user].borrowed[token];
-            totalBorrowValue = totalBorrowValue.add(borrowed); // Simplified: assumes token price = 1
+        uint256 collateralValue = calculateCollateralValue(userCollateral[user]);
+        uint256 healthRatio = (collateralValue * 100) / debt;
+        
+        return healthRatio < COLLATERAL_RATIO;
+    }
+
+    /**
+     * @notice Get user's position health ratio (percentage)
+     * @param user Address to check
+     * @return ratio Health ratio as percentage (120 = 120%)
+     */
+    function getHealthRatio(address user) external view returns (uint256 ratio) {
+        uint256 debt = userBorrowed[user];
+        if (debt == 0) return type(uint256).max; // No debt = infinite health
+        
+        uint256 collateralValue = calculateCollateralValue(userCollateral[user]);
+        return (collateralValue * 100) / debt;
+    }
+
+    /**
+     * @notice Get maximum ORACLE amount a user can borrow
+     * @param user Address to check
+     * @return maxBorrow Maximum borrowable amount
+     */
+    function getMaxBorrowAmount(address user) external view returns (uint256 maxBorrow) {
+        uint256 collateralValue = calculateCollateralValue(userCollateral[user]);
+        uint256 currentDebt = userBorrowed[user];
+        
+        // Max borrowable = (collateralValue / COLLATERAL_RATIO) * 100 - currentDebt
+        uint256 maxTotalBorrow = (collateralValue * 100) / COLLATERAL_RATIO;
+        
+        if (maxTotalBorrow > currentDebt) {
+            return maxTotalBorrow - currentDebt;
         }
+        return 0;
+    }
+
+    /**
+     * @notice Get maximum ETH collateral a user can withdraw
+     * @param user Address to check  
+     * @return maxWithdraw Maximum withdrawable ETH amount
+     */
+    function getMaxWithdrawableCollateral(address user) external view returns (uint256 maxWithdraw) {
+        uint256 debt = userBorrowed[user];
+        if (debt == 0) return userCollateral[user]; // No debt = can withdraw all
         
-        return totalBorrowValue;
-    }
-
-    /**
-     * @dev Get user's health factor (collateral value / borrow value)
-     */
-    function getHealthFactor(address _user) external view returns (uint256) {
-        uint256 borrowValue = getTotalBorrowValue(_user);
-        if (borrowValue == 0) return type(uint256).max;
+        uint256 price = getCurrentPrice();
+        if (price == 0) return 0; // No price = can't calculate
         
-        uint256 collateralValue = getBorrowPower(_user).mul(BASIS_POINTS).div(7500); // Assuming 75% collateral factor
-        return collateralValue.mul(BASIS_POINTS).div(borrowValue);
+        // Minimum collateral needed = (debt * COLLATERAL_RATIO * 1e18) / (price * 100)
+        uint256 minCollateralNeeded = (debt * COLLATERAL_RATIO * 1e18) / (price * 100);
+        uint256 currentCollateral = userCollateral[user];
+        
+        if (currentCollateral > minCollateralNeeded) {
+            return currentCollateral - minCollateralNeeded;
+        }
+        return 0;
     }
 
     /**
-     * @dev Get market utilization rate
+     * @notice Get user's complete position info
+     * @param user Address to check
+     * @return collateral ETH collateral amount
+     * @return borrowed ORACLE debt amount  
+     * @return collateralValue Collateral value in ORACLE
+     * @return healthRatio Health ratio percentage
+     * @return liquidatable Whether position can be liquidated
      */
-    function getUtilizationRate(address _token) external view returns (uint256) {
-        Market storage market = markets[_token];
-        if (market.totalSupply == 0) return 0;
-        return market.totalBorrow.mul(BASIS_POINTS).div(market.totalSupply);
-    }
-
-    /**
-     * @dev Get user account info
-     */
-    function getUserAccount(address _user, address _token) external view returns (uint256 supplied, uint256 borrowed) {
-        UserAccount storage account = userAccounts[_user];
-        return (account.supplied[_token], account.borrowed[_token]);
-    }
-
-    /**
-     * @dev Get all markets
-     */
-    function getAllMarkets() external view returns (address[] memory) {
-        return allMarkets;
+    function getUserPosition(address user) external view returns (
+        uint256 collateral,
+        uint256 borrowed,
+        uint256 collateralValue,
+        uint256 healthRatio,
+        bool liquidatable
+    ) {
+        collateral = userCollateral[user];
+        borrowed = userBorrowed[user];
+        collateralValue = calculateCollateralValue(collateral);
+        
+        if (borrowed == 0) {
+            healthRatio = type(uint256).max;
+            liquidatable = false;
+        } else {
+            healthRatio = (collateralValue * 100) / borrowed;
+            liquidatable = healthRatio < COLLATERAL_RATIO;
+        }
     }
 
     // Internal functions
 
-    function _updateSupplyIndex(address _token, address _user) internal {
-        // Simplified interest calculation - in production, use compound interest
-        UserAccount storage account = userAccounts[_user];
-        account.supplyIndex[_token] = block.timestamp;
-    }
-
-    function _updateBorrowIndex(address _token, address _user) internal {
-        // Simplified interest calculation - in production, use compound interest
-        UserAccount storage account = userAccounts[_user];
-        account.borrowIndex[_token] = block.timestamp;
-    }
-
-    function _isAccountHealthy(
-        address _user,
-        address _excludeToken,
-        uint256 _newSupplyBalance,
-        uint256 _oldSupplyBalance
-    ) internal view returns (bool) {
-        uint256 totalCollateralValue = 0;
-        uint256 totalBorrowValue = getTotalBorrowValue(_user);
-        
-        for (uint256 i = 0; i < allMarkets.length; i++) {
-            address token = allMarkets[i];
-            uint256 supplied;
-            
-            if (token == _excludeToken) {
-                supplied = _newSupplyBalance;
-            } else {
-                supplied = userAccounts[_user].supplied[token];
-            }
-            
-            if (supplied > 0) {
-                uint256 collateralValue = supplied.mul(markets[token].liquidationThreshold).div(BASIS_POINTS);
-                totalCollateralValue = totalCollateralValue.add(collateralValue);
-            }
-        }
-        
-        return totalBorrowValue <= totalCollateralValue;
+    /**
+     * @dev Validate that a user's position is healthy after a change
+     * @param user Address to validate
+     */
+    function _validatePosition(address user) internal view {
+        if (isLiquidatable(user)) revert OracleLend__UnsafePositionRatio();
     }
 
     // Admin functions
 
     /**
-     * @dev Pause the protocol
+     * @notice Pause the protocol (emergency stop)
      */
     function pause() external onlyOwner {
         _pause();
     }
 
     /**
-     * @dev Unpause the protocol
+     * @notice Unpause the protocol
      */
     function unpause() external onlyOwner {
         _unpause();
     }
 
     /**
-     * @dev Update market parameters
+     * @notice Fund the contract with ORACLE tokens for lending
+     * @param amount Amount of ORACLE tokens to add
      */
-    function updateMarket(
-        address _token,
-        uint256 _supplyRate,
-        uint256 _borrowRate,
-        uint256 _collateralFactor,
-        bool _isActive
-    ) external onlyOwner {
-        require(marketExists[_token], "Market does not exist");
-        require(_collateralFactor <= BASIS_POINTS, "Invalid collateral factor");
-        
-        Market storage market = markets[_token];
-        market.supplyRate = _supplyRate;
-        market.borrowRate = _borrowRate;
-        market.collateralFactor = _collateralFactor;
-        market.liquidationThreshold = _collateralFactor.add(1000);
-        market.isActive = _isActive;
+    function fundContract(uint256 amount) external onlyOwner {
+        oracleToken.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     /**
-     * @dev Emergency withdrawal function for admin
+     * @notice Emergency withdrawal of ORACLE tokens (only owner)
+     * @param amount Amount of ORACLE tokens to withdraw
      */
-    function emergencyWithdraw(address _token, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(owner(), _amount);
+    function emergencyWithdrawOracle(uint256 amount) external onlyOwner {
+        oracleToken.safeTransfer(owner(), amount);
+    }
+
+    /**
+     * @notice Emergency withdrawal of ETH (only owner)
+     * @param amount Amount of ETH to withdraw
+     */
+    function emergencyWithdrawETH(uint256 amount) external onlyOwner {
+        require(address(this).balance >= amount, "Insufficient ETH balance");
+        (bool success, ) = payable(owner()).call{value: amount}("");
+        require(success, "ETH transfer failed");
+    }
+
+    /**
+     * @notice Get contract's ORACLE token balance
+     * @return balance Available ORACLE tokens for lending
+     */
+    function getContractOracleBalance() external view returns (uint256 balance) {
+        return oracleToken.balanceOf(address(this));
+    }
+
+    /**
+     * @notice Get contract's ETH balance
+     * @return balance Available ETH balance
+     */
+    function getContractETHBalance() external view returns (uint256 balance) {
+        return address(this).balance;
+    }
+
+    /**
+     * @dev Function to receive ETH (for collateral deposits)
+     */
+    receive() external payable {
+        // Allow ETH deposits via receive() - they will be added as collateral
+        if (msg.value > 0) {
+            userCollateral[msg.sender] += msg.value;
+            emit CollateralAdded(msg.sender, msg.value, getCurrentPrice());
+        }
     }
 }

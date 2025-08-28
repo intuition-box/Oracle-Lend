@@ -1,17 +1,37 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
 import TokenIcon from './TokenIcon'
+import { PROTOCOL_CONFIG, LENDING_CONFIG } from '../utils/constants'
 
 const LendingBorrowing: React.FC = () => {
-  const { userPosition, lendingPools, isLoading, supply, withdraw, borrow, repay } = useContract()
-  const { isConnected, balance, isInitializing } = useWallet()
+  const { 
+    userLendingPosition, 
+    protocolStats, 
+    isLoading, 
+    addCollateral, 
+    withdrawCollateral, 
+    borrowOracle, 
+    repayOracle,
+    liquidate,
+    isConnected: contractConnected,
+    initializeWeb3
+  } = useContract()
+  const { isConnected: walletConnected, balance, isInitializing, connect } = useWallet()
   
-  const [activeTab, setActiveTab] = useState<'supply' | 'borrow'>('supply')
-  const [selectedToken, setSelectedToken] = useState<'tTRUST' | 'ORACLE' | 'INTUIT'>('tTRUST')
+  const [activeTab, setActiveTab] = useState<'collateral' | 'borrow'>('collateral')
   const [amount, setAmount] = useState('')
-  const [action, setAction] = useState<'supply' | 'withdraw' | 'borrow' | 'repay'>('supply')
+  const [action, setAction] = useState<'addCollateral' | 'withdrawCollateral' | 'borrowOracle' | 'repayOracle'>('addCollateral')
+  const [liquidateAddress, setLiquidateAddress] = useState('')
 
+  const isConnected = walletConnected && contractConnected
+
+  // Initialize contracts when wallet connects
+  useEffect(() => {
+    if (walletConnected && !contractConnected) {
+      initializeWeb3()
+    }
+  }, [walletConnected, contractConnected, initializeWeb3])
 
   const handleTransaction = async () => {
     if (!amount || !isConnected) return
@@ -19,17 +39,17 @@ const LendingBorrowing: React.FC = () => {
     try {
       let result
       switch (action) {
-        case 'supply':
-          result = await supply(selectedToken, amount)
+        case 'addCollateral':
+          result = await addCollateral(amount)
           break
-        case 'withdraw':
-          result = await withdraw(selectedToken, amount)
+        case 'withdrawCollateral':
+          result = await withdrawCollateral(amount)
           break
-        case 'borrow':
-          result = await borrow(selectedToken, amount)
+        case 'borrowOracle':
+          result = await borrowOracle(amount)
           break
-        case 'repay':
-          result = await repay(selectedToken, amount)
+        case 'repayOracle':
+          result = await repayOracle(amount)
           break
         default:
           return
@@ -39,7 +59,7 @@ const LendingBorrowing: React.FC = () => {
         setAmount('')
         // Use global notification system
         if (typeof window !== 'undefined' && (window as any).showNotification) {
-          (window as any).showNotification('success', `Successfully ${action}ed ${amount} ${selectedToken}`, result.txHash)
+          (window as any).showNotification('success', result.message, result.txHash)
         }
       } else {
         if (result && result.error && result.error.includes('rejected')) {
@@ -48,509 +68,390 @@ const LendingBorrowing: React.FC = () => {
           }
         } else {
           if (typeof window !== 'undefined' && (window as any).showNotification) {
-            (window as any).showNotification('error', result?.error || `${action} transaction failed`)
+            (window as any).showNotification('error', result?.error || 'Transaction failed')
           }
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Transaction error:', error)
       if (typeof window !== 'undefined' && (window as any).showNotification) {
-        (window as any).showNotification('error', error.message || 'Transaction failed unexpectedly')
+        (window as any).showNotification('error', 'Transaction failed. Please try again.')
       }
     }
   }
 
-  const getTokenPool = (token: 'tTRUST' | 'ORACLE' | 'INTUIT') => {
-    return lendingPools.find(pool => pool.token === token)
-  }
+  const handleLiquidate = async () => {
+    if (!liquidateAddress || !isConnected) return
 
-  const formatCurrency = (value: string, decimals: number = 2) => {
-    return parseFloat(value).toLocaleString(undefined, { 
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals 
-    })
-  }
-
-  const calculateHealthFactor = () => {
-    const collateralValue = parseFloat(userPosition.collateralValue) || 0
-    
-    // Calculate actual borrowed value from borrowed amounts
-    const totalBorrowed = Object.values(userPosition.borrowed).reduce((total, amount) => {
-      return total + parseFloat(amount || '0')
-    }, 0)
-    
-    // If no borrowed amount, return infinity (safest position) 
-    if (totalBorrowed === 0) {
-      return collateralValue > 0 ? 999 : 0 // 999 represents "infinite" health factor
+    try {
+      const result = await liquidate(liquidateAddress)
+      
+      if (result && result.success) {
+        setLiquidateAddress('')
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('success', result.message, result.txHash)
+        }
+      } else {
+        if (typeof window !== 'undefined' && (window as any).showNotification) {
+          (window as any).showNotification('error', result?.error || 'Liquidation failed')
+        }
+      }
+    } catch (error) {
+      console.error('Liquidation error:', error)
+      if (typeof window !== 'undefined' && (window as any).showNotification) {
+        (window as any).showNotification('error', 'Liquidation failed. Please try again.')
+      }
     }
-    
-    // Calculate borrowed value in USD (using token prices)
-    const borrowValue = 
-      parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + // tTRUST price
-      parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + // ORACLE price  
-      parseFloat(userPosition.borrowed.INTUIT || '0') * 25   // INTUIT price
-    
-    return borrowValue > 0 ? collateralValue / borrowValue : 999
   }
 
-  const healthFactor = calculateHealthFactor()
+  const formatAmount = (amount: string, decimals: number = 4) => {
+    const num = parseFloat(amount)
+    if (num === 0) return '0'
+    if (num < 0.0001) return '<0.0001'
+    return num.toFixed(decimals)
+  }
 
-  // Get user wallet balance for selected token
-  const getUserBalance = () => {
-    if (selectedToken === 'tTRUST') {
-      return balance // Use real wallet balance for tTRUST
+  const formatHealthRatio = (ratio: number) => {
+    if (ratio === 999 || ratio === 0) return '∞'
+    return `${ratio.toFixed(1)}%`
+  }
+
+  const getHealthColor = (status: string) => {
+    switch (status) {
+      case 'safe': return 'text-green-400'
+      case 'warning': return 'text-yellow-400'
+      case 'danger': return 'text-red-400'
+      default: return 'text-gray-400'
     }
-    // For ORACLE and INTUIT, use supplied amounts since we don't have ERC20 balance reading yet
-    return userPosition.supplied[selectedToken] || '0'
   }
 
-  const handleMaxClick = () => {
-    const balance = getUserBalance()
-    setAmount(balance)
+  const getHealthBgColor = (status: string) => {
+    switch (status) {
+      case 'safe': return 'bg-green-900/20 border-green-500/30'
+      case 'warning': return 'bg-yellow-900/20 border-yellow-500/30'
+      case 'danger': return 'bg-red-900/20 border-red-500/30'
+      default: return 'bg-gray-900/20 border-gray-500/30'
+    }
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+        <div className="text-white text-xl">Initializing...</div>
+      </div>
+    )
+  }
+
+  if (!walletConnected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-8 max-w-md">
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">Connect Your Wallet</h2>
+          <p className="text-gray-300 mb-6 text-center">
+            Please connect your wallet to interact with the Oracle Lend protocol
+          </p>
+          <button
+            onClick={connect}
+            className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all"
+          >
+            Connect Wallet
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!contractConnected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-8 max-w-md">
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">Connecting to Contracts</h2>
+          <p className="text-gray-300 mb-6 text-center">
+            Initializing contract connections...
+          </p>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8">
-
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold gradient-text mb-4">LENDING & BORROWING</h1>
-      </div>
-
-      {isInitializing && (
-        <div className="glass-effect rounded-xl p-8 border border-blue-500/30 text-center">
-          <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h3 className="text-xl font-bold text-white mb-2">Checking Wallet Connection</h3>
-          <p className="text-gray-400">Please wait while we check for existing wallet connections...</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-4">Oracle Lend Protocol</h1>
+          <p className="text-gray-300 text-lg">Over-collateralized lending with ETH collateral and ORACLE borrowing</p>
         </div>
-      )}
 
-      {!isInitializing && !isConnected && (
-        <div className="glass-effect rounded-xl p-8 border border-yellow-500/30 text-center">
-          <i className="fas fa-wallet text-yellow-400 text-4xl mb-4"></i>
-          <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
-          <p className="text-gray-400">Please connect your wallet to start lending and borrowing.</p>
+        {/* Protocol Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
+            <p className="text-2xl font-bold text-purple-400">
+              {formatAmount((parseFloat(protocolStats.oracleBalance) / 1e18).toString())}
+            </p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <h3 className="text-white font-semibold mb-2">Current Price</h3>
+            <p className="text-2xl font-bold text-blue-400">
+              {formatAmount((parseFloat(protocolStats.currentPrice) / 1e18).toString())} ORACLE/ETH
+            </p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <h3 className="text-white font-semibold mb-2">Total Borrowed</h3>
+            <p className="text-2xl font-bold text-red-400">
+              {formatAmount((parseFloat(protocolStats.totalBorrowed) / 1e18).toString())}
+            </p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <h3 className="text-white font-semibold mb-2">Collateral Ratio</h3>
+            <p className="text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
+          </div>
         </div>
-      )}
 
-      {isConnected && (
-        <>
-          {/* User Position Overview */}
-          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <i className="fas fa-chart-pie text-purple-400 mr-3"></i>
-              Your Position
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-plus text-green-400 text-lg"></i>
-                </div>
-                <h4 className="font-medium text-white mb-1 text-sm">Total Supplied</h4>
-                <p className="text-xl font-bold text-green-400">
-                  ${formatCurrency(userPosition.collateralValue)}
-                </p>
-                <div className="text-xs text-gray-400 mt-1">
-                  <div>{parseFloat(userPosition.supplied.tTRUST).toFixed(4)} tTRUST</div>
-                  <div>{parseFloat(userPosition.supplied.ORACLE).toFixed(4)} ORACLE</div>
-                  <div>{parseFloat(userPosition.supplied.INTUIT).toFixed(4)} INTUIT</div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-minus text-red-400 text-lg"></i>
-                </div>
-                <h4 className="font-medium text-white mb-1 text-sm">Total Borrowed</h4>
-                <p className="text-xl font-bold text-red-400">
-                  ${formatCurrency((
-                    parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + 
-                    parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + 
-                    parseFloat(userPosition.borrowed.INTUIT || '0') * 25
-                  ).toString())}
-                </p>
-                <div className="text-xs text-gray-400 mt-1">
-                  <div>{parseFloat(userPosition.borrowed.tTRUST).toFixed(4)} tTRUST</div>
-                  <div>{parseFloat(userPosition.borrowed.ORACLE).toFixed(4)} ORACLE</div>
-                  <div>{parseFloat(userPosition.borrowed.INTUIT).toFixed(4)} INTUIT</div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-shield-alt text-blue-400 text-lg"></i>
-                </div>
-                <h4 className="font-medium text-white mb-1 text-sm">Available to Borrow</h4>
-                <p className="text-xl font-bold text-blue-400">
-                  ${formatCurrency((parseFloat(userPosition.collateralValue) * 0.75 - (
-                    parseFloat(userPosition.borrowed.tTRUST || '0') * 2500 + 
-                    parseFloat(userPosition.borrowed.ORACLE || '0') * 25 + 
-                    parseFloat(userPosition.borrowed.INTUIT || '0') * 25
-                  )).toString())}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">75% of collateral</p>
-              </div>
-
-              <div className="text-center">
-                <div className={`w-12 h-12 rounded-full ${
-                  healthFactor > 2 ? 'bg-green-500/20' : 
-                  healthFactor > 1.5 ? 'bg-yellow-500/20' : 'bg-red-500/20'
-                } flex items-center justify-center mx-auto mb-2`}>
-                  <i className={`fas fa-heartbeat ${
-                    healthFactor > 2 ? 'text-green-400' : 
-                    healthFactor > 1.5 ? 'text-yellow-400' : 'text-red-400'
-                  } text-lg`}></i>
-                </div>
-                <h4 className="font-medium text-white mb-1 text-sm">Health Factor</h4>
-                <p className={`text-xl font-bold ${
-                  healthFactor > 2 ? 'text-green-400' : 
-                  healthFactor > 1.5 ? 'text-yellow-400' : 'text-red-400'
-                }`}>
-                  {healthFactor >= 999 ? '∞' : healthFactor.toFixed(2)}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {healthFactor >= 999 ? 'No Debt - Safest' : 
-                   healthFactor > 2 ? 'Safe' : 
-                   healthFactor > 1.5 ? 'Moderate Risk' : 'High Risk'}
-                </p>
-              </div>
+        {/* User Position */}
+        <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
+          <h2 className="text-2xl font-bold text-white mb-6">Your Position</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-white font-semibold mb-2 flex items-center">
+                <TokenIcon token="tTRUST" className="w-5 h-5 mr-2" />
+                ETH Collateral
+              </h3>
+              <p className="text-2xl font-bold text-blue-400">
+                {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} ETH
+              </p>
+              <p className="text-sm text-gray-400">
+                Value: {formatAmount((parseFloat(userLendingPosition.collateralValue) / 1e18).toString())} ORACLE
+              </p>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-2 flex items-center">
+                <TokenIcon token="ORACLE" className="w-5 h-5 mr-2" />
+                ORACLE Debt
+              </h3>
+              <p className="text-2xl font-bold text-red-400">
+                {formatAmount((parseFloat(userLendingPosition.borrowed) / 1e18).toString())} ORACLE
+              </p>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-2">Health Ratio</h3>
+              <p className={`text-2xl font-bold ${getHealthColor(userLendingPosition.status)}`}>
+                {formatHealthRatio(userLendingPosition.healthRatio)}
+              </p>
+              <p className="text-sm text-gray-400 capitalize">{userLendingPosition.status}</p>
             </div>
           </div>
+        </div>
 
-          {/* Markets Overview */}
-          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <i className="fas fa-store text-cyan-400 mr-3"></i>
-              Markets
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {lendingPools.map((pool) => (
-                <div key={pool.token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
-                        <TokenIcon token={pool.token} size="md" className="text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-bold text-white">{pool.token}</h3>
-                        <p className="text-xs text-gray-400">
-                          {pool.token === 'tTRUST' ? 'Intuition Token' : 
-                           pool.token === 'ORACLE' ? 'Oracle Token' : 'INTUIT'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">Utilization</p>
-                      <p className="text-base font-bold text-white">{pool.utilizationRate}%</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Supply APY</p>
-                      <p className="text-lg font-bold text-green-400">{pool.supplyAPY}%</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Borrow APY</p>
-                      <p className="text-lg font-bold text-red-400">{pool.borrowAPY}%</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <p className="text-gray-400 mb-1">Total Supply</p>
-                      <p className="text-white">{formatCurrency(pool.totalSupply)} {pool.token}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-1">Total Borrow</p>
-                      <p className="text-white">{formatCurrency(pool.totalBorrow)} {pool.token}</p>
-                    </div>
-                  </div>
-
-                  {/* Utilization bar */}
-                  <div className="mt-3">
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${pool.utilizationRate}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Transaction Interface */}
-          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <i className="fas fa-exchange-alt text-green-400 mr-3"></i>
-              Transaction
-            </h2>
-
-            {/* Tab Navigation */}
-            <div className="flex space-x-1 mb-6 bg-gray-800/50 rounded-lg p-1">
+        {/* Main Interface */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Lending/Borrowing Interface */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <div className="flex space-x-4 mb-6">
               <button
-                onClick={() => setActiveTab('supply')}
-                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === 'supply'
-                    ? 'bg-green-600/30 text-green-300 border border-green-500/30'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                onClick={() => setActiveTab('collateral')}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  activeTab === 'collateral'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Supply / Withdraw
+                ETH Collateral
               </button>
               <button
                 onClick={() => setActiveTab('borrow')}
-                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'borrow'
-                    ? 'bg-red-600/30 text-red-300 border border-red-500/30'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Borrow / Repay
+                ORACLE Borrowing
               </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Action Selection */}
+            {activeTab === 'collateral' && (
               <div className="space-y-4">
+                <h3 className="text-xl font-bold text-white">ETH Collateral Management</h3>
+                
+                <div className="flex space-x-2 mb-4">
+                  <button
+                    onClick={() => setAction('addCollateral')}
+                    className={`px-3 py-1 rounded text-sm font-medium ${
+                      action === 'addCollateral'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                    }`}
+                  >
+                    Add Collateral
+                  </button>
+                  <button
+                    onClick={() => setAction('withdrawCollateral')}
+                    className={`px-3 py-1 rounded text-sm font-medium ${
+                      action === 'withdrawCollateral'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                    }`}
+                  >
+                    Withdraw Collateral
+                  </button>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Action</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {activeTab === 'supply' ? (
-                      <>
-                        <button
-                          onClick={() => setAction('supply')}
-                          className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                            action === 'supply'
-                              ? 'bg-green-600/30 text-green-300 border border-green-500/30'
-                              : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          }`}
-                        >
-                          Supply
-                        </button>
-                        <button
-                          onClick={() => setAction('withdraw')}
-                          className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                            action === 'withdraw'
-                              ? 'bg-orange-600/30 text-orange-300 border border-orange-500/30'
-                              : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          }`}
-                        >
-                          Withdraw
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setAction('borrow')}
-                          className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                            action === 'borrow'
-                              ? 'bg-red-600/30 text-red-300 border border-red-500/30'
-                              : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          }`}
-                        >
-                          Borrow
-                        </button>
-                        <button
-                          onClick={() => setAction('repay')}
-                          className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                            action === 'repay'
-                              ? 'bg-blue-600/30 text-blue-300 border border-blue-500/30'
-                              : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          }`}
-                        >
-                          Repay
-                        </button>
-                      </>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Amount (ETH)
+                  </label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.0"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex justify-between text-sm text-gray-400 mt-1">
+                    <span>Balance: {formatAmount(balance)} ETH</span>
+                    {action === 'withdrawCollateral' && (
+                      <span>Max: {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} ETH</span>
                     )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Token</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      onClick={() => setSelectedToken('tTRUST')}
-                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
-                        selectedToken === 'tTRUST'
-                          ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
-                          : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      }`}
-                    >
-                      <span>⚡</span>
-                      <span>tTRUST</span>
-                    </button>
-                    <button
-                      onClick={() => setSelectedToken('ORACLE')}
-                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
-                        selectedToken === 'ORACLE'
-                          ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
-                          : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      }`}
-                    >
-                      <TokenIcon token="ORACLE" size="sm" />
-                      <span>ORACLE</span>
-                    </button>
-                    <button
-                      onClick={() => setSelectedToken('INTUIT')}
-                      className={`py-3 px-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm ${
-                        selectedToken === 'INTUIT'
-                          ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
-                          : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      }`}
-                    >
-                      <span>💎</span>
-                      <span>INTUIT</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-400">Amount</label>
-                    <span className="text-xs text-gray-400">
-                      Balance: {parseFloat(getUserBalance()).toFixed(4)} {selectedToken}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20"
-                    />
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.25).toString())}
-                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
-                      >
-                        25%
-                      </button>
-                      <button 
-                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.5).toString())}
-                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
-                      >
-                        50%
-                      </button>
-                      <button 
-                        onClick={() => setAmount((parseFloat(getUserBalance()) * 0.75).toString())}
-                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
-                      >
-                        75%
-                      </button>
-                      <button 
-                        onClick={handleMaxClick}
-                        className="flex-1 py-2 text-xs text-purple-400 font-medium hover:text-purple-300 transition-colors bg-purple-600/20 rounded"
-                      >
-                        MAX
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  onClick={handleTransaction}
+                  disabled={!isConnected || isLoading || !amount}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                    !isConnected || isLoading || !amount
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : action === 'addCollateral'
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                  }`}
+                >
+                  {isLoading ? 'Processing...' : 
+                   !isConnected ? 'Connect Wallet' : 
+                   action === 'addCollateral' ? 'Add Collateral' : 'Withdraw Collateral'}
+                </button>
               </div>
+            )}
 
-              {/* Transaction Summary */}
-              <div className="bg-gray-800/50 rounded-lg p-6 space-y-4">
-                <h3 className="text-lg font-bold text-white mb-4">Transaction Summary</h3>
+            {activeTab === 'borrow' && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-white">ORACLE Token Borrowing</h3>
                 
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Action:</span>
-                    <span className="text-white capitalize">{action}</span>
+                <div className="flex space-x-2 mb-4">
+                  <button
+                    onClick={() => setAction('borrowOracle')}
+                    className={`px-3 py-1 rounded text-sm font-medium ${
+                      action === 'borrowOracle'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                    }`}
+                  >
+                    Borrow ORACLE
+                  </button>
+                  <button
+                    onClick={() => setAction('repayOracle')}
+                    className={`px-3 py-1 rounded text-sm font-medium ${
+                      action === 'repayOracle'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                    }`}
+                  >
+                    Repay ORACLE
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Amount (ORACLE)
+                  </label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.0"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <div className="flex justify-between text-sm text-gray-400 mt-1">
+                    {action === 'borrowOracle' && (
+                      <span>Max Borrow: {formatAmount((parseFloat(userLendingPosition.collateralValue) * 100 / PROTOCOL_CONFIG.collateralRatio / 1e18 - parseFloat(userLendingPosition.borrowed) / 1e18).toString())} ORACLE</span>
+                    )}
+                    {action === 'repayOracle' && (
+                      <span>Debt: {formatAmount((parseFloat(userLendingPosition.borrowed) / 1e18).toString())} ORACLE</span>
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Token:</span>
-                    <span className="text-white">{selectedToken}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Amount:</span>
-                    <span className="text-white">{amount || '0'} {selectedToken}</span>
-                  </div>
-                  
-                  {getTokenPool(selectedToken) && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">
-                          {activeTab === 'supply' ? 'Supply APY:' : 'Borrow APY:'}
-                        </span>
-                        <span className={activeTab === 'supply' ? 'text-green-400' : 'text-red-400'}>
-                          {activeTab === 'supply' 
-                            ? getTokenPool(selectedToken)?.supplyAPY 
-                            : getTokenPool(selectedToken)?.borrowAPY}%
-                        </span>
-                      </div>
-                      
-                      {amount && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">
-                            {activeTab === 'supply' ? 'Est. Annual Earnings:' : 'Est. Annual Interest Cost:'}
-                          </span>
-                          <span className={activeTab === 'supply' ? 'text-green-400' : 'text-red-400'}>
-                            {activeTab === 'supply' 
-                              ? `+${(parseFloat(amount) * (getTokenPool(selectedToken)?.supplyAPY || 0) / 100).toFixed(4)} ${selectedToken}`
-                              : `-${(parseFloat(amount) * (getTokenPool(selectedToken)?.borrowAPY || 0) / 100).toFixed(4)} ${selectedToken}`
-                            }
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
 
                 <button
                   onClick={handleTransaction}
-                  disabled={!amount || !isConnected || isLoading}
-                  className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
-                    !amount || !isConnected || isLoading
-                      ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                      : action === 'supply'
-                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-green-500/25'
-                      : action === 'withdraw'
-                      ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg hover:shadow-orange-500/25'
-                      : action === 'borrow'
-                      ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white shadow-lg hover:shadow-red-500/25'
-                      : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25'
-                  } flex items-center justify-center space-x-2`}
+                  disabled={!isConnected || isLoading || !amount}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                    !isConnected || isLoading || !amount
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : action === 'borrowOracle'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <i className={`fas ${
-                        action === 'supply' ? 'fa-plus' :
-                        action === 'withdraw' ? 'fa-minus' :
-                        action === 'borrow' ? 'fa-download' : 'fa-upload'
-                      }`}></i>
-                      <span className="capitalize">{action} {selectedToken}</span>
-                    </>
-                  )}
+                  {isLoading ? 'Processing...' : 
+                   !isConnected ? 'Connect Wallet' : 
+                   action === 'borrowOracle' ? 'Borrow ORACLE' : 'Repay ORACLE'}
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* Liquidation Interface */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            <h3 className="text-xl font-bold text-white mb-4">Liquidation</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Liquidate unsafe positions to earn a {PROTOCOL_CONFIG.liquidationBonus}% bonus
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  User Address to Liquidate
+                </label>
+                <input
+                  type="text"
+                  value={liquidateAddress}
+                  onChange={(e) => setLiquidateAddress(e.target.value)}
+                  placeholder="0x..."
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <button
+                onClick={handleLiquidate}
+                disabled={!isConnected || isLoading || !liquidateAddress}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                  !isConnected || isLoading || !liquidateAddress
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
+              >
+                {isLoading ? 'Processing...' : 
+                 !isConnected ? 'Connect Wallet' : 'Liquidate Position'}
+              </button>
+            </div>
+
+            {/* Protocol Info */}
+            <div className="mt-8 p-4 bg-gray-800/50 rounded-lg">
+              <h4 className="text-white font-semibold mb-2">Protocol Info</h4>
+              <ul className="text-sm text-gray-300 space-y-1">
+                <li>• Collateral Ratio Required: {PROTOCOL_CONFIG.collateralRatio}%</li>
+                <li>• Liquidation Bonus: {PROTOCOL_CONFIG.liquidationBonus}%</li>
+                <li>• Max LTV: {PROTOCOL_CONFIG.maxLTV.toFixed(2)}%</li>
+                <li>• Price Oracle: DEX-based</li>
+              </ul>
             </div>
           </div>
-        </>
-      )}
-
-      {/* Discord Link */}
-      <div className="text-center py-8">
-        <a 
-          href="https://discord.com/invite/0xintuition" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center space-x-3 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25"
-        >
-          <i className="fab fa-discord text-xl"></i>
-          <span>Join Intuition Discord</span>
-          <i className="fas fa-external-link-alt text-sm opacity-75"></i>
-        </a>
+        </div>
       </div>
     </div>
   )

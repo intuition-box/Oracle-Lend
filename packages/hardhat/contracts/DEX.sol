@@ -62,7 +62,8 @@ contract DEX is ERC20, Ownable, ReentrancyGuard, Pausable {
         ERC20("Oracle DEX LP", "OLP") 
         Ownable(msg.sender) 
     {
-        require(_tTrust != address(0) && _oracle != address(0), "Invalid token addresses");
+        require(_oracle != address(0), "Invalid ORACLE token address");
+        // tTRUST can be zero address for native token, ORACLE must be valid ERC20
         tTRUST = IERC20(_tTrust);
         ORACLE = IERC20(_oracle);
     }
@@ -79,9 +80,9 @@ contract DEX is ERC20, Ownable, ReentrancyGuard, Pausable {
     ) external payable nonReentrant whenNotPaused returns (uint256 liquidity) {
         uint256 tTrustAmountActual;
         
-        // Handle ETH as tTRUST for testing (when tTRUST address == ORACLE address)
-        if (address(tTRUST) == address(ORACLE)) {
-            require(msg.value > 0, "Must send ETH as tTRUST equivalent");
+        // Handle native TTRUST (when tTRUST address is zero address)
+        if (address(tTRUST) == address(0)) {
+            require(msg.value > 0, "Must send TTRUST as native token");
             require(_oracleAmount > 0, "ORACLE amount must be greater than 0");
             tTrustAmountActual = msg.value;
             ORACLE.safeTransferFrom(msg.sender, address(this), _oracleAmount);
@@ -150,10 +151,10 @@ contract DEX is ERC20, Ownable, ReentrancyGuard, Pausable {
         oracleReserve = oracleReserve - oracleAmount;
 
         // Transfer tokens back to user
-        if (address(tTRUST) == address(ORACLE)) {
-            // Send ETH instead of tTRUST token
+        if (address(tTRUST) == address(0)) {
+            // Send native TTRUST
             (bool success, ) = payable(msg.sender).call{value: tTrustAmount}("");
-            require(success, "ETH transfer failed");
+            require(success, "TTRUST transfer failed");
         } else {
             tTRUST.safeTransfer(msg.sender, tTrustAmount);
         }
@@ -177,9 +178,9 @@ contract DEX is ERC20, Ownable, ReentrancyGuard, Pausable {
     {
         uint256 amountInActual;
         
-        // Handle ETH as tTRUST for testing (when tTRUST address == ORACLE address)
-        if (address(tTRUST) == address(ORACLE)) {
-            require(msg.value > 0, "Must send ETH as tTRUST equivalent");
+        // Handle native TTRUST (when tTRUST address is zero address)
+        if (address(tTRUST) == address(0)) {
+            require(msg.value > 0, "Must send TTRUST as native token");
             amountInActual = msg.value;
         } else {
             require(_amountIn > 0, "Amount must be greater than 0");
@@ -241,10 +242,10 @@ contract DEX is ERC20, Ownable, ReentrancyGuard, Pausable {
         require(amountOut < tTrustReserve, "Insufficient tTRUST liquidity");
 
         // Transfer tTRUST to user
-        if (address(tTRUST) == address(ORACLE)) {
-            // Send ETH instead of tTRUST token
+        if (address(tTRUST) == address(0)) {
+            // Send native TTRUST
             (bool success, ) = payable(msg.sender).call{value: amountOut}("");
-            require(success, "ETH transfer failed");
+            require(success, "TTRUST transfer failed");
         } else {
             tTRUST.safeTransfer(msg.sender, amountOut);
         }
