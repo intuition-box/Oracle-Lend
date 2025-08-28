@@ -12,11 +12,12 @@ export const INTUITION_TESTNET = {
   },
   contracts: {
     // ✅ WORKING: Real Intuition testnet addresses with liquidity and funding
-    oracleLend: '0x5CdfBB614F07DA297fBfCb0Dcc9765463F2cCE9e', // OracleLend contract (5M ORACLE funded)
-    oracleToken: '0xF840731096FAeD511eFda466ACaD39531101fBAc', // OracleToken contract (10M supply)
-    dex: '0x072c2b3f3937aD47Da25dE0de1e36E4C366d5FED', // DEX contract (10 TTRUST + 5M ORACLE liquidity)
+    oracleLend: '0x552948CC80f3D757E4c18a702F5DdD42a06E7039', // OracleLend contract (5M ORACLE funded)
+    oracleToken: '0x1AA6ad0A70Dd90796F2936BD11F0d4DEF7553b04', // OracleToken contract (10M supply)
+    dex: '0x216cCe003Be533D11Fd4B6d87F066Eef48B42568', // DEX contract (10 TTRUST + 5M ORACLE liquidity)
     tTrustToken: '0x0000000000000000000000000000000000000000', // Native TTRUST
-    intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', // INTUINT token (legacy)
+    intuintToken: '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c', 
+
   }
 }
 
