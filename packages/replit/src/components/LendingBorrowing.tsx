@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useContract } from '../hooks/useContract'
 import { useWallet } from '../hooks/useWallet'
 import TokenIcon from './TokenIcon'
+import LiquidationExplainer from './LiquidationExplainer'
 import { PROTOCOL_CONFIG, LENDING_CONFIG } from '../utils/constants'
 
 const LendingBorrowing: React.FC = () => {
@@ -19,10 +20,11 @@ const LendingBorrowing: React.FC = () => {
   } = useContract()
   const { isConnected: walletConnected, balance, isInitializing, connect } = useWallet()
   
-  const [activeTab, setActiveTab] = useState<'collateral' | 'borrow'>('collateral')
+  const [activeTab, setActiveTab] = useState<'collateral' | 'borrow' | 'liquidate'>('collateral')
   const [amount, setAmount] = useState('')
   const [action, setAction] = useState<'addCollateral' | 'withdrawCollateral' | 'borrowOracle' | 'repayOracle'>('addCollateral')
   const [liquidateAddress, setLiquidateAddress] = useState('')
+  const [showLiquidationExplainer, setShowLiquidationExplainer] = useState(false)
 
   const isConnected = walletConnected && contractConnected
 
@@ -272,6 +274,16 @@ const LendingBorrowing: React.FC = () => {
               >
                 ORACLE Borrowing
               </button>
+              <button
+                onClick={() => setActiveTab('liquidate')}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  activeTab === 'liquidate'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                ⚡ Liquidate
+              </button>
             </div>
 
             {activeTab === 'collateral' && (
@@ -403,6 +415,80 @@ const LendingBorrowing: React.FC = () => {
                 </button>
               </div>
             )}
+
+            {activeTab === 'liquidate' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Liquidation Center</h3>
+                  <button
+                    onClick={() => setShowLiquidationExplainer(true)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
+                  >
+                    ℹ️ How it works
+                  </button>
+                </div>
+                
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                  <p className="text-yellow-300 text-sm">
+                    <strong>💡 Liquidation Guide:</strong> You need ORACLE tokens equal to the user's debt to liquidate their position. 
+                    You'll receive their ETH collateral + 10% bonus as reward.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Target User Address
+                  </label>
+                  <input
+                    type="text"
+                    value={liquidateAddress}
+                    onChange={(e) => setLiquidateAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowLiquidationExplainer(true)}
+                    disabled={!liquidateAddress}
+                    className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
+                      !liquidateAddress
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    🔍 Analyze Position
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      if (liquidateAddress) {
+                        await liquidate(liquidateAddress)
+                      }
+                    }}
+                    disabled={!isConnected || isLoading || !liquidateAddress}
+                    className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
+                      !isConnected || isLoading || !liquidateAddress
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700 text-white'
+                    }`}
+                  >
+                    {isLoading ? 'Processing...' : '⚡ Liquidate'}
+                  </button>
+                </div>
+
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                  <h4 className="text-red-300 font-semibold mb-2">⚠️ Important Notes:</h4>
+                  <ul className="text-red-300 text-sm space-y-1 list-disc list-inside">
+                    <li>Only positions with health ratio &lt; 120% can be liquidated</li>
+                    <li>You must have enough ORACLE tokens to cover the user's debt</li>
+                    <li>You'll receive the user's ETH collateral + 10% bonus</li>
+                    <li>Use "Analyze Position" to check requirements before liquidating</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Liquidation Interface */}
@@ -453,6 +539,14 @@ const LendingBorrowing: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Liquidation Explainer Modal */}
+      {showLiquidationExplainer && (
+        <LiquidationExplainer
+          targetUserAddress={liquidateAddress}
+          onClose={() => setShowLiquidationExplainer(false)}
+        />
+      )}
     </div>
   )
 }

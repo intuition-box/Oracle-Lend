@@ -37,7 +37,10 @@ const ORACLE_TOKEN_ABI = [
   "function approve(address spender, uint256 amount) external returns (bool)",
   "function allowance(address owner, address spender) external view returns (uint256)",
   "function transfer(address to, uint256 amount) external returns (bool)",
-  "function transferFrom(address from, address to, uint256 amount) external returns (bool)"
+  "function transferFrom(address from, address to, uint256 amount) external returns (bool)",
+  "function mint(address to, uint256 amount) external returns (bool)",
+  "function isMinter(address account) external view returns (bool)",
+  "function owner() external view returns (address)"
 ]
 
 const DEX_ABI = [
@@ -502,17 +505,30 @@ export const useContract = () => {
     setError(null)
 
     try {
+      const liquidatorAddress = await signer.getAddress()
+      
       // First check if position is liquidatable
       const isLiquidatable = await oracleLendContract.isLiquidatable(userAddress)
       if (!isLiquidatable) {
-        throw new Error('Position is not liquidatable')
+        throw new Error('Position is not liquidatable - health ratio is above 120%')
       }
 
-      // Get user debt to determine approval amount
+      // Get user debt to determine required ORACLE amount
       const userDebt = await oracleLendContract.userBorrowed(userAddress)
+      const liquidatorBalance = await oracleTokenContract.balanceOf(liquidatorAddress)
+      
+      console.log('Liquidation check:')
+      console.log(`  User debt: ${ethers.formatEther(userDebt)} ORACLE`)
+      console.log(`  Your balance: ${ethers.formatEther(liquidatorBalance)} ORACLE`)
+      
+      // Check if liquidator has enough ORACLE tokens
+      if (liquidatorBalance < userDebt) {
+        const shortage = userDebt - liquidatorBalance
+        throw new Error(`Insufficient ORACLE tokens for liquidation. You need ${ethers.formatEther(userDebt)} ORACLE but only have ${ethers.formatEther(liquidatorBalance)} ORACLE. Missing: ${ethers.formatEther(shortage)} ORACLE`)
+      }
       
       // Check and approve if needed
-      const allowance = await oracleTokenContract.allowance(signer.address, INTUITION_TESTNET.contracts.oracleLend)
+      const allowance = await oracleTokenContract.allowance(liquidatorAddress, INTUITION_TESTNET.contracts.oracleLend)
       
       if (allowance < userDebt) {
         console.log('Approving ORACLE spending for liquidation...')
@@ -522,6 +538,7 @@ export const useContract = () => {
       }
 
       // Liquidate
+      console.log(`Liquidating position with ${ethers.formatEther(userDebt)} ORACLE...`)
       const tx = await oracleLendContract.liquidate(userAddress)
       
       console.log('Transaction sent:', tx.hash)
@@ -534,11 +551,22 @@ export const useContract = () => {
       return {
         success: true,
         txHash: tx.hash,
-        message: SUCCESS_MESSAGES.LIQUIDATION_SUCCESS
+        message: `${SUCCESS_MESSAGES.LIQUIDATION_SUCCESS} Repaid ${ethers.formatEther(userDebt)} ORACLE debt.`
       }
     } catch (err: any) {
       console.error('Liquidation error:', err)
-      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      
+      // Provide more specific error messages
+      let errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      
+      if (errorMsg.includes('OracleLend__InsufficientLiquidatorORACLE') || errorMsg.includes('0x7d7654fd')) {
+        errorMsg = 'Insufficient ORACLE tokens for liquidation. You need ORACLE tokens equal to the user\'s debt to liquidate their position.'
+      } else if (errorMsg.includes('OracleLend__NotLiquidatable') || errorMsg.includes('0x98e9cff3')) {
+        errorMsg = 'Position cannot be liquidated - health ratio is above 120% (position is safe)'
+      } else if (errorMsg.includes('OracleLend__PositionSafe') || errorMsg.includes('0x591022fe')) {
+        errorMsg = 'Position is safe and cannot be liquidated'
+      }
+      
       setError(errorMsg)
       return { success: false, error: errorMsg }
     } finally {
@@ -626,6 +654,53 @@ export const useContract = () => {
     }
   }, [dexContract, oracleTokenContract, signer, userAddress, fetchContractData])
 
+  /**
+   * Mint ORACLE tokens (only for minters)
+   */
+  const mintOracle = useCallback(async (amount: string) => {
+    if (!oracleTokenContract || !signer) {
+      throw new Error('Contract not initialized')
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const userAddress = await signer.getAddress()
+      
+      // Check if user is a minter
+      const isMinter = await oracleTokenContract.isMinter(userAddress)
+      if (!isMinter) {
+        throw new Error('You are not authorized to mint ORACLE tokens')
+      }
+
+      const mintAmount = ethers.parseEther(amount)
+      console.log(`Minting ${amount} ORACLE tokens...`)
+      
+      const tx = await oracleTokenContract.mint(userAddress, mintAmount)
+      
+      console.log('Transaction sent:', tx.hash)
+      const receipt = await tx.wait()
+      console.log('Transaction confirmed:', receipt)
+
+      // Refresh data
+      await fetchContractData()
+
+      return {
+        success: true,
+        txHash: tx.hash,
+        message: `Successfully minted ${amount} ORACLE tokens`
+      }
+    } catch (err: any) {
+      console.error('Mint ORACLE error:', err)
+      const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [oracleTokenContract, signer, fetchContractData])
+
   // Initialize on mount and when wallet connects
   useEffect(() => {
     initializeWeb3()
@@ -658,6 +733,7 @@ export const useContract = () => {
     borrowOracle,
     repayOracle,
     liquidate,
+    mintOracle,
     
     // Legacy interface
     userPosition,
