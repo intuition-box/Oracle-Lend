@@ -25,6 +25,7 @@ const LendingBorrowing: React.FC = () => {
   const [action, setAction] = useState<'addCollateral' | 'withdrawCollateral' | 'borrowOracle' | 'repayOracle'>('addCollateral')
   const [liquidateAddress, setLiquidateAddress] = useState('')
   const [showLiquidationExplainer, setShowLiquidationExplainer] = useState(false)
+  const [showLiquidationInfo, setShowLiquidationInfo] = useState(false)
 
   const isConnected = walletConnected && contractConnected
 
@@ -136,6 +137,30 @@ const LendingBorrowing: React.FC = () => {
     }
   }
 
+  const setPercentageAmount = (percentage: number) => {
+    let maxAmount = 0
+    
+    switch (action) {
+      case 'addCollateral':
+        maxAmount = parseFloat(balance)
+        break
+      case 'withdrawCollateral':
+        maxAmount = parseFloat(userLendingPosition.collateral) / 1e18
+        break
+      case 'borrowOracle':
+        maxAmount = parseFloat(userLendingPosition.collateralValue) * 100 / PROTOCOL_CONFIG.collateralRatio / 1e18 - parseFloat(userLendingPosition.borrowed) / 1e18
+        break
+      case 'repayOracle':
+        maxAmount = parseFloat(userLendingPosition.borrowed) / 1e18
+        break
+      default:
+        maxAmount = 0
+    }
+    
+    const targetAmount = (maxAmount * percentage / 100).toString()
+    setAmount(targetAmount)
+  }
+
   if (isInitializing) {
   return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
@@ -185,11 +210,11 @@ const LendingBorrowing: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">Oracle Lend Protocol</h1>
-          <p className="text-gray-300 text-lg">Over-collateralized lending with ETH collateral and ORACLE borrowing</p>
+          <p className="text-gray-300 text-lg">Over-collateralized lending with TTRUST collateral and ORACLE borrowing</p>
               </div>
 
         {/* Protocol Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
             <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
             <p className="text-2xl font-bold text-purple-400">
@@ -199,15 +224,9 @@ const LendingBorrowing: React.FC = () => {
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
             <h3 className="text-white font-semibold mb-2">Current Price</h3>
             <p className="text-2xl font-bold text-blue-400">
-              {formatAmount((parseFloat(protocolStats.currentPrice) / 1e18).toString())} ORACLE/ETH
+              {formatAmount((parseFloat(protocolStats.currentPrice) / 1e18).toString())} ORACLE/TTRUST
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
-            <h3 className="text-white font-semibold mb-2">Total Borrowed</h3>
-            <p className="text-2xl font-bold text-red-400">
-              {formatAmount((parseFloat(protocolStats.totalBorrowed) / 1e18).toString())}
-                        </p>
-                      </div>
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
             <h3 className="text-white font-semibold mb-2">Collateral Ratio</h3>
             <p className="text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
@@ -221,10 +240,10 @@ const LendingBorrowing: React.FC = () => {
                     <div>
               <h3 className="text-white font-semibold mb-2 flex items-center">
                 <TokenIcon token="tTRUST" className="w-5 h-5 mr-2" />
-                ETH Collateral
+                TTRUST Collateral
               </h3>
               <p className="text-2xl font-bold text-blue-400">
-                {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} ETH
+                {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} TTRUST
               </p>
               <p className="text-sm text-gray-400">
                 Value: {formatAmount((parseFloat(userLendingPosition.collateralValue) / 1e18).toString())} ORACLE
@@ -262,7 +281,7 @@ const LendingBorrowing: React.FC = () => {
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                ETH Collateral
+                TTRUST Collateral
               </button>
               <button
                 onClick={() => setActiveTab('borrow')}
@@ -274,21 +293,12 @@ const LendingBorrowing: React.FC = () => {
               >
                 ORACLE Borrowing
               </button>
-              <button
-                onClick={() => setActiveTab('liquidate')}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  activeTab === 'liquidate'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                ⚡ Liquidate
-              </button>
+
             </div>
 
             {activeTab === 'collateral' && (
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-white">ETH Collateral Management</h3>
+                <h3 className="text-xl font-bold text-white">TTRUST Collateral Management</h3>
                 
                 <div className="flex space-x-2 mb-4">
                         <button
@@ -315,7 +325,7 @@ const LendingBorrowing: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Amount (ETH)
+                    Amount (TTRUST)
                   </label>
                   <input
                     type="number"
@@ -325,10 +335,42 @@ const LendingBorrowing: React.FC = () => {
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="flex justify-between text-sm text-gray-400 mt-1">
-                    <span>Balance: {formatAmount(balance)} ETH</span>
+                    <span>Balance: {formatAmount(balance)} TTRUST</span>
                     {action === 'withdrawCollateral' && (
-                      <span>Max: {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} ETH</span>
+                      <span>Max: {formatAmount((parseFloat(userLendingPosition.collateral) / 1e18).toString())} TTRUST</span>
                     )}
+                  </div>
+                  
+                  {/* Quick Amount Selectors */}
+                  <div className="flex space-x-2 mt-3">
+                    <button
+                      onClick={() => setPercentageAmount(25)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      25%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(50)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      50%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(75)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      75%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(100)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      MAX
+                    </button>
                   </div>
                 </div>
 
@@ -396,6 +438,38 @@ const LendingBorrowing: React.FC = () => {
                       <span>Debt: {formatAmount((parseFloat(userLendingPosition.borrowed) / 1e18).toString())} ORACLE</span>
                     )}
                   </div>
+                  
+                  {/* Quick Amount Selectors */}
+                  <div className="flex space-x-2 mt-3">
+                    <button
+                      onClick={() => setPercentageAmount(25)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      25%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(50)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      50%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(75)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      75%
+                    </button>
+                    <button
+                      onClick={() => setPercentageAmount(100)}
+                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      type="button"
+                    >
+                      MAX
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -418,23 +492,8 @@ const LendingBorrowing: React.FC = () => {
 
             {activeTab === 'liquidate' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white">Liquidation Center</h3>
-                  <button
-                    onClick={() => setShowLiquidationExplainer(true)}
-                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
-                  >
-                    ℹ️ How it works
-                  </button>
-                </div>
+                <h3 className="text-xl font-bold text-white">Liquidation Center</h3>
                 
-                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                  <p className="text-yellow-300 text-sm">
-                    <strong>💡 Liquidation Guide:</strong> You need ORACLE tokens equal to the user's debt to liquidate their position. 
-                    You'll receive their ETH collateral + 10% bonus as reward.
-                  </p>
-                  </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Target User Address
@@ -448,52 +507,58 @@ const LendingBorrowing: React.FC = () => {
                   />
                   </div>
 
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowLiquidationExplainer(true)}
-                    disabled={!liquidateAddress}
-                    className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                      !liquidateAddress
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    🔍 Analyze Position
-                  </button>
-                  
-                  <button
-                    onClick={async () => {
-                      if (liquidateAddress) {
-                        await liquidate(liquidateAddress)
-                      }
-                    }}
-                    disabled={!isConnected || isLoading || !liquidateAddress}
-                    className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                      !isConnected || isLoading || !liquidateAddress
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                    }`}
-                  >
-                    {isLoading ? 'Processing...' : '⚡ Liquidate'}
-                  </button>
-                      </div>
-                      
-                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                  <h4 className="text-red-300 font-semibold mb-2">⚠️ Important Notes:</h4>
-                  <ul className="text-red-300 text-sm space-y-1 list-disc list-inside">
-                    <li>Only positions with health ratio &lt; 120% can be liquidated</li>
-                    <li>You must have enough ORACLE tokens to cover the user's debt</li>
-                    <li>You'll receive the user's ETH collateral + 10% bonus</li>
-                    <li>Use "Analyze Position" to check requirements before liquidating</li>
-                  </ul>
-                </div>
+                <button
+                  onClick={() => setShowLiquidationExplainer(true)}
+                  disabled={!liquidateAddress}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                    !liquidateAddress
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  🔍 Analyze Position
+                </button>
               </div>
             )}
           </div>
 
           {/* Liquidation Interface */}
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Liquidation</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Liquidation</h3>
+              <button
+                onClick={() => setShowLiquidationInfo(!showLiquidationInfo)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
+              >
+                ℹ️ How it works
+              </button>
+            </div>
+            
+            {showLiquidationInfo && (
+              <div className="space-y-4 mb-6">
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                  <p className="text-yellow-300 text-sm">
+                    <strong>💡 Liquidation Guide:</strong> 
+                    <br />
+                    <br />
+                    <p>You need ORACLE tokens equal to the user's debt to liquidate their position. </p>
+                    <br />
+                    <p>You'll receive their TTRUST collateral + 10% bonus as reward.</p>
+                  </p>
+                </div>
+                
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                  <h4 className="text-red-300 font-semibold mb-2">⚠️ Important Notes:</h4>
+                  <ul className="text-red-300 text-sm space-y-1 list-disc list-inside">
+                    <li>Only positions with health ratio &lt; 120% can be liquidated</li>
+                    <li>You must have enough ORACLE tokens to cover the user's debt</li>
+                    <li>You'll receive the user's TTRUST collateral + 10% bonus</li>
+                    <li>Use "Analyze Position" to check requirements before liquidating</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            
             <p className="text-gray-300 text-sm mb-4">
               Liquidate unsafe positions to earn a {PROTOCOL_CONFIG.liquidationBonus}% bonus
             </p>
