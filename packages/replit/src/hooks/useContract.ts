@@ -477,8 +477,8 @@ export const useContract = () => {
 
       // Refresh data
       await fetchContractData()
-
-      return {
+        
+        return {
         success: true,
         txHash: tx.hash,
         message: SUCCESS_MESSAGES.REPAY_SUCCESS
@@ -547,8 +547,8 @@ export const useContract = () => {
 
       // Refresh data
       await fetchContractData()
-
-      return {
+        
+        return {
         success: true,
         txHash: tx.hash,
         message: `${SUCCESS_MESSAGES.LIQUIDATION_SUCCESS} Repaid ${ethers.formatEther(userDebt)} ORACLE debt.`
@@ -639,8 +639,8 @@ export const useContract = () => {
       // Refresh data
       await fetchContractData()
 
-      return {
-        success: true,
+        return { 
+          success: true, 
         txHash: tx.hash,
         message: SUCCESS_MESSAGES.SWAP_SUCCESS
       }
@@ -755,6 +755,11 @@ export const useContract = () => {
     isLoading,
     error,
     setError,
+    
+    // Contract instances (for analytics)
+    oracleTokenContract,
+    oracleLendContract,
+    dexContract,
     
     // Contract management
     initializeWeb3,

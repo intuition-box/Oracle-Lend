@@ -137,7 +137,7 @@ const LendingBorrowing: React.FC = () => {
   }
 
   if (isInitializing) {
-    return (
+  return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
         <div className="text-white text-xl">Initializing...</div>
       </div>
@@ -159,7 +159,7 @@ const LendingBorrowing: React.FC = () => {
             Connect Wallet
           </button>
         </div>
-      </div>
+        </div>
     )
   }
 
@@ -173,9 +173,9 @@ const LendingBorrowing: React.FC = () => {
           </p>
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+                </div>
     )
   }
 
@@ -186,7 +186,7 @@ const LendingBorrowing: React.FC = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">Oracle Lend Protocol</h1>
           <p className="text-gray-300 text-lg">Over-collateralized lending with ETH collateral and ORACLE borrowing</p>
-        </div>
+              </div>
 
         {/* Protocol Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -194,8 +194,8 @@ const LendingBorrowing: React.FC = () => {
             <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
             <p className="text-2xl font-bold text-purple-400">
               {formatAmount((parseFloat(protocolStats.oracleBalance) / 1e18).toString())}
-            </p>
-          </div>
+                </p>
+              </div>
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
             <h3 className="text-white font-semibold mb-2">Current Price</h3>
             <p className="text-2xl font-bold text-blue-400">
@@ -206,19 +206,19 @@ const LendingBorrowing: React.FC = () => {
             <h3 className="text-white font-semibold mb-2">Total Borrowed</h3>
             <p className="text-2xl font-bold text-red-400">
               {formatAmount((parseFloat(protocolStats.totalBorrowed) / 1e18).toString())}
-            </p>
-          </div>
+                        </p>
+                      </div>
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
             <h3 className="text-white font-semibold mb-2">Collateral Ratio</h3>
             <p className="text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
-          </div>
-        </div>
+                    </div>
+                  </div>
 
         {/* User Position */}
         <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
           <h2 className="text-2xl font-bold text-white mb-6">Your Position</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
+                    <div>
               <h3 className="text-white font-semibold mb-2 flex items-center">
                 <TokenIcon token="tTRUST" className="w-5 h-5 mr-2" />
                 ETH Collateral
@@ -229,8 +229,8 @@ const LendingBorrowing: React.FC = () => {
               <p className="text-sm text-gray-400">
                 Value: {formatAmount((parseFloat(userLendingPosition.collateralValue) / 1e18).toString())} ORACLE
               </p>
-            </div>
-            <div>
+                    </div>
+                    <div>
               <h3 className="text-white font-semibold mb-2 flex items-center">
                 <TokenIcon token="ORACLE" className="w-5 h-5 mr-2" />
                 ORACLE Debt
@@ -238,16 +238,16 @@ const LendingBorrowing: React.FC = () => {
               <p className="text-2xl font-bold text-red-400">
                 {formatAmount((parseFloat(userLendingPosition.borrowed) / 1e18).toString())} ORACLE
               </p>
-            </div>
-            <div>
+                    </div>
+                    <div>
               <h3 className="text-white font-semibold mb-2">Health Ratio</h3>
               <p className={`text-2xl font-bold ${getHealthColor(userLendingPosition.status)}`}>
                 {formatHealthRatio(userLendingPosition.healthRatio)}
               </p>
               <p className="text-sm text-gray-400 capitalize">{userLendingPosition.status}</p>
             </div>
+            </div>
           </div>
-        </div>
 
         {/* Main Interface */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -291,7 +291,7 @@ const LendingBorrowing: React.FC = () => {
                 <h3 className="text-xl font-bold text-white">ETH Collateral Management</h3>
                 
                 <div className="flex space-x-2 mb-4">
-                  <button
+                        <button
                     onClick={() => setAction('addCollateral')}
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'addCollateral'
@@ -300,8 +300,8 @@ const LendingBorrowing: React.FC = () => {
                     }`}
                   >
                     Add Collateral
-                  </button>
-                  <button
+                        </button>
+                        <button
                     onClick={() => setAction('withdrawCollateral')}
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'withdrawCollateral'
@@ -310,7 +310,7 @@ const LendingBorrowing: React.FC = () => {
                     }`}
                   >
                     Withdraw Collateral
-                  </button>
+                        </button>
                 </div>
 
                 <div>
@@ -332,7 +332,7 @@ const LendingBorrowing: React.FC = () => {
                   </div>
                 </div>
 
-                <button
+                    <button
                   onClick={handleTransaction}
                   disabled={!isConnected || isLoading || !amount}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
@@ -346,7 +346,7 @@ const LendingBorrowing: React.FC = () => {
                   {isLoading ? 'Processing...' : 
                    !isConnected ? 'Connect Wallet' : 
                    action === 'addCollateral' ? 'Add Collateral' : 'Withdraw Collateral'}
-                </button>
+                    </button>
               </div>
             )}
 
@@ -355,7 +355,7 @@ const LendingBorrowing: React.FC = () => {
                 <h3 className="text-xl font-bold text-white">ORACLE Token Borrowing</h3>
                 
                 <div className="flex space-x-2 mb-4">
-                  <button
+                    <button
                     onClick={() => setAction('borrowOracle')}
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'borrowOracle'
@@ -364,8 +364,8 @@ const LendingBorrowing: React.FC = () => {
                     }`}
                   >
                     Borrow ORACLE
-                  </button>
-                  <button
+                    </button>
+                    <button
                     onClick={() => setAction('repayOracle')}
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'repayOracle'
@@ -374,17 +374,17 @@ const LendingBorrowing: React.FC = () => {
                     }`}
                   >
                     Repay ORACLE
-                  </button>
+                    </button>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Amount (ORACLE)
                   </label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
@@ -433,7 +433,7 @@ const LendingBorrowing: React.FC = () => {
                     <strong>💡 Liquidation Guide:</strong> You need ORACLE tokens equal to the user's debt to liquidate their position. 
                     You'll receive their ETH collateral + 10% bonus as reward.
                   </p>
-                </div>
+                  </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -446,7 +446,7 @@ const LendingBorrowing: React.FC = () => {
                     placeholder="0x..."
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
-                </div>
+                  </div>
 
                 <div className="flex space-x-3">
                   <button
@@ -476,8 +476,8 @@ const LendingBorrowing: React.FC = () => {
                   >
                     {isLoading ? 'Processing...' : '⚡ Liquidate'}
                   </button>
-                </div>
-
+                      </div>
+                      
                 <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
                   <h4 className="text-red-300 font-semibold mb-2">⚠️ Important Notes:</h4>
                   <ul className="text-red-300 text-sm space-y-1 list-disc list-inside">
@@ -510,9 +510,9 @@ const LendingBorrowing: React.FC = () => {
                   placeholder="0x..."
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
-              </div>
+                </div>
 
-              <button
+                <button
                 onClick={handleLiquidate}
                 disabled={!isConnected || isLoading || !liquidateAddress}
                 className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
@@ -523,8 +523,8 @@ const LendingBorrowing: React.FC = () => {
               >
                 {isLoading ? 'Processing...' : 
                  !isConnected ? 'Connect Wallet' : 'Liquidate Position'}
-              </button>
-            </div>
+                </button>
+              </div>
 
             {/* Protocol Info */}
             <div className="mt-8 p-4 bg-gray-800/50 rounded-lg">

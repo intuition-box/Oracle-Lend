@@ -1,10 +1,136 @@
-import React, { useState } from 'react'
-import { useAnalytics } from '../hooks/useAnalytics'
+import React, { useState, useEffect } from 'react'
+import { useContract } from '../hooks/useContract'
 import TokenIcon from './TokenIcon'
 
 const Analytics: React.FC = () => {
-  const { analytics, isLoading, refreshAnalytics } = useAnalytics()
+  const { 
+    protocolStats, 
+    isLoading, 
+    oracleTokenContract, 
+    oracleLendContract,
+    dexContract,
+    isConnected 
+  } = useContract()
   const [timeframe, setTimeframe] = useState<'24h' | '7d' | '30d'>('24h')
+  const [realTimeData, setRealTimeData] = useState({
+    totalTVL: { tTRUST: '0', ORACLE: '0', usd: '0' },
+    totalTransactions: 0,
+    volume24h: '0',
+    dexReserves: { tTRUST: '0', ORACLE: '0' },
+    lendingStats: { totalCollateral: '0', totalBorrowed: '0', oracleBalance: '0' }
+  })
+  const [dataLoading, setDataLoading] = useState(true)
+
+  // Fetch real-time data from contracts
+  useEffect(() => {
+    const fetchRealTimeData = async () => {
+      console.log('🔄 Fetching analytics data...')
+      console.log('Contracts available:', {
+        dexContract: !!dexContract,
+        oracleTokenContract: !!oracleTokenContract,
+        oracleLendContract: !!oracleLendContract,
+        isConnected
+      })
+
+      if (!dexContract || !oracleTokenContract || !oracleLendContract || !isConnected) {
+        console.log('❌ Missing contracts or not connected')
+        setDataLoading(false)
+        return
+      }
+
+      try {
+        setDataLoading(true)
+        console.log('📊 Getting DEX reserves...')
+
+        // Get DEX reserves with error handling
+        let dexTTrust = 0
+        let dexOracle = 0
+        
+        try {
+          const tTrustReserve = await dexContract.tTrustReserve()
+          const oracleReserve = await dexContract.oracleReserve()
+          
+          dexTTrust = Number(tTrustReserve) / 1e18
+          dexOracle = Number(oracleReserve) / 1e18
+          
+          console.log('✅ DEX reserves:', { dexTTrust, dexOracle })
+        } catch (dexError) {
+          console.error('❌ DEX reserves error:', dexError)
+        }
+
+        // Get lending protocol balances
+        let lendingTTrust = 0
+        let lendingOracle = 0
+        
+        try {
+          const ethBalance = await oracleLendContract.getContractETHBalance()
+          const oracleBalance = await oracleLendContract.getContractOracleBalance()
+          
+          lendingTTrust = Number(ethBalance) / 1e18
+          lendingOracle = Number(oracleBalance) / 1e18
+          
+          console.log('✅ Lending balances:', { lendingTTrust, lendingOracle })
+        } catch (lendingError) {
+          console.error('❌ Lending balances error:', lendingError)
+        }
+
+        // Calculate totals
+        const totalTTrust = dexTTrust + lendingTTrust
+        const totalOracle = dexOracle + lendingOracle
+        
+        console.log('📈 Totals:', { totalTTrust, totalOracle })
+
+        // Get current price for USD calculation
+        let currentPrice = 500000 // Default fallback
+        try {
+          const price = await oracleLendContract.getCurrentPrice()
+          currentPrice = Number(price) / 1e18
+          console.log('💰 Current price:', currentPrice, 'ORACLE per TTRUST')
+        } catch (priceError) {
+          console.error('❌ Price error:', priceError)
+        }
+
+        // Calculate USD value (approximate)
+        const ttrust_usd_price = 2500 // Approximate TTRUST price in USD
+        const oracle_usd_price = ttrust_usd_price / currentPrice // ORACLE price in USD
+        const totalUSD = (totalTTrust * ttrust_usd_price + totalOracle * oracle_usd_price)
+
+        const newData = {
+          totalTVL: {
+            tTRUST: totalTTrust.toFixed(2),
+            ORACLE: totalOracle.toFixed(0),
+            usd: totalUSD.toFixed(2)
+          },
+          totalTransactions: 0, // Would need event tracking
+          volume24h: '0', // Would need event tracking  
+          dexReserves: {
+            tTRUST: dexTTrust.toFixed(2),
+            ORACLE: dexOracle.toFixed(0)
+          },
+          lendingStats: {
+            totalCollateral: lendingTTrust.toFixed(2),
+            totalBorrowed: '0', // Would need tracking
+            oracleBalance: lendingOracle.toFixed(0)
+          }
+        }
+
+        console.log('✅ Final analytics data:', newData)
+        setRealTimeData(newData)
+
+      } catch (error) {
+        console.error('❌ Error fetching real-time data:', error)
+      } finally {
+        setDataLoading(false)
+      }
+    }
+
+    fetchRealTimeData()
+    
+    // Update every 30 seconds
+    const interval = setInterval(fetchRealTimeData, 30000)
+    return () => clearInterval(interval)
+    
+  }, [dexContract, oracleTokenContract, oracleLendContract, isConnected])
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -23,98 +149,128 @@ const Analytics: React.FC = () => {
     })
   }
 
+  const formatInteger = (value: string) => {
+    return parseInt(parseFloat(value).toString()).toLocaleString()
+  }
+
+  const formatSmartPrecision = (value: string | number, significantDigits: number = 3) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value
+    if (num === 0) return '0'
+    
+    // For very small numbers, use significant digits after first non-zero
+    if (Math.abs(num) < 1) {
+      // Find the position of the first non-zero digit after decimal
+      const str = num.toExponential()
+      const [mantissa, exponent] = str.split('e')
+      const exp = parseInt(exponent)
+      
+      if (exp < 0) {
+        // Calculate decimal places needed for 3 significant digits
+        const decimalPlaces = Math.abs(exp) + significantDigits - 1
+        return num.toFixed(decimalPlaces)
+      }
+    }
+    
+    // For larger numbers, use regular precision
+    if (Math.abs(num) >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M'
+    }
+    if (Math.abs(num) >= 1000) {
+      return (num / 1000).toFixed(1) + 'K'  
+    }
+    if (Math.abs(num) >= 1) {
+      return num.toFixed(2)
+    }
+    
+    return num.toString()
+  }
+
+  // Calculate current price for display
+  const currentPriceNum = parseFloat(protocolStats.currentPrice) / 1e18 || 0
+  const currentPriceFormatted = formatNumber(currentPriceNum)
+
   const mainMetrics = [
     {
-      title: 'Total Value Locked (TVL)',
-      value: `$${formatCurrency(analytics.totalTVL.usd)}`,
+      title: 'Current Price',
+      value: `1 TTRUST = ${formatCurrency(currentPriceNum.toString())} ORACLE`,
       change: null,
-      icon: 'fas fa-lock',
+      icon: 'fas fa-chart-line',
       color: 'text-green-400',
-      subtitle: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST + ${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE + ${formatCurrency(analytics.totalTVL.INTUIT)} INTUIT`
+      subtitle: `1 ORACLE = ${formatSmartPrecision(1 / currentPriceNum)} TTRUST`
     },
     {
-      title: 'Total Transactions',
-      value: formatNumber(analytics.totalTransactions),
+      title: 'DEX Liquidity',
+      value: `${formatCurrency(realTimeData.dexReserves.tTRUST)} TTRUST`,
       change: null,
       icon: 'fas fa-exchange-alt',
       color: 'text-blue-400',
-      subtitle: 'All-time protocol transactions'
+      subtitle: `${formatInteger(realTimeData.dexReserves.ORACLE)} ORACLE`
     },
     {
-      title: 'Unique Wallets',
-      value: formatNumber(analytics.uniqueWallets),
+      title: 'Lending Protocol',
+      value: `${formatCurrency(realTimeData.lendingStats.totalCollateral)} TTRUST`,
       change: null,
-      icon: 'fas fa-users',
+      icon: 'fas fa-university',
       color: 'text-purple-400',
-      subtitle: 'Active protocol users'
-    },
-    {
-      title: '24h Volume',
-      value: `${formatCurrency(analytics.volume24h)} TTRUST`,
-      change: null,
-      icon: 'fas fa-chart-line',
-      color: 'text-yellow-400',
-      subtitle: 'Trading + lending volume'
+      subtitle: `${formatInteger(realTimeData.lendingStats.oracleBalance)} ORACLE`
     }
   ]
 
-  const protocolStats = [
+  const protocolStatsData = [
     {
-      category: 'Lending Pools',
+      category: 'Lending Protocol',
       stats: [
-        { label: 'tTRUST Pool Size', value: `${formatCurrency(analytics.totalTVL.tTRUST)} tTRUST`, icon: '⚡' },
-        { label: 'ORACLE Pool Size', value: `${formatCurrency(analytics.totalTVL.ORACLE)} ORACLE`, icon: <TokenIcon token="ORACLE" size="sm" /> },
-        { label: 'INTUIT Pool Size', value: `${formatCurrency(analytics.totalTVL.INTUIT)} INTUIT`, icon: '💎' },
-        { label: 'Total Borrowed', value: `$${formatCurrency(analytics.totalBorrowed)}`, icon: 'fas fa-arrow-down' }
+        { label: 'TTRUST Collateral', value: `${formatCurrency(realTimeData.lendingStats.totalCollateral)} TTRUST`, icon: '⚡' },
+        { label: 'ORACLE Available', value: `${formatInteger(realTimeData.lendingStats.oracleBalance)} ORACLE`, icon: <TokenIcon token="ORACLE" size="sm" /> },
+        { label: 'Current Price', value: `${formatNumber(parseFloat(protocolStats.currentPrice) / 1e18)} ORACLE/TTRUST`, icon: '💰' },
+        { label: 'Collateral Ratio', value: '120%', icon: '🛡️' }
       ]
     },
     {
-      category: 'Swap Analytics',
+      category: 'DEX Analytics',
       stats: [
-        { label: 'Daily Swaps', value: formatNumber(analytics.dailySwaps), icon: 'fas fa-exchange-alt' },
-        { label: 'Swap Volume (24h)', value: `$${formatCurrency(analytics.swapVolume24h)}`, icon: 'fas fa-dollar-sign' },
-        { label: 'Total Swaps', value: formatNumber(analytics.totalSwaps), icon: 'fas fa-exchange-alt' },
-        { label: 'Avg Trade Size', value: `$${formatCurrency(analytics.avgTradeSize)}`, icon: 'fas fa-chart-area' }
-      ]
-    },
-    {
-      category: 'Network Activity',
-      stats: [
-        { label: 'Active Lenders', value: formatNumber(analytics.activeLenders), icon: 'fas fa-plus-circle' },
-        { label: 'Active Borrowers', value: formatNumber(analytics.activeBorrowers), icon: 'fas fa-minus-circle' },
-        { label: 'New Users (24h)', value: formatNumber(analytics.newUsers24h), icon: 'fas fa-user-plus' },
-        { label: 'Active Users (24h)', value: formatNumber(analytics.activeUsers24h), icon: 'fas fa-user' }
+        { label: 'TTRUST Reserve', value: `${formatCurrency(realTimeData.dexReserves.tTRUST)} TTRUST`, icon: '⚡' },
+        { label: 'ORACLE Reserve', value: `${formatInteger(realTimeData.dexReserves.ORACLE)} ORACLE`, icon: <TokenIcon token="ORACLE" size="sm" /> },
+        { label: 'LP Token Supply', value: 'N/A', icon: '🔄' },
+        { label: 'Pool Health', value: 'Active', icon: '✅' }
       ]
     }
   ]
 
-  // Use real chart data from analytics
-  const getChartData = () => {
-    const data = analytics.chartData || []
-    return data.map(point => ({
-      timestamp: point.timestamp,
-      value: parseFloat(point.value),
-      formatted: new Date(point.timestamp).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        ...(timeframe !== '24h' && { month: 'short', day: 'numeric' })
-      })
-    }))
-  }
 
-  const chartData = getChartData()
-  const maxValue = chartData.length > 0 ? Math.max(...chartData.map(d => d.value)) : 1000000
-  const minValue = chartData.length > 0 ? Math.min(...chartData.map(d => d.value)) : 0
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">My activity</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-4">Protocol Analytics</h1>
+        <p className="text-gray-400 text-lg">Real-time data from Oracle Lend Protocol</p>
+        
+        {/* Debug Status */}
+        <div className="mt-4 p-3 bg-gray-800/50 rounded-lg text-sm">
+          <div className="flex items-center justify-center space-x-4 text-gray-400">
+            <span className={`flex items-center ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+            <span className={`flex items-center ${dexContract ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${dexContract ? 'bg-green-400' : 'bg-red-400'}`}></div>
+              DEX Contract
+            </span>
+            <span className={`flex items-center ${oracleLendContract ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${oracleLendContract ? 'bg-green-400' : 'bg-red-400'}`}></div>
+              Lending Contract
+            </span>
+            <span className={`flex items-center ${dataLoading ? 'text-yellow-400' : 'text-gray-400'}`}>
+              {dataLoading && <div className="w-2 h-2 rounded-full mr-2 bg-yellow-400 animate-pulse"></div>}
+              {dataLoading ? 'Loading...' : 'Ready'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mainMetrics.map((metric, index) => (
           <div key={index} className="glass-effect rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -123,100 +279,49 @@ const Analytics: React.FC = () => {
               </div>
               {metric.change && <span className="text-green-400 text-sm font-medium">{metric.change}</span>}
             </div>
-            <h3 className="text-gray-400 text-sm mb-1">{metric.title}</h3>
-            <p className="text-2xl font-bold text-white mb-1">
-              {isLoading ? (
-                <div className="animate-pulse bg-gray-700 h-8 w-24 rounded"></div>
+            <h3 className="text-gray-400 text-sm mb-2">{metric.title}</h3>
+            <p className="text-xl font-bold text-white mb-2">
+              {dataLoading ? (
+                <div className="animate-pulse bg-gray-700 h-6 w-32 rounded"></div>
               ) : (
                 metric.value
               )}
             </p>
-            <p className="text-xs text-gray-500">{metric.subtitle}</p>
+            <p className="text-xl font-bold text-gray-300">{metric.subtitle}</p>
           </div>
         ))}
       </div>
 
 
-      {/* Detailed Statistics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {protocolStats.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="glass-effect rounded-xl p-6 border border-gray-700/50">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-              <div className="w-2 h-2 rounded-full bg-purple-400 mr-3"></div>
-              {section.category}
-            </h3>
-            <div className="space-y-4">
-              {section.stats.map((stat, statIndex) => (
-                <div key={statIndex} className="flex items-center justify-between py-2 border-b border-gray-700/30 last:border-b-0">
-                  <div className="flex items-center space-x-3">
-                    {typeof stat.icon === 'string' && stat.icon.startsWith('fas') ? (
-                      <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center">
-                        <i className={`${stat.icon} text-gray-400 text-sm`}></i>
-                      </div>
-                    ) : (
-                      <span className="text-xl">{stat.icon}</span>
-                    )}
-                    <span className="text-gray-300 text-sm">{stat.label}</span>
-                  </div>
-                  <span className="text-white font-medium">{stat.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+  
 
-      {/* Live Activity Feed */}
+      {/* Protocol Information */}
       <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <i className="fas fa-rss text-orange-400 mr-3"></i>
-          Live Activity Feed
-          <div className="ml-3 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <i className="fas fa-info-circle text-blue-400 mr-3"></i>
+          Protocol Overview
         </h2>
         
-        <div className="space-y-3 max-h-64 overflow-y-auto">
-          {(analytics.recentTransactions || []).map((activity, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className={`w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center`}>
-                  <i className={`${activity.icon} ${activity.color} text-sm`}></i>
-                </div>
-                <div>
-                  <p className="text-white text-sm">
-                    <span className="text-gray-400">User</span> {activity.user} 
-                    <span className="text-gray-400 ml-1">
-                      {activity.type === 'supply' ? 'supplied' :
-                       activity.type === 'withdraw' ? 'withdrew' :
-                       activity.type === 'borrow' ? 'borrowed' :
-                       activity.type === 'repay' ? 'repaid' :
-                       'swapped'}
-                    </span> {activity.amount}
-                  </p>
-                  <p className="text-gray-500 text-xs">{activity.time}</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => window.open(`https://explorer.intuition.network/tx/${activity.txHash}`, '_blank')}
-                className="text-gray-500 hover:text-gray-400 transition-colors"
-                title="View on block explorer"
-              >
-                <i className="fas fa-external-link-alt text-xs"></i>
-              </button>
-            </div>
-          ))}
-          {(!analytics.recentTransactions || analytics.recentTransactions.length === 0) && (
-            <div className="text-center py-8">
-              <p className="text-gray-400">No recent transactions</p>
-              <p className="text-gray-500 text-sm mt-1">Activity will appear here as users interact with the protocol</p>
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-4 text-center">
-          <button className="text-purple-400 hover:text-purple-300 text-sm font-medium">
-            View All Transactions
-            <i className="fas fa-arrow-right ml-1"></i>
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-white">🏦 Lending Protocol</h3>
+            <ul className="text-gray-300 text-sm space-y-2">
+              <li>• Over-collateralized lending (120% ratio)</li>
+              <li>• TTRUST as collateral, ORACLE as borrowable asset</li>
+              <li>• 10% liquidation bonus for liquidators</li>
+              <li>• Real-time price discovery via DEX</li>
+            </ul>
+          </div>
+          
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-white">🔄 DEX (AMM)</h3>
+            <ul className="text-gray-300 text-sm space-y-2">
+              <li>• Constant product formula (x * y = k)</li>
+              <li>• TTRUST/ORACLE trading pair</li>
+              <li>• Serves as price oracle for lending</li>
+              <li>• Native TTRUST integration</li>
+            </ul>
+          </div>
         </div>
       </div>
 
