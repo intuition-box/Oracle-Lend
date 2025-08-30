@@ -33,15 +33,7 @@
 
   body {
     min-height: 100vh;
-    background: linear-gradient(
-      135deg,
-      #0a0a0a 0%,
-      #1a1a2e 25%,
-      #16213e 50%,
-      #0f3460 75%,
-      #0a0a0a 100%
-    );
-    background-attachment: fixed;
+    background: black;
   }
 
   h1,
@@ -110,6 +102,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .glassmorphism-card:hover {
