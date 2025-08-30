@@ -119,7 +119,7 @@ function App() {
         </div>
       )}
       
-      <div className={`min-h-screen cosmic-bg ${isDarkMode ? 'dark' : ''}`}>
+      <div className={`min-h-screen glassmorphism-background ${isDarkMode ? 'dark' : ''}`}>
         <Router>
         <Layout 
           isDarkMode={isDarkMode}

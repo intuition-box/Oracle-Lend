@@ -9,7 +9,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDarkMode, toggleTheme }) =>
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-lg glass-effect border border-gray-600/50 hover:border-gray-500/50 transition-all duration-200 group"
+      className="relative p-2 rounded-lg glassmorphism-card border border-gray-600/50 hover:border-gray-500/50 transition-all duration-200 group hover:animate-button-pulse"
       title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
     >
       <div className="relative w-5 h-5">

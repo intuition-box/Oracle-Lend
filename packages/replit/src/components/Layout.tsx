@@ -42,7 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
       {isDashboard && (
         <div className="relative py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-6xl font-bold mb-4 gradient-text">
+            <h1 className="text-6xl font-bold mb-4 glassmorphism-text-gradient">
               ORACLE LEND
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
@@ -50,10 +50,10 @@ const Layout: React.FC<LayoutProps> = ({
             </p>
             
             {/* Floating cosmic elements */}
-            <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full star"></div>
-            <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full star" style={{ animationDelay: '0.5s' }}></div>
-            <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-yellow-400 rounded-full star" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute top-40 right-1/3 w-1 h-1 bg-pink-400 rounded-full star" style={{ animationDelay: '1.5s' }}></div>
+            <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full animate-twinkle"></div>
+            <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full animate-twinkle" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-yellow-400 rounded-full animate-golden-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-40 right-1/3 w-1 h-1 bg-pink-400 rounded-full animate-mythic-sparkle" style={{ animationDelay: '1.5s' }}></div>
           </div>
         </div>
       )}

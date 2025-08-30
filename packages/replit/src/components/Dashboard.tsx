@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
           <Link
             key={index}
             to={feature.link}
-            className="glass-effect rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 group"
+            className="glassmorphism-card defi-card-hover rounded-xl p-6 transition-all duration-300 group"
           >
             <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
               <i className={`${feature.icon} text-white text-2xl`}></i>
@@ -49,13 +49,13 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Token Supply Information */}
-      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
+      <div className="glassmorphism-card rounded-xl p-6">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
           <i className="fas fa-coins text-green-400 mr-3"></i>
           Token Supply
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600/30">
+          <div className="glassmorphism-tier-mythic rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Protocol Information */}
-      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
+      <div className="glassmorphism-card rounded-xl p-6">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
           <i className="fas fa-network-wired text-cyan-400 mr-3"></i>
           Network Information
