@@ -3971,6 +3971,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@se-2/replit@workspace:packages/replit":
+  version: 0.0.0-use.local
+  resolution: "@se-2/replit@workspace:packages/replit"
+  dependencies:
+    "@tailwindcss/postcss": ^4.1.12
+    "@types/react": ^19.1.11
+    "@types/react-dom": ^19.1.7
+    "@vitejs/plugin-react": ^5.0.1
+    autoprefixer: ^10.4.21
+    cssnano: ^7.1.1
+    ethers: ^6.15.0
+    postcss: ^8.5.6
+    react: ^19.1.1
+    react-dom: ^19.1.1
+    react-router-dom: ^7.8.2
+    tailwindcss: ^4.1.12
+    terser: ^5.43.1
+    typescript: ^5.9.2
+    vite: ^7.1.3
+  languageName: unknown
+  linkType: soft
+
 "@sec-ant/readable-stream@npm:^0.4.1":
   version: 0.4.1
   resolution: "@sec-ant/readable-stream@npm:0.4.1"
@@ -11247,15 +11269,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:~9.1.6":
-  version: 9.1.7
-  resolution: "husky@npm:9.1.7"
-  bin:
-    husky: bin.js
-  checksum: c2412753f15695db369634ba70f50f5c0b7e5cb13b673d0826c411ec1bd9ddef08c1dad89ea154f57da2521d2605bd64308af748749b27d08c5f563bcd89975f
-  languageName: node
-  linkType: hard
-
 "iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
@@ -16479,7 +16492,6 @@ __metadata:
   resolution: "se-2@workspace:."
   dependencies:
     "@vitejs/plugin-react": ^5.0.1
-    husky: ~9.1.6
     lint-staged: ~13.2.2
     vite: ^7.1.3
   languageName: unknown
@@ -19073,28 +19085,6 @@ __metadata:
   checksum: f86d13f9139c3a57c5a5867e81905cd84134b499849405dec2ffe5b1acd30dabaa1809f6f6ee603a7c65e1e4325f21509db6b8398eaf202c8b8f5809e26a2e16
   languageName: node
   linkType: hard
-
-"workspace@workspace:packages/replit":
-  version: 0.0.0-use.local
-  resolution: "workspace@workspace:packages/replit"
-  dependencies:
-    "@tailwindcss/postcss": ^4.1.12
-    "@types/react": ^19.1.11
-    "@types/react-dom": ^19.1.7
-    "@vitejs/plugin-react": ^5.0.1
-    autoprefixer: ^10.4.21
-    cssnano: ^7.1.1
-    ethers: ^6.15.0
-    postcss: ^8.5.6
-    react: ^19.1.1
-    react-dom: ^19.1.1
-    react-router-dom: ^7.8.2
-    tailwindcss: ^4.1.12
-    terser: ^5.43.1
-    typescript: ^5.9.2
-    vite: ^7.1.3
-  languageName: unknown
-  linkType: soft
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0, wrap-ansi@npm:^7.0.0":
   version: 7.0.0
