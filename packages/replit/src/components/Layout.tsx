@@ -27,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({
   const isDashboard = location.pathname === '/'
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen layout-container">
       <Navbar
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
@@ -42,7 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
       {isDashboard && (
         <div className="relative py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-6xl font-bold mb-4 glassmorphism-text-gradient">
+            <h1 className="text-6xl font-bold mb-4 gradient-text">
               ORACLE LEND
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
@@ -59,12 +59,12 @@ const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 pb-16">
+      <main className="relative max-w-7xl mx-auto px-4 pb-16">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50 py-8">
+      <footer className="relative border-t border-gray-700/50 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400">
           <p>&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
           <p className="text-sm mt-2">

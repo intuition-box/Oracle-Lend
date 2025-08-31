@@ -172,7 +172,7 @@ const LendingBorrowing: React.FC = () => {
   if (!walletConnected) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
-        <div className="glassmorphism-card rounded-xl p-8 max-w-md">
+        <div className="glass-effect rounded-xl p-8 max-w-md">
           <h2 className="text-2xl font-bold text-white mb-4 text-center">Connect Your Wallet</h2>
           <p className="text-gray-300 mb-6 text-center">
             Please connect your wallet to interact with the Oracle Lend protocol
@@ -191,7 +191,7 @@ const LendingBorrowing: React.FC = () => {
   if (!contractConnected) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
-        <div className="glassmorphism-card rounded-xl p-8 max-w-md">
+        <div className="glass-effect rounded-xl p-8 max-w-md">
           <h2 className="text-2xl font-bold text-white mb-4 text-center">Connecting to Contracts</h2>
           <p className="text-gray-300 mb-6 text-center">
             Initializing contract connections...
