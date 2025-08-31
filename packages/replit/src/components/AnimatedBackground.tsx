@@ -1,19 +1,23 @@
 import React, { useRef, useEffect } from 'react';
 
 interface Star {
-  // Position polaire dans la galaxie
+  // Position polaire pour rotation différentielle
   angle: number;
   radius: number;
-  // Position carthésienne calculée
+  // Position cartésienne calculée
   x: number;
   y: number;
+  // Positions précédentes pour interpolation
+  prevX: number;
+  prevY: number;
   // Propriétés visuelles
   size: number;
   opacity: number;
   color: string;
   // Animation
-  rotationSpeed: number;
   pulsePhase: number;
+  // Vitesse de rotation individuelle (rotation différentielle)
+  angularVelocity: number;
 }
 
 interface BackgroundStar {
@@ -43,6 +47,7 @@ const AnimatedBackground: React.FC = () => {
   const backgroundStarsRef = useRef<BackgroundStar[]>([]);
   const timeRef = useRef(0);
   const lastTimeRef = useRef(0);
+  const smoothDeltaRef = useRef(1/60); // Lissage du deltaTime
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,7 +62,7 @@ const AnimatedBackground: React.FC = () => {
       initializeGalaxies();
     };
 
-    const createSpiral = (centerX: number, centerY: number, baseRadius: number, armCount: number, starCount: number, color: string): Star[] => {
+    const createSpiral = (centerX: number, centerY: number, baseRadius: number, armCount: number, starCount: number, color: string, baseRotationSpeed: number): Star[] => {
       const stars: Star[] = [];
       
       for (let i = 0; i < starCount; i++) {
@@ -70,23 +75,32 @@ const AnimatedBackground: React.FC = () => {
         const armOffset = (armIndex * 2 * Math.PI) / armCount;
         
         // Position polaire avec variation aléatoire
-        const angle = t + armOffset + (Math.random() - 0.5) * 0.5;
+        // Inverser l'angle si la rotation est négative pour que la spirale corresponde
+        const angleMultiplier = baseRotationSpeed < 0 ? -1 : 1;
+        const angle = angleMultiplier * (t + armOffset) + (Math.random() - 0.5) * 0.5;
         const radius = spiralRadius + (Math.random() - 0.5) * baseRadius * 0.2;
         
-        // Conversion en coordonnées cartésiennes
+        // Rotation différentielle : les étoiles proches du centre tournent plus vite
+        // Formule de Kepler simplifiée : v ∝ 1/√r
+        const normalizedRadius = radius / baseRadius;
+        const angularVelocity = baseRotationSpeed * (1 / Math.sqrt(0.2 + normalizedRadius * 0.8));
+        
+        // Position initiale
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
         
         stars.push({
-          angle: angle,
-          radius: radius,
+          angle,
+          radius,
           x,
           y,
+          prevX: x, // Initialiser les positions précédentes
+          prevY: y,
           size: Math.random() * 2 + 0.5, // Étoiles plus petites et raffinées
           opacity: Math.random() * 0.4 + 0.6,
           color: color,
-          rotationSpeed: (0.8 + Math.random() * 0.4) * (radius > spiralRadius * 0.7 ? 0.9 : 1.1),
-          pulsePhase: Math.random() * Math.PI * 2
+          pulsePhase: Math.random() * Math.PI * 2,
+          angularVelocity
         });
       }
       
@@ -112,58 +126,67 @@ const AnimatedBackground: React.FC = () => {
       galaxiesRef.current = [];
       initializeBackgroundStars();
       
-      // Galaxie principale - taille et position optimisées
+      // Galaxie principale - position décentrée pour dynamisme
+      const mainGalaxyX = canvas.width * 0.6;
+      const mainGalaxyY = canvas.height * 0.45;
       galaxiesRef.current.push({
-        centerX: canvas.width * 0.5,
-        centerY: canvas.height * 0.5,
-        baseRadius: Math.min(canvas.width, canvas.height) * 0.25,
-        rotationSpeed: 0.003,
+        centerX: mainGalaxyX,
+        centerY: mainGalaxyY,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.22,
+        rotationSpeed: 0.045, // Accéléré pour fluidité
         armCount: 4,
         stars: createSpiral(
-          canvas.width * 0.5,
-          canvas.height * 0.5,
-          Math.min(canvas.width, canvas.height) * 0.25,
+          mainGalaxyX,
+          mainGalaxyY,
+          Math.min(canvas.width, canvas.height) * 0.22,
           4,
           300,
-          '#ff6b35' // Orange chaud pour la galaxie principale
+          '#ff6b35', // Orange chaud pour la galaxie principale
+          0.045
         ),
         color: '#ff6b35', // Orange chaud
         opacity: 1.0
       });
 
-      // Galaxie secondaire - rotation inverse
+      // Galaxie secondaire - coin supérieur gauche pour équilibre
+      const secondGalaxyX = canvas.width * 0.25;
+      const secondGalaxyY = canvas.height * 0.25;
       galaxiesRef.current.push({
-        centerX: canvas.width * 0.8,
-        centerY: canvas.height * 0.3,
-        baseRadius: Math.min(canvas.width, canvas.height) * 0.15,
-        rotationSpeed: -0.004,
+        centerX: secondGalaxyX,
+        centerY: secondGalaxyY,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.12,
+        rotationSpeed: -0.06, // Rotation inverse accélérée
         armCount: 3,
         stars: createSpiral(
-          canvas.width * 0.8,
-          canvas.height * 0.3,
-          Math.min(canvas.width, canvas.height) * 0.15,
+          secondGalaxyX,
+          secondGalaxyY,
+          Math.min(canvas.width, canvas.height) * 0.12,
           3,
           200,
-          '#ffd700' // Doré chaud
+          '#ffd700', // Doré chaud
+          -0.06
         ),
         color: '#ffd700', // Doré
         opacity: 0.9
       });
 
-      // Galaxie lointaine - rotation rapide
+      // Galaxie lointaine - coin inférieur droit pour triangle harmonieux
+      const thirdGalaxyX = canvas.width * 0.75;
+      const thirdGalaxyY = canvas.height * 0.70;
       galaxiesRef.current.push({
-        centerX: canvas.width * 0.2,
-        centerY: canvas.height * 0.7,
-        baseRadius: Math.min(canvas.width, canvas.height) * 0.08,
-        rotationSpeed: 0.005,
+        centerX: thirdGalaxyX,
+        centerY: thirdGalaxyY,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.10,
+        rotationSpeed: 0.075, // La plus rapide, accélérée
         armCount: 2,
         stars: createSpiral(
-          canvas.width * 0.2,
-          canvas.height * 0.7,
-          Math.min(canvas.width, canvas.height) * 0.08,
+          thirdGalaxyX,
+          thirdGalaxyY,
+          Math.min(canvas.width, canvas.height) * 0.10,
           2,
           100,
-          '#ff9a56' // Pêche chaud
+          '#ff9a56', // Pêche chaud
+          0.075
         ),
         color: '#ff9a56', // Pêche
         opacity: 0.7
@@ -176,10 +199,16 @@ const AnimatedBackground: React.FC = () => {
     };
 
     const animate = (currentTime: number) => {
-      // Calcul du deltaTime pour une animation fluide
+      // Calcul du deltaTime avec lissage pour éviter les saccades
       if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-      const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
+      const rawDeltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
       lastTimeRef.current = currentTime;
+      
+      // Lissage du deltaTime pour éviter les variations brusques
+      const targetDelta = Math.min(rawDeltaTime, 1/30); // Cap à 30 FPS minimum
+      smoothDeltaRef.current = smoothDeltaRef.current * 0.9 + targetDelta * 0.1;
+      const deltaTime = smoothDeltaRef.current;
+      
       timeRef.current += deltaTime;
       
       // Fond dégradé cosmique - noir profond avec tons chauds subtils
@@ -234,21 +263,35 @@ const AnimatedBackground: React.FC = () => {
         ctx.restore();
       });
 
-      // Animer chaque galaxie
+      // Animer chaque galaxie avec rotation différentielle et interpolation
       galaxiesRef.current.forEach((galaxy) => {
+        // Rotation différentielle : chaque étoile tourne à sa propre vitesse
         galaxy.stars.forEach((star) => {
-          // Rotation continue basée sur deltaTime
-          star.angle += galaxy.rotationSpeed * star.rotationSpeed * deltaTime * 60; // 60 pour normaliser à 60fps
+          // Sauvegarder les positions précédentes
+          star.prevX = star.x;
+          star.prevY = star.y;
           
-          // Recalculer position
-          star.x = galaxy.centerX + Math.cos(star.angle) * star.radius;
-          star.y = galaxy.centerY + Math.sin(star.angle) * star.radius;
+          // Rotation avec pas de temps fixe pour éviter les saccades
+          const fixedDelta = 1/60; // Assume 60 FPS pour un mouvement constant
+          star.angle += star.angularVelocity * fixedDelta;
+          
+          // Normaliser l'angle pour éviter les problèmes de précision
+          star.angle = star.angle % (Math.PI * 2);
+          
+          // Calculer la position cible
+          const targetX = galaxy.centerX + Math.cos(star.angle) * star.radius;
+          const targetY = galaxy.centerY + Math.sin(star.angle) * star.radius;
+          
+          // Interpolation linéaire (LERP) pour un mouvement fluide
+          const lerpFactor = 0.2; // Plus c'est bas, plus c'est fluide
+          star.x = star.prevX * (1 - lerpFactor) + targetX * lerpFactor;
+          star.y = star.prevY * (1 - lerpFactor) + targetY * lerpFactor;
           
           // Animation de pulsation basée sur deltaTime
           star.pulsePhase += deltaTime * 1.2;
           const pulseOpacity = star.opacity * (0.7 + 0.3 * Math.sin(star.pulsePhase));
           
-          // Interaction avec la souris (effet gravitationnel)
+          // Interaction avec la souris
           const mouseDistance = Math.sqrt(
             (mouseRef.current.x - star.x) ** 2 + 
             (mouseRef.current.y - star.y) ** 2
@@ -290,38 +333,8 @@ const AnimatedBackground: React.FC = () => {
           ctx.restore();
         });
         
-        // Dessiner les bras galactiques avec effet lumineux
-        ctx.save();
-        
-        for (let arm = 0; arm < galaxy.armCount; arm++) {
-          const armAngle = (arm * 2 * Math.PI) / galaxy.armCount;
-          
-          // Une seule passe subtile pour les bras
-          for (let pass = 0; pass < 1; pass++) {
-            ctx.beginPath();
-            ctx.globalAlpha = 0.08 * galaxy.opacity;
-            ctx.strokeStyle = galaxy.color;
-            ctx.lineWidth = 2;
-            ctx.shadowColor = galaxy.color;
-            ctx.shadowBlur = 4;
-            
-            for (let r = galaxy.baseRadius * 0.1; r < galaxy.baseRadius; r += 5) {
-              const spiralAngle = armAngle + (r / galaxy.baseRadius) * Math.PI * 2 + timeRef.current * galaxy.rotationSpeed * 60;
-              const x = galaxy.centerX + Math.cos(spiralAngle) * r;
-              const y = galaxy.centerY + Math.sin(spiralAngle) * r;
-              
-              if (r === galaxy.baseRadius * 0.1) {
-                ctx.moveTo(x, y);
-              } else {
-                ctx.lineTo(x, y);
-              }
-            }
-            
-            ctx.stroke();
-          }
-        }
-        
-        ctx.restore();
+        // Les bras galactiques sont maintenant uniquement représentés par les étoiles
+        // Pas de lignes supplémentaires pour un rendu plus propre
       });
 
       animationFrameRef.current = requestAnimationFrame(() => animate(performance.now()));

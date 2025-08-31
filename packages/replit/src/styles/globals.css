@@ -26,11 +26,11 @@
   --error: #ef4444;
   --info: #06b6d4;
   
-  /* Glass morphism */
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-bg-dark: rgba(0, 0, 0, 0.3);
-  --glass-border-dark: rgba(255, 255, 255, 0.1);
+  /* Glass morphism - Ultra transparent */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg-dark: rgba(0, 0, 0, 0.08);
+  --glass-border-dark: rgba(255, 255, 255, 0.05);
   
   /* Shadows */
   --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -177,14 +177,14 @@ body {
 }
 
 .glass-effect:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: var(--shadow-large);
 }
 
 .dark .glass-effect:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Gradient text effect */
@@ -577,8 +577,8 @@ body {
 }
 
 .light .glass-effect {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(0, 0, 0, 0.05);
 }
 
 .light .input-primary {
