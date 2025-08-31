@@ -5,10 +5,87 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ORACLE LEND - DeFi Protocol</title>
-    <!-- Tailwind CSS handled via local build -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- All styles handled by globals.css for consistency -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        background: #000000;
+        min-height: 100vh;
+      }
+      
+      .light body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
+      }
+      
+      .cosmic-bg {
+        background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
+        backdrop-filter: blur(1px);
+      }
+      
+      .light .cosmic-bg {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
+      }
+      
+      .light .glass-effect {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      .light * {
+        color: #1f2937 !important;
+      }
+      
+      .light .text-white {
+        color: #1f2937 !important;
+      }
+      
+      .light .text-gray-300,
+      .light .text-gray-400 {
+        color: #6b7280 !important;
+      }
+      
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .gradient-text {
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-family: 'Geist', sans-serif !important;
+        font-weight: 800 !important;
+      }
+      
+      .star {
+        animation: twinkle 2s infinite;
+      }
+      
+      @keyframes twinkle {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+      
+      .orbit {
+        animation: orbit 20s infinite linear;
+      }
+      
+      @keyframes orbit {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    </style>
     
     <!-- GitHub Pages SPA redirect handling -->
     <script type="text/javascript">

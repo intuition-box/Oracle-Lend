@@ -136,7 +136,7 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
         {targetUserAddress && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-3">📊 Target Position Analysis</h3>
-            <div className="glassmorphism-tier-mythic rounded-lg p-4 space-y-3">
+            <div className="bg-white/5 rounded-lg p-4 space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-300">Target Address:</span>
                 <span className="text-white font-mono text-sm">
@@ -189,7 +189,7 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
         {/* Liquidation Requirements */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-white mb-3">📋 Your Liquidation Status</h3>
-          <div className="glassmorphism-tier-mythic rounded-lg p-4 space-y-3">
+          <div className="bg-white/5 rounded-lg p-4 space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-300">Your ORACLE Balance:</span>
               <div className="flex items-center space-x-2">
@@ -241,7 +241,7 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
         {targetUserAddress && isLiquidatable && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-3">💰 Liquidation Rewards</h3>
-            <div className="glassmorphism-tier-rare rounded-lg p-4 space-y-2">
+            <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-300">ETH Collateral:</span>
                 <div className="flex items-center space-x-2">
@@ -279,7 +279,7 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
         {!hasEnoughOracle && targetUserAddress && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-3">🏭 Get ORACLE Tokens</h3>
-            <div className="glassmorphism-card rounded-lg p-4 space-y-4">
+            <div className="bg-white/5 rounded-lg p-4 space-y-4">
               {isUserMinter ? (
                 <div className="space-y-3">
                   <p className="text-green-400 text-sm">
@@ -340,7 +340,7 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
         </div>
 
         {/* Educational Note */}
-        <div className="mt-6 p-4 glassmorphism-tier-rare rounded-lg">
+        <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
           <p className="text-blue-300 text-sm">
             <strong>💡 Pro Tip:</strong> Liquidation helps maintain the protocol's health by ensuring 
             all loans remain properly collateralized. As a liquidator, you provide a valuable service 

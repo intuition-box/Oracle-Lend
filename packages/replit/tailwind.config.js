@@ -110,10 +110,6 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
         'shimmer': 'shimmer 2s linear infinite',
-        'golden-pulse': 'golden-pulse 2s ease-in-out infinite',
-        'mythic-sparkle': 'mythic-sparkle 1.5s ease-in-out infinite',
-        'button-pulse': 'button-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'checkmark': 'checkmark 0.6s ease-in-out forwards',
       },
       keyframes: {
         fadeIn: {
@@ -184,54 +180,6 @@ export default {
         shimmer: {
           '0%': { backgroundPosition: '-200px 0' },
           '100%': { backgroundPosition: 'calc(200px + 100%) 0' },
-        },
-        'golden-pulse': {
-          '0%, 100%': {
-            transform: 'scale(1)',
-            boxShadow: '0 0 20px rgba(251, 191, 36, 0.5)',
-            filter: 'brightness(1)',
-          },
-          '50%': {
-            transform: 'scale(1.05)',
-            boxShadow: '0 0 40px rgba(251, 191, 36, 0.8), 0 0 60px rgba(251, 191, 36, 0.3)',
-            filter: 'brightness(1.2)',
-          },
-        },
-        'mythic-sparkle': {
-          '0%, 100%': {
-            transform: 'scale(1) rotate(0deg)',
-            boxShadow: '0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)',
-          },
-          '25%': {
-            transform: 'scale(1.02) rotate(90deg)',
-            boxShadow: '0 0 30px rgba(236, 72, 153, 0.7), 0 0 60px rgba(168, 85, 247, 0.5)',
-          },
-          '50%': {
-            transform: 'scale(1.05) rotate(180deg)',
-            boxShadow: '0 0 40px rgba(236, 72, 153, 0.8), 0 0 80px rgba(168, 85, 247, 0.6)',
-          },
-          '75%': {
-            transform: 'scale(1.02) rotate(270deg)',
-            boxShadow: '0 0 30px rgba(236, 72, 153, 0.7), 0 0 60px rgba(168, 85, 247, 0.5)',
-          },
-        },
-        'button-pulse': {
-          '0%, 100%': {
-            transform: 'scale(1)',
-            opacity: '1',
-          },
-          '50%': {
-            transform: 'scale(1.05)',
-            opacity: '0.8',
-          },
-        },
-        'checkmark': {
-          '0%': {
-            strokeDasharray: '0 50',
-          },
-          '100%': {
-            strokeDasharray: '50 0',
-          },
         },
       },
       backdropBlur: {

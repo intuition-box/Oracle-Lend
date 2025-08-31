@@ -27,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({
   const isDashboard = location.pathname === '/'
 
   return (
-    <div className="min-h-screen layout-container">
+    <div className="min-h-screen">
       <Navbar
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
@@ -50,21 +50,21 @@ const Layout: React.FC<LayoutProps> = ({
             </p>
             
             {/* Floating cosmic elements */}
-            <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full animate-twinkle"></div>
-            <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full animate-twinkle" style={{ animationDelay: '0.5s' }}></div>
-            <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-yellow-400 rounded-full animate-golden-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute top-40 right-1/3 w-1 h-1 bg-pink-400 rounded-full animate-mythic-sparkle" style={{ animationDelay: '1.5s' }}></div>
+            <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full star"></div>
+            <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full star" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-yellow-400 rounded-full star" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-40 right-1/3 w-1 h-1 bg-pink-400 rounded-full star" style={{ animationDelay: '1.5s' }}></div>
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="relative max-w-7xl mx-auto px-4 pb-16">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 pb-16">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="relative border-t border-gray-700/50 py-8">
+      <footer className="relative z-10 border-t border-gray-700/50 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400">
           <p>&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
           <p className="text-sm mt-2">

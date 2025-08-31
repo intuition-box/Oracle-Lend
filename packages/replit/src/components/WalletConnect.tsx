@@ -47,7 +47,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
     return (
       <button
         onClick={connectWallet}
-        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 hover:animate-button-pulse"
+        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25"
       >
         <i className="fas fa-wallet"></i>
         <span className="font-medium">Connect Wallet</span>
@@ -59,7 +59,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
     <div className="relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center space-x-2 px-4 py-2 glassmorphism-tier-rare border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 hover:bg-green-500/10 hover:animate-button-pulse"
+        className="flex items-center space-x-2 px-4 py-2 glass-effect border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 hover:bg-green-500/10"
       >
         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
         <span className="font-medium">{formatAddress(account!)}</span>
@@ -67,7 +67,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-64 glassmorphism-card border border-gray-600/50 rounded-lg shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-64 glass-effect border border-gray-600/50 rounded-lg shadow-xl z-50">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-400">Connected Wallet</span>
@@ -105,7 +105,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
                   disconnectWallet()
                   setIsDropdownOpen(false)
                 }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-600/30 transition-all duration-200 hover:animate-button-pulse"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-600/30 transition-all duration-200"
               >
                 <i className="fas fa-sign-out-alt"></i>
                 <span>Disconnect</span>

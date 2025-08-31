@@ -1,241 +1,326 @@
-import { useEffect, useRef } from "react";
+import React, { useRef, useEffect } from 'react';
 
-interface Particle {
+interface Star {
+  // Position polaire dans la galaxie
+  angle: number;
+  radius: number;
+  // Position carthésienne calculée
   x: number;
   y: number;
-  originX: number;
-  originY: number;
-  vx: number;
-  vy: number;
-  opacity: number;
-  targetOpacity: number;
+  // Propriétés visuelles
   size: number;
-  connections: number[];
+  opacity: number;
+  color: string;
+  // Animation
+  rotationSpeed: number;
+  pulsePhase: number;
 }
 
-export default function AnimatedBackground() {
+interface Galaxy {
+  centerX: number;
+  centerY: number;
+  baseRadius: number;
+  rotationSpeed: number;
+  armCount: number;
+  stars: Star[];
+  color: string;
+  opacity: number;
+}
+
+const AnimatedBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const galaxiesRef = useRef<Galaxy[]>([]);
+  const timeRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth * window.devicePixelRatio;
-      canvas.height = window.innerHeight * window.devicePixelRatio;
-      canvas.style.width = window.innerWidth + "px";
-      canvas.style.height = window.innerHeight + "px";
-
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initializeGalaxies();
     };
 
-    resizeCanvas();
-
-    const particles: Particle[] = [];
-    let mouseX = 0;
-    let mouseY = 0;
-
-    const createConstellationGrid = () => {
-      const gridSize = 12;
-      const jitter = 40;
-
-      for (let x = 0; x < window.innerWidth; x += window.innerWidth / gridSize) {
-        for (let y = 0; y < window.innerHeight; y += window.innerHeight / gridSize) {
-          if (Math.random() < 0.3) continue;
-
-          const jitterX = (Math.random() - 0.5) * jitter * 2;
-          const jitterY = (Math.random() - 0.5) * jitter * 2;
-
-          particles.push({
-            x: x + jitterX,
-            y: y + jitterY,
-            originX: x + jitterX,
-            originY: y + jitterY,
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: (Math.random() - 0.5) * 0.8,
-            opacity: 0.6 + Math.random() * 0.4,
-            targetOpacity: 0.6 + Math.random() * 0.4,
-            size: 1.5 + Math.random() * 1,
-            connections: [],
-          });
-        }
+    const createSpiral = (centerX: number, centerY: number, baseRadius: number, armCount: number, starCount: number, color: string): Star[] => {
+      const stars: Star[] = [];
+      
+      for (let i = 0; i < starCount; i++) {
+        // Créer une spirale logarithmique
+        const t = (i / starCount) * Math.PI * 4; // 4 tours de spirale
+        const spiralRadius = baseRadius * (0.2 + 0.8 * (i / starCount));
+        
+        // Ajouter de la variation pour chaque bras
+        const armIndex = Math.floor(Math.random() * armCount);
+        const armOffset = (armIndex * 2 * Math.PI) / armCount;
+        
+        // Position polaire avec variation aléatoire
+        const angle = t + armOffset + (Math.random() - 0.5) * 0.5;
+        const radius = spiralRadius + (Math.random() - 0.5) * baseRadius * 0.2;
+        
+        // Conversion en coordonnées cartésiennes
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        stars.push({
+          angle: angle,
+          radius: radius,
+          x,
+          y,
+          size: Math.random() * 4 + 1,
+          opacity: Math.random() * 0.4 + 0.6,
+          color: color,
+          rotationSpeed: (0.8 + Math.random() * 0.4) * (radius > spiralRadius * 0.7 ? 0.9 : 1.1),
+          pulsePhase: Math.random() * Math.PI * 2
+        });
       }
+      
+      return stars;
     };
 
-    createConstellationGrid();
+    const initializeGalaxies = () => {
+      galaxiesRef.current = [];
+      
+      // Galaxie principale - taille et position optimisées
+      galaxiesRef.current.push({
+        centerX: canvas.width * 0.5,
+        centerY: canvas.height * 0.5,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.25,
+        rotationSpeed: 0.003,
+        armCount: 4,
+        stars: createSpiral(
+          canvas.width * 0.5,
+          canvas.height * 0.5,
+          Math.min(canvas.width, canvas.height) * 0.25,
+          4,
+          300,
+          '#ff6b35' // Orange chaud pour la galaxie principale
+        ),
+        color: '#ff6b35', // Orange chaud
+        opacity: 1.0
+      });
 
-    const handleResize = () => {
-      resizeCanvas();
+      // Galaxie secondaire - rotation inverse
+      galaxiesRef.current.push({
+        centerX: canvas.width * 0.8,
+        centerY: canvas.height * 0.3,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.15,
+        rotationSpeed: -0.004,
+        armCount: 3,
+        stars: createSpiral(
+          canvas.width * 0.8,
+          canvas.height * 0.3,
+          Math.min(canvas.width, canvas.height) * 0.15,
+          3,
+          200,
+          '#ffd700' // Doré chaud
+        ),
+        color: '#ffd700', // Doré
+        opacity: 0.9
+      });
 
-      particles.forEach(particle => {
-        if (particle.x > window.innerWidth) particle.x = window.innerWidth - 50;
-        if (particle.y > window.innerHeight) particle.y = window.innerHeight - 50;
-        if (particle.x < 0) particle.x = 50;
-        if (particle.y < 0) particle.y = 50;
-
-        particle.originX = Math.min(particle.originX, window.innerWidth);
-        particle.originY = Math.min(particle.originY, window.innerHeight);
+      // Galaxie lointaine - rotation rapide
+      galaxiesRef.current.push({
+        centerX: canvas.width * 0.2,
+        centerY: canvas.height * 0.7,
+        baseRadius: Math.min(canvas.width, canvas.height) * 0.08,
+        rotationSpeed: 0.005,
+        armCount: 2,
+        stars: createSpiral(
+          canvas.width * 0.2,
+          canvas.height * 0.7,
+          Math.min(canvas.width, canvas.height) * 0.08,
+          2,
+          100,
+          '#ff9a56' // Pêche chaud
+        ),
+        color: '#ff9a56', // Pêche
+        opacity: 0.7
       });
     };
-
-    const regenerateParticles = () => {
-      particles.length = 0;
-
-      const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 20000);
-      const gridSize = Math.sqrt(particleCount);
-      const jitter = 40;
-
-      for (let x = 0; x < window.innerWidth; x += window.innerWidth / gridSize) {
-        for (let y = 0; y < window.innerHeight; y += window.innerHeight / gridSize) {
-          if (Math.random() < 0.2) continue;
-
-          const jitterX = (Math.random() - 0.5) * jitter * 2;
-          const jitterY = (Math.random() - 0.5) * jitter * 2;
-
-          particles.push({
-            x: x + jitterX,
-            y: y + jitterY,
-            originX: x + jitterX,
-            originY: y + jitterY,
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: (Math.random() - 0.5) * 0.8,
-            opacity: 0.6 + Math.random() * 0.4,
-            targetOpacity: 0.6 + Math.random() * 0.4,
-            size: 1.5 + Math.random() * 1,
-            connections: [],
-          });
-        }
-      }
-    };
-
-    let resizeTimeout: NodeJS.Timeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        handleResize();
-        regenerateParticles();
-      }, 100);
-    };
-
-    window.addEventListener("resize", debouncedResize);
 
     const handleMouseMove = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseX = event.clientX - rect.left;
-      mouseY = event.clientY - rect.top;
+      mouseRef.current.x = event.clientX;
+      mouseRef.current.y = event.clientY;
     };
-
-    canvas.addEventListener("mousemove", handleMouseMove);
-
-    let animationFrameId: number;
 
     const animate = () => {
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-      const mouseAttraction = 200;
-
-      particles.forEach(particle => {
-        const dx = mouseX - particle.x;
-        const dy = mouseY - particle.y;
-        const mouseDistance = Math.sqrt(dx * dx + dy * dy);
-
-        if (mouseDistance < mouseAttraction && mouseDistance > 0) {
-          const attractionStrength = 1 - mouseDistance / mouseAttraction;
-          const attractionX = (dx / mouseDistance) * attractionStrength * 2;
-          const attractionY = (dy / mouseDistance) * attractionStrength * 2;
-
-          particle.vx += attractionX * attractionStrength * 0.002;
-          particle.vy += attractionY * attractionStrength * 0.002;
-        }
-
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        if (particle.x < 0 || particle.x > window.innerWidth) {
-          particle.vx *= -1;
-          particle.x = Math.max(0, Math.min(window.innerWidth, particle.x));
-        }
-        if (particle.y < 0 || particle.y > window.innerHeight) {
-          particle.vy *= -1;
-          particle.y = Math.max(0, Math.min(window.innerHeight, particle.y));
-        }
-
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-        ctx.fill();
+      timeRef.current += 0.016; // ~60fps
+      
+      // Fond dégradé cosmique - noir profond avec tons chauds subtils
+      const gradient = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 0,
+        canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+      );
+      gradient.addColorStop(0, '#0a0604'); // Noir avec très légère teinte chaude
+      gradient.addColorStop(0.5, '#040201'); // Noir profond
+      gradient.addColorStop(1, '#000000'); // Noir pur
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Ajouter des nébuleuses colorées
+      galaxiesRef.current.forEach((galaxy, index) => {
+        ctx.save();
+        
+        // Nébuleuse de fond très subtile pour chaque galaxie
+        const nebulaGradient = ctx.createRadialGradient(
+          galaxy.centerX, galaxy.centerY, 0,
+          galaxy.centerX, galaxy.centerY, galaxy.baseRadius * 1.5
+        );
+        nebulaGradient.addColorStop(0, galaxy.color + '10'); // Beaucoup plus subtil
+        nebulaGradient.addColorStop(0.3, galaxy.color + '08');
+        nebulaGradient.addColorStop(0.6, galaxy.color + '03');
+        nebulaGradient.addColorStop(1, 'transparent');
+        
+        ctx.globalAlpha = 0.3; // Réduction de l'opacité globale
+        ctx.fillStyle = nebulaGradient;
+        ctx.fillRect(
+          galaxy.centerX - galaxy.baseRadius * 1.5,
+          galaxy.centerY - galaxy.baseRadius * 1.5,
+          galaxy.baseRadius * 3,
+          galaxy.baseRadius * 3
+        );
+        
+        ctx.restore();
       });
 
-      const maxConnectionsPerPoint = 2;
-      const maxDistance = 100;
-      const minOpacity = 0.1;
-      const maxOpacity = 0.4;
+      // Animer chaque galaxie
+      galaxiesRef.current.forEach((galaxy) => {
+        galaxy.stars.forEach((star) => {
+          // Rotation de la galaxie
+          star.angle += galaxy.rotationSpeed * star.rotationSpeed;
+          
+          // Recalculer position
+          star.x = galaxy.centerX + Math.cos(star.angle) * star.radius;
+          star.y = galaxy.centerY + Math.sin(star.angle) * star.radius;
+          
+          // Animation de pulsation
+          star.pulsePhase += 0.02;
+          const pulseOpacity = star.opacity * (0.7 + 0.3 * Math.sin(star.pulsePhase));
+          
+          // Interaction avec la souris (effet gravitationnel)
+          const mouseDistance = Math.sqrt(
+            (mouseRef.current.x - star.x) ** 2 + 
+            (mouseRef.current.y - star.y) ** 2
+          );
+          
+          let mouseEffect = 1;
+          if (mouseDistance < 150) {
+            mouseEffect = 1 + (150 - mouseDistance) / 150 * 0.5;
+          }
 
-      particles.forEach((particle, i) => {
-        let connectionCount = 0;
-
-        for (let j = i + 1; j < particles.length; j++) {
-          if (connectionCount >= maxConnectionsPerPoint) break;
-
-          const otherParticle = particles[j];
-          const dx = particle.x - otherParticle.x;
-          const dy = particle.y - otherParticle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < maxDistance) {
-            const distanceRatio = distance / maxDistance;
-            const lineOpacity = maxOpacity - distanceRatio * (maxOpacity - minOpacity);
-
-            if (lineOpacity > minOpacity) {
-              ctx.beginPath();
-              ctx.moveTo(particle.x, particle.y);
-              ctx.lineTo(otherParticle.x, otherParticle.y);
-              ctx.strokeStyle = `rgba(255, 255, 255, ${lineOpacity})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-              connectionCount++;
+          // Dessiner l'étoile avec glow subtil
+          ctx.save();
+          
+          // Glow léger
+          ctx.globalAlpha = pulseOpacity * galaxy.opacity * 0.5 * mouseEffect;
+          ctx.shadowColor = star.color;
+          ctx.shadowBlur = star.size * 3 * mouseEffect;
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * mouseEffect, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Étoile principale
+          ctx.globalAlpha = pulseOpacity * galaxy.opacity * mouseEffect;
+          ctx.shadowBlur = star.size * 2 * mouseEffect;
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 0.8 * mouseEffect, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Core brillant
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = pulseOpacity * galaxy.opacity;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 0.3 * mouseEffect, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.restore();
+        });
+        
+        // Dessiner les bras galactiques avec effet lumineux
+        ctx.save();
+        
+        for (let arm = 0; arm < galaxy.armCount; arm++) {
+          const armAngle = (arm * 2 * Math.PI) / galaxy.armCount;
+          
+          // Une seule passe subtile pour les bras
+          for (let pass = 0; pass < 1; pass++) {
+            ctx.beginPath();
+            ctx.globalAlpha = 0.08 * galaxy.opacity;
+            ctx.strokeStyle = galaxy.color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = galaxy.color;
+            ctx.shadowBlur = 4;
+            
+            for (let r = galaxy.baseRadius * 0.1; r < galaxy.baseRadius; r += 5) {
+              const spiralAngle = armAngle + (r / galaxy.baseRadius) * Math.PI * 2 + timeRef.current * galaxy.rotationSpeed;
+              const x = galaxy.centerX + Math.cos(spiralAngle) * r;
+              const y = galaxy.centerY + Math.sin(spiralAngle) * r;
+              
+              if (r === galaxy.baseRadius * 0.1) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
             }
+            
+            ctx.stroke();
           }
         }
+        
+        ctx.restore();
       });
 
-      animationFrameId = requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
+    // Initialize
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('mousemove', handleMouseMove);
     animate();
 
     return () => {
-      window.removeEventListener("resize", debouncedResize);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      clearTimeout(resizeTimeout);
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
+      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "black",
+        width: '100%',
+        height: '100%',
         zIndex: -1,
-        pointerEvents: "none"
+        background: '#000000',
+        overflow: 'hidden'
       }}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: '100%'
+        }}
+      />
+    </div>
   );
-}
+};
+
+export default AnimatedBackground;

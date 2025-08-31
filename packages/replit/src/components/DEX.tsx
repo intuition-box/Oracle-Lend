@@ -440,7 +440,7 @@ const DEX: React.FC = () => {
 
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold glassmorphism-text-gradient mb-4">Token Swap</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-4">Token Swap</h1>
         <p className="text-gray-400">Live market rates with real-time fluctuation</p>
       </div>
 
@@ -477,7 +477,7 @@ const DEX: React.FC = () => {
       {isConnected && isCorrectNetwork && (
         <>
           {/* Token Balances */}
-          <div className="glassmorphism-tier-mythic rounded-xl p-6 border border-gray-700/50">
+          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white flex items-center">
                 <i className="fas fa-wallet text-green-400 mr-3"></i>
@@ -660,7 +660,7 @@ const DEX: React.FC = () => {
                 <div className="flex justify-center">
                   <button
                     onClick={handleSwapTokens}
-                    className="w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 hover:border-purple-500 text-gray-400 hover:text-purple-400 transition-all duration-200 hover:scale-110 hover:animate-button-pulse"
+                    className="w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 hover:border-purple-500 text-gray-400 hover:text-purple-400 transition-all duration-200 hover:scale-110"
                   >
                     <i className="fas fa-arrow-down"></i>
                   </button>
@@ -758,7 +758,7 @@ const DEX: React.FC = () => {
           </div>
 
           {/* Live Token Rates */}
-          <div className="glassmorphism-tier-mythic rounded-xl p-6 border border-gray-700/50">
+          <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center">
               <i className="fas fa-chart-line text-green-400 mr-3"></i>
               Live Token Rates

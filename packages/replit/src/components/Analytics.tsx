@@ -243,7 +243,7 @@ const Analytics: React.FC = () => {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold glassmorphism-text-gradient mb-4">Protocol Analytics</h1>
+        <h1 className="text-4xl font-bold gradient-text mb-4">Protocol Analytics</h1>
         <p className="text-gray-400 text-lg">Real-time data from Oracle Lend Protocol</p>
         
         {/* Debug Status */}
@@ -272,7 +272,7 @@ const Analytics: React.FC = () => {
       {/* Main Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mainMetrics.map((metric, index) => (
-          <div key={index} className="glassmorphism-tier-mythic rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300">
+          <div key={index} className="glass-effect rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${metric.color} bg-opacity-20 flex items-center justify-center`}>
                 <i className={`${metric.icon} ${metric.color} text-xl`}></i>
@@ -296,7 +296,7 @@ const Analytics: React.FC = () => {
   
 
       {/* Protocol Information */}
-      <div className="glassmorphism-card rounded-xl p-6 border border-gray-700/50">
+      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
           <i className="fas fa-info-circle text-blue-400 mr-3"></i>
           Protocol Overview
@@ -331,7 +331,7 @@ const Analytics: React.FC = () => {
           href="https://discord.com/invite/0xintuition" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center space-x-3 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25 hover:animate-button-pulse"
+          className="inline-flex items-center space-x-3 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25"
         >
           <i className="fab fa-discord text-xl"></i>
           <span>Join Intuition Discord</span>

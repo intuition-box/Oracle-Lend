@@ -49,10 +49,9 @@ function App() {
 
   return (
     <>
-      {/* Animated Background */}
       <AnimatedBackground />
       
-      {/* Global Transaction Notification */}
+      {/* Global Transaction Notification - COMPLETELY OUTSIDE EVERYTHING */}
       {notification && (
         <div 
           style={{ 
@@ -60,7 +59,7 @@ function App() {
             top: '20px', 
             left: '50%', 
             transform: 'translateX(-50%)', 
-            zIndex: 9999,
+            zIndex: 2147483647,
             width: 'auto',
             maxWidth: '400px',
             padding: '16px',
@@ -123,25 +122,25 @@ function App() {
         </div>
       )}
       
-      <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <div className={`min-h-screen app-content ${isDarkMode ? 'dark' : ''}`}>
         <Router>
-          <Layout 
-            isDarkMode={isDarkMode}
-            toggleTheme={toggleTheme}
-            isConnected={isConnected}
-            account={account}
-            connectWallet={connect}
-            disconnectWallet={disconnect}
-            isInitializing={isInitializing}
-          >
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/lending" element={<LendingBorrowing />} />
-              <Route path="/dex" element={<Swap />} />
-              <Route path="/analytics" element={<Analytics />} />
-            </Routes>
-          </Layout>
-        </Router>
+        <Layout 
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+          isConnected={isConnected}
+          account={account}
+          connectWallet={connect}
+          disconnectWallet={disconnect}
+          isInitializing={isInitializing}
+        >
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/lending" element={<LendingBorrowing />} />
+            <Route path="/dex" element={<Swap />} />
+            <Route path="/analytics" element={<Analytics />} />
+          </Routes>
+        </Layout>
+      </Router>
       </div>
     </>
   )

@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
           <Link
             key={index}
             to={feature.link}
-            className="glass-effect card-hover rounded-xl p-6 border border-gray-700/50 group"
+            className="glass-effect rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 group"
           >
             <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
               <i className={`${feature.icon} text-white text-2xl`}></i>
@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
           Token Supply
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass-effect rounded-lg p-6 border border-gray-700/50">
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600/30">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
