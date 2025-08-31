@@ -133,7 +133,7 @@ const AnimatedBackground: React.FC = () => {
         centerX: mainGalaxyX,
         centerY: mainGalaxyY,
         baseRadius: Math.min(canvas.width, canvas.height) * 0.22,
-        rotationSpeed: 0.045, // Accéléré pour fluidité
+        rotationSpeed: 0.06, // Rotation plus rapide
         armCount: 4,
         stars: createSpiral(
           mainGalaxyX,
@@ -142,7 +142,7 @@ const AnimatedBackground: React.FC = () => {
           4,
           300,
           '#ff6b35', // Orange chaud pour la galaxie principale
-          0.045
+          0.06
         ),
         color: '#ff6b35', // Orange chaud
         opacity: 1.0
@@ -155,7 +155,7 @@ const AnimatedBackground: React.FC = () => {
         centerX: secondGalaxyX,
         centerY: secondGalaxyY,
         baseRadius: Math.min(canvas.width, canvas.height) * 0.12,
-        rotationSpeed: -0.06, // Rotation inverse accélérée
+        rotationSpeed: -0.08, // Rotation inverse plus rapide
         armCount: 3,
         stars: createSpiral(
           secondGalaxyX,
@@ -164,7 +164,7 @@ const AnimatedBackground: React.FC = () => {
           3,
           200,
           '#ffd700', // Doré chaud
-          -0.06
+          -0.08
         ),
         color: '#ffd700', // Doré
         opacity: 0.9
@@ -177,7 +177,7 @@ const AnimatedBackground: React.FC = () => {
         centerX: thirdGalaxyX,
         centerY: thirdGalaxyY,
         baseRadius: Math.min(canvas.width, canvas.height) * 0.10,
-        rotationSpeed: 0.075, // La plus rapide, accélérée
+        rotationSpeed: 0.1, // La plus rapide
         armCount: 2,
         stars: createSpiral(
           thirdGalaxyX,
@@ -186,7 +186,7 @@ const AnimatedBackground: React.FC = () => {
           2,
           100,
           '#ff9a56', // Pêche chaud
-          0.075
+          0.1
         ),
         color: '#ff9a56', // Pêche
         opacity: 0.7

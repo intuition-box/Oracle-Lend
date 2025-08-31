@@ -485,7 +485,7 @@ const DEX: React.FC = () => {
               </h2>
               <div className="flex items-center space-x-3">
                 {/* Debug info - remove after fixing */}
-                <div className="text-xs text-gray-500 bg-gray-800/30 px-2 py-1 rounded border">
+                <div className="text-xs text-gray-500 glass-effect px-2 py-1 rounded border border-gray-600/30">
                   Connected: {isConnected ? '✓' : '✗'} | 
                   Network: {isCorrectNetwork ? '✓' : '✗'} | 
                   Account: {account ? '✓' : '✗'}
@@ -496,7 +496,7 @@ const DEX: React.FC = () => {
                     fetchBalances()
                     fetchDexStats()
                   }}
-                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-green-500/50 transition-all"
+                  className="flex items-center space-x-2 px-3 py-2 glass-effect border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-green-500/50 transition-all"
                   title="Refresh balances"
                 >
                   <i className="fas fa-sync-alt"></i>
@@ -508,7 +508,7 @@ const DEX: React.FC = () => {
               {(['TTRUST', 'ORACLE'] as const).map((token) => {
                 const info = getTokenInfo(token)
                 return (
-                  <div key={token} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                  <div key={token} className="glass-effect rounded-lg p-4 border border-gray-600/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {token === 'ORACLE' ? (
@@ -541,7 +541,7 @@ const DEX: React.FC = () => {
                 <div className="relative">
                   <button 
                     onClick={() => setShowSlippageSettings(!showSlippageSettings)}
-                    className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-purple-500/50 transition-all"
+                    className="flex items-center space-x-2 px-3 py-2 glass-effect border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-purple-500/50 transition-all"
                   >
                     <i className="fas fa-cog"></i>
                     <span className="text-sm">Settings</span>
@@ -603,7 +603,7 @@ const DEX: React.FC = () => {
                       Balance: {parseFloat(balances[fromToken]).toFixed(4)}
                     </span>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                  <div className="glass-effect rounded-lg p-4 border border-gray-600/30">
                     <div className="flex items-center justify-between mb-3">
                       <input
                         type="number"
@@ -674,7 +674,7 @@ const DEX: React.FC = () => {
                       Balance: {parseFloat(balances[toToken]).toFixed(4)}
                     </span>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+                  <div className="glass-effect rounded-lg p-4 border border-gray-600/30">
                     <div className="flex items-center justify-between">
                       <input
                         type="number"
@@ -703,7 +703,7 @@ const DEX: React.FC = () => {
 
                 {/* Swap Details */}
                 {quote && (
-                  <div className="bg-gray-800/30 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="glass-effect rounded-lg p-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Exchange Rate:</span>
                       <span className="text-white">
@@ -769,7 +769,7 @@ const DEX: React.FC = () => {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+              <div className="glass-effect rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
                   <div className="text-3xl mb-2 flex items-center justify-center space-x-2">
                     <span>⚡</span>
@@ -786,7 +786,7 @@ const DEX: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30">
+              <div className="glass-effect rounded-lg p-4 border border-gray-600/30">
                 <div className="text-center">
                   <div className="text-3xl mb-2 flex items-center justify-center space-x-2">
                     <TokenIcon token="ORACLE" size="lg" />

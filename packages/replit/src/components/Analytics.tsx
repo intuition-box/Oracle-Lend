@@ -247,7 +247,7 @@ const Analytics: React.FC = () => {
         <p className="text-gray-400 text-lg">Real-time data from Oracle Lend Protocol</p>
         
         {/* Debug Status */}
-        <div className="mt-4 p-3 bg-gray-800/50 rounded-lg text-sm">
+        <div className="mt-4 p-3 glass-effect rounded-lg text-sm">
           <div className="flex items-center justify-center space-x-4 text-gray-400">
             <span className={`flex items-center ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
