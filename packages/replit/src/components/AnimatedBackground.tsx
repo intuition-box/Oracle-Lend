@@ -16,6 +16,14 @@ interface Star {
   pulsePhase: number;
 }
 
+interface BackgroundStar {
+  x: number;
+  y: number;
+  size: number;
+  opacity: number;
+  twinklePhase: number;
+}
+
 interface Galaxy {
   centerX: number;
   centerY: number;
@@ -32,7 +40,9 @@ const AnimatedBackground: React.FC = () => {
   const animationFrameRef = useRef<number>();
   const mouseRef = useRef({ x: 0, y: 0 });
   const galaxiesRef = useRef<Galaxy[]>([]);
+  const backgroundStarsRef = useRef<BackgroundStar[]>([]);
   const timeRef = useRef(0);
+  const lastTimeRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -72,7 +82,7 @@ const AnimatedBackground: React.FC = () => {
           radius: radius,
           x,
           y,
-          size: Math.random() * 4 + 1,
+          size: Math.random() * 2 + 0.5, // Étoiles plus petites et raffinées
           opacity: Math.random() * 0.4 + 0.6,
           color: color,
           rotationSpeed: (0.8 + Math.random() * 0.4) * (radius > spiralRadius * 0.7 ? 0.9 : 1.1),
@@ -83,8 +93,24 @@ const AnimatedBackground: React.FC = () => {
       return stars;
     };
 
+    const initializeBackgroundStars = () => {
+      backgroundStarsRef.current = [];
+      const starCount = Math.floor((canvas.width * canvas.height) / 5000); // Densité d'étoiles de fond
+      
+      for (let i = 0; i < starCount; i++) {
+        backgroundStarsRef.current.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.2, // Très petites étoiles
+          opacity: Math.random() * 0.8 + 0.2,
+          twinklePhase: Math.random() * Math.PI * 2
+        });
+      }
+    };
+
     const initializeGalaxies = () => {
       galaxiesRef.current = [];
+      initializeBackgroundStars();
       
       // Galaxie principale - taille et position optimisées
       galaxiesRef.current.push({
@@ -149,8 +175,12 @@ const AnimatedBackground: React.FC = () => {
       mouseRef.current.y = event.clientY;
     };
 
-    const animate = () => {
-      timeRef.current += 0.016; // ~60fps
+    const animate = (currentTime: number) => {
+      // Calcul du deltaTime pour une animation fluide
+      if (!lastTimeRef.current) lastTimeRef.current = currentTime;
+      const deltaTime = (currentTime - lastTimeRef.current) / 1000; // Convert to seconds
+      lastTimeRef.current = currentTime;
+      timeRef.current += deltaTime;
       
       // Fond dégradé cosmique - noir profond avec tons chauds subtils
       const gradient = ctx.createRadialGradient(
@@ -163,6 +193,20 @@ const AnimatedBackground: React.FC = () => {
       
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Dessiner les étoiles de fond statiques
+      backgroundStarsRef.current.forEach((star) => {
+        star.twinklePhase += deltaTime * 2; // Animation de scintillement
+        const twinkle = 0.5 + 0.5 * Math.sin(star.twinklePhase);
+        
+        ctx.save();
+        ctx.globalAlpha = star.opacity * twinkle;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
       
       // Ajouter des nébuleuses colorées
       galaxiesRef.current.forEach((galaxy, index) => {
@@ -193,15 +237,15 @@ const AnimatedBackground: React.FC = () => {
       // Animer chaque galaxie
       galaxiesRef.current.forEach((galaxy) => {
         galaxy.stars.forEach((star) => {
-          // Rotation de la galaxie
-          star.angle += galaxy.rotationSpeed * star.rotationSpeed;
+          // Rotation continue basée sur deltaTime
+          star.angle += galaxy.rotationSpeed * star.rotationSpeed * deltaTime * 60; // 60 pour normaliser à 60fps
           
           // Recalculer position
           star.x = galaxy.centerX + Math.cos(star.angle) * star.radius;
           star.y = galaxy.centerY + Math.sin(star.angle) * star.radius;
           
-          // Animation de pulsation
-          star.pulsePhase += 0.02;
+          // Animation de pulsation basée sur deltaTime
+          star.pulsePhase += deltaTime * 1.2;
           const pulseOpacity = star.opacity * (0.7 + 0.3 * Math.sin(star.pulsePhase));
           
           // Interaction avec la souris (effet gravitationnel)
@@ -218,29 +262,29 @@ const AnimatedBackground: React.FC = () => {
           // Dessiner l'étoile avec glow subtil
           ctx.save();
           
-          // Glow léger
-          ctx.globalAlpha = pulseOpacity * galaxy.opacity * 0.5 * mouseEffect;
+          // Glow très subtil
+          ctx.globalAlpha = pulseOpacity * galaxy.opacity * 0.3 * mouseEffect;
           ctx.shadowColor = star.color;
-          ctx.shadowBlur = star.size * 3 * mouseEffect;
-          ctx.fillStyle = star.color;
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * mouseEffect, 0, Math.PI * 2);
-          ctx.fill();
-          
-          // Étoile principale
-          ctx.globalAlpha = pulseOpacity * galaxy.opacity * mouseEffect;
           ctx.shadowBlur = star.size * 2 * mouseEffect;
           ctx.fillStyle = star.color;
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 0.8 * mouseEffect, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size * mouseEffect * 0.8, 0, Math.PI * 2);
           ctx.fill();
           
-          // Core brillant
+          // Étoile principale plus fine
+          ctx.globalAlpha = pulseOpacity * galaxy.opacity * mouseEffect * 0.9;
+          ctx.shadowBlur = star.size * mouseEffect;
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 0.6 * mouseEffect, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Core brillant très petit
           ctx.shadowBlur = 0;
           ctx.globalAlpha = pulseOpacity * galaxy.opacity;
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 0.3 * mouseEffect, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size * 0.2 * mouseEffect, 0, Math.PI * 2);
           ctx.fill();
           
           ctx.restore();
@@ -262,7 +306,7 @@ const AnimatedBackground: React.FC = () => {
             ctx.shadowBlur = 4;
             
             for (let r = galaxy.baseRadius * 0.1; r < galaxy.baseRadius; r += 5) {
-              const spiralAngle = armAngle + (r / galaxy.baseRadius) * Math.PI * 2 + timeRef.current * galaxy.rotationSpeed;
+              const spiralAngle = armAngle + (r / galaxy.baseRadius) * Math.PI * 2 + timeRef.current * galaxy.rotationSpeed * 60;
               const x = galaxy.centerX + Math.cos(spiralAngle) * r;
               const y = galaxy.centerY + Math.sin(spiralAngle) * r;
               
@@ -280,14 +324,14 @@ const AnimatedBackground: React.FC = () => {
         ctx.restore();
       });
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(() => animate(performance.now()));
     };
 
     // Initialize
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('mousemove', handleMouseMove);
-    animate();
+    animate(performance.now());
 
     return () => {
       if (animationFrameRef.current) {
