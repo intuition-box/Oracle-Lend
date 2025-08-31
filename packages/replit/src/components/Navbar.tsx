@@ -111,7 +111,7 @@ const Navbar: React.FC<NavbarProps> = ({
     </nav>
 
     {/* Mobile Navigation Overlay - Outside nav for proper z-index */}
-    <div className={`fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg transform transition-transform duration-300 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div className={`fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg transform transition-transform duration-300 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex flex-col h-full">
             {/* Mobile Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
