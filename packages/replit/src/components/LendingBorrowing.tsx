@@ -205,38 +205,38 @@ const LendingBorrowing: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">Oracle Lend Protocol</h1>
-          <p className="text-gray-300 text-lg">Over-collateralized lending with TTRUST collateral and ORACLE borrowing</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">Oracle Lend Protocol</h1>
+          <p className="text-gray-300 text-sm sm:text-base lg:text-lg px-4 sm:px-0">Over-collateralized lending with TTRUST collateral and ORACLE borrowing</p>
               </div>
 
         {/* Protocol Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
-            <p className="text-2xl font-bold text-purple-400">
+            <p className="text-xl sm:text-2xl font-bold text-purple-400">
               {formatAmount((parseFloat(protocolStats.oracleBalance) / 1e18).toString())}
                 </p>
               </div>
-          <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Current Price</h3>
-            <p className="text-2xl font-bold text-blue-400">
+            <p className="text-xl sm:text-2xl font-bold text-blue-400">
               {formatAmount((parseFloat(protocolStats.currentPrice) / 1e18).toString())} ORACLE/TTRUST
             </p>
           </div>
-          <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Collateral Ratio</h3>
-            <p className="text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
                     </div>
                   </div>
 
         {/* User Position */}
-        <div className={`glass-effect border border-gray-700/50 rounded-xl p-6 mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
-          <h2 className="text-2xl font-bold text-white mb-6">Your Position</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Your Position</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div>
               <h3 className="text-white font-semibold mb-2 flex items-center">
                 <TokenIcon token="tTRUST" className="w-5 h-5 mr-2" />
@@ -269,7 +269,7 @@ const LendingBorrowing: React.FC = () => {
           </div>
 
         {/* Main Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Lending/Borrowing Interface */}
           <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
             <div className="flex space-x-4 mb-6">
@@ -342,7 +342,7 @@ const LendingBorrowing: React.FC = () => {
                   </div>
                   
                   {/* Quick Amount Selectors */}
-                  <div className="flex space-x-2 mt-3">
+                  <div className="grid grid-cols-2 sm:flex sm:space-x-2 gap-2 mt-3">
                     <button
                       onClick={() => setPercentageAmount(25)}
                       className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
@@ -440,7 +440,7 @@ const LendingBorrowing: React.FC = () => {
                   </div>
                   
                   {/* Quick Amount Selectors */}
-                  <div className="flex space-x-2 mt-3">
+                  <div className="grid grid-cols-2 sm:flex sm:space-x-2 gap-2 mt-3">
                     <button
                       onClick={() => setPercentageAmount(25)}
                       className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"

@@ -37,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({
   }
 
   return (
+    <>
     <nav className="relative z-50 glass-effect border-b border-gray-700/50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
@@ -96,26 +97,43 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10"
+              className="md:hidden p-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center transition-transform duration-200"
             >
-              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              <div className="relative w-6 h-5 flex flex-col justify-between">
+                <span className={`block h-0.5 w-full bg-current transform transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                <span className={`block h-0.5 w-full bg-current transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
+                <span className={`block h-0.5 w-full bg-current transform transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+              </div>
             </button>
           </div>
         </div>
+      </div>
+    </nav>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-700/50">
-            {/* Mobile Logo */}
-            <div className="flex items-center justify-center space-x-3 pb-4 mb-4 border-b border-gray-700/50">
-              <img 
-                src="/oracle-lend-logo.png" 
-                alt="Oracle Lend Logo" 
-                className="w-8 h-8 object-contain rounded-lg"
-              />
-              <span className="text-lg font-bold gradient-text">ORACLE LEND</span>
+    {/* Mobile Navigation Overlay - Outside nav for proper z-index */}
+    <div className={`fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg transform transition-transform duration-300 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex flex-col h-full">
+            {/* Mobile Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/oracle-lend-logo.png" 
+                  alt="Oracle Lend Logo" 
+                  className="w-8 h-8 object-contain rounded-lg"
+                />
+                <span className="text-lg font-bold gradient-text">ORACLE LEND</span>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px]"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
             </div>
-            <div className="flex flex-col space-y-2">
+            
+            {/* Mobile Menu Items */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex flex-col space-y-2">
               {navigation.map((item) => (
                 <Link
                   key={item.path}
@@ -143,11 +161,19 @@ const Navbar: React.FC<NavbarProps> = ({
                   <span className="font-medium">Get Test Tokens</span>
                 </a>
               </div>
+              </div>
+            </div>
+            
+            {/* Mobile Footer */}
+            <div className="p-4 border-t border-gray-700/50">
+              <div className="flex items-center justify-between">
+                <ThemeToggle isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                <div className="text-xs text-gray-500">v1.0.0</div>
+              </div>
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+    </>
   )
 }
 
