@@ -27,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({
   const isDashboard = location.pathname === '/'
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
@@ -38,7 +38,6 @@ const Layout: React.FC<LayoutProps> = ({
         isInitializing={isInitializing}
       />
       
-      {/* Hero Section - Only show on Dashboard */}
       {isDashboard && (
         <div className="relative py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
@@ -49,7 +48,6 @@ const Layout: React.FC<LayoutProps> = ({
               A decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Trust your Intuition.
             </p>
             
-            {/* Floating cosmic elements */}
             <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full star"></div>
             <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full star" style={{ animationDelay: '0.5s' }}></div>
             <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-yellow-400 rounded-full star" style={{ animationDelay: '1s' }}></div>
@@ -58,13 +56,11 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 pb-16">
+      <main className="relative z-10 flex-1 max-w-7xl mx-auto px-4 pb-16">
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50 py-8">
+      <footer className="relative z-10 border-t border-gray-700/50 py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400">
           <p>&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
           <p className="text-sm mt-2">

@@ -26,11 +26,11 @@
   --error: #ef4444;
   --info: #06b6d4;
   
-  /* Glass morphism - Ultra transparent */
-  --glass-bg: rgba(255, 255, 255, 0.02);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-bg-dark: rgba(0, 0, 0, 0.08);
-  --glass-border-dark: rgba(255, 255, 255, 0.05);
+  /* Glass morphism - Enhanced grey tint */
+  --glass-bg: rgba(148, 163, 184, 0.08);
+  --glass-border: rgba(148, 163, 184, 0.2);
+  --glass-bg-dark: rgba(71, 85, 105, 0.15);
+  --glass-border-dark: rgba(148, 163, 184, 0.1);
   
   /* Shadows */
   --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -177,14 +177,14 @@ body {
 }
 
 .glass-effect:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.3);
   box-shadow: var(--shadow-large);
 }
 
 .dark .glass-effect:hover {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(71, 85, 105, 0.25);
+  border-color: rgba(148, 163, 184, 0.15);
 }
 
 /* Gradient text effect */
@@ -484,11 +484,11 @@ body {
 /* Cross-browser compatibility fixes */
 @supports not (backdrop-filter: blur(10px)) {
   .glass-effect {
-    background: rgba(0, 0, 0, 0.85) !important;
+    background: rgba(71, 85, 105, 0.85) !important;
   }
   
   .glass-effect:hover {
-    background: rgba(0, 0, 0, 0.9) !important;
+    background: rgba(71, 85, 105, 0.9) !important;
   }
 }
 
@@ -698,8 +698,8 @@ input, select, textarea {
 }
 
 .light .glass-effect {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: rgba(0, 0, 0, 0.05);
+  background: rgba(148, 163, 184, 0.25);
+  border-color: rgba(71, 85, 105, 0.15);
 }
 
 .light .input-primary {
