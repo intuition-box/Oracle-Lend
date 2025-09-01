@@ -1,17 +1,19 @@
 import React, { useRef, useEffect } from 'react';
 
 // Galaxy morphological types following Hubble sequence
-type GalaxyType = 'Sa' | 'Sb' | 'Sc' | 'SBa' | 'SBb' | 'SBc' | 'E0' | 'E7' | 'Irr';
+type GalaxyType = 'Sa' | 'Sb' | 'Sc' | 'SBa' | 'SBb' | 'SBc' | 'E0' | 'E7' | 'Irr' | 'PolarRing';
 
 // Stellar population types
 type StellarPopulation = 'young' | 'intermediate' | 'old' | 'core';
 
 interface Star {
-  // Position
-  x: number;
-  y: number;
+  // Position (now fixed relative to galaxy center)
+  x: number; // Current position (for compatibility during transition)
+  y: number; // Current position (for compatibility during transition)
+  baseX: number; // Fixed position relative to galaxy center
+  baseY: number; // Fixed position relative to galaxy center
   z: number; // For 3D depth
-  // Polar coordinates for rotation
+  // Initial polar coordinates (for setup only)
   angle: number;
   radius: number;
   // Physical properties
@@ -27,7 +29,6 @@ interface Star {
   // Animation
   pulsePhase: number;
   twinkleRate: number;
-  angularVelocity: number; // Individual angular velocity for differential rotation
   // Population type
   population: StellarPopulation;
 }
@@ -69,6 +70,18 @@ interface GalacticCore {
   blackHoleMass: number; // In solar masses
 }
 
+interface PolarRingStructure {
+  enabled: boolean;
+  radius: number;
+  thickness: number;
+  angle: number; // Current rotation angle
+  baseAngle: number; // Base orientation (perpendicular to main disk)
+  rotationSpeed: number;
+  opacity: number;
+  color: string;
+  stars: Star[]; // Separate star population for the ring
+}
+
 interface RealisticGalaxy {
   // Identity
   id: string;
@@ -104,6 +117,7 @@ interface RealisticGalaxy {
   rotationCurve: (r: number) => number; // Velocity as function of radius
   patternSpeed: number; // Spiral pattern rotation
   baseRotationSpeed: number; // Base rotation speed
+  currentRotation: number; // Current rotation angle for canvas transformation
   
   // Visual properties
   baseColor: string;
@@ -111,6 +125,10 @@ interface RealisticGalaxy {
   coreColor: string;
   opacity: number;
   brightness: number;
+  
+  // Special structures
+  polarRing?: PolarRingStructure;
+  eccentricity?: number; // For elliptical galaxies (0 = circular, 1 = very elongated)
 }
 
 interface BackgroundStar {
@@ -335,22 +353,19 @@ const AnimatedBackground: React.FC = () => {
             size = 1;
         }
         
-        // Calculate position
-        const x = centerX + r * Math.cos(angle);
-        const y = centerY + r * Math.sin(angle);
+        // Calculate fixed position relative to galaxy center
+        const baseX = centerX + r * Math.cos(angle);
+        const baseY = centerY + r * Math.sin(angle);
         const z = (Math.random() - 0.5) * radius * 0.1; // Thin disk
         
         // Calculate luminosity from temperature (simplified Stefan-Boltzmann)
         const luminosity = Math.pow(temp / 5778, 4) * Math.pow(size, 2);
         
-        // Differential rotation: stars closer to center rotate faster
-        // Simplified Kepler formula: v ∝ 1/√r
-        const normalizedRadius = r / radius;
-        const angularVelocity = baseRotationSpeed * (1 / Math.sqrt(0.2 + normalizedRadius * 0.8));
-        
         stars.push({
-          x,
-          y,
+          x: baseX, // Current position (kept for compatibility)
+          y: baseY, // Current position (kept for compatibility)
+          baseX, // Fixed position relative to galaxy center
+          baseY, // Fixed position relative to galaxy center
           z,
           angle: normalizeAngle(angle),
           radius: r,
@@ -364,7 +379,6 @@ const AnimatedBackground: React.FC = () => {
           brightness: luminosity / 10,
           pulsePhase: Math.random() * Math.PI * 2,
           twinkleRate: 0.5 + Math.random() * 2,
-          angularVelocity,
           population: populationType
         });
       }
@@ -463,6 +477,36 @@ const AnimatedBackground: React.FC = () => {
           galaxy.bulgeRadius = radius * 0.15;
           galaxy.diskRadius = radius;
           break;
+        case 'E0':
+          galaxy.bulgeToTotal = 1.0;
+          galaxy.bulgeRadius = radius;
+          galaxy.diskRadius = radius;
+          galaxy.eccentricity = 0; // Perfectly circular
+          break;
+        case 'E7':
+          galaxy.bulgeToTotal = 1.0;
+          galaxy.bulgeRadius = radius;
+          galaxy.diskRadius = radius;
+          galaxy.eccentricity = 0.7; // Very elongated
+          break;
+        case 'PolarRing':
+          galaxy.bulgeToTotal = 0.6;
+          galaxy.bulgeRadius = radius * 0.6;
+          galaxy.diskRadius = radius;
+          galaxy.eccentricity = 0.8; // Eye-shaped elongation
+          // Initialize polar ring structure
+          galaxy.polarRing = {
+            enabled: true,
+            radius: radius * 1.2,
+            thickness: radius * 0.2,
+            angle: 0,
+            baseAngle: Math.PI / 2, // Perpendicular to main disk
+            rotationSpeed: -baseRotationSpeed * 0.5, // Counter-rotating
+            opacity: 0.7,
+            color: '#4169E1', // Royal blue for iris effect
+            stars: []
+          };
+          break;
         default:
           galaxy.bulgeToTotal = 0.2;
           galaxy.bulgeRadius = radius * 0.2;
@@ -498,8 +542,8 @@ const AnimatedBackground: React.FC = () => {
         }
       }
       
-      // Create stellar populations
-      const starCount = isMobile ? 500 : 1500;
+      // Create stellar populations - REDUCED for smooth rotation
+      const starCount = isMobile ? 100 : 300;
       const stars: Star[] = [
         ...createStellarPopulation(galaxy, 'core', Math.floor(starCount * 0.3), baseRotationSpeed),
         ...createStellarPopulation(galaxy, 'young', Math.floor(starCount * 0.2), baseRotationSpeed),
@@ -509,6 +553,50 @@ const AnimatedBackground: React.FC = () => {
       
       galaxy.stars = stars;
       galaxy.totalStarCount = stars.length;
+      
+      // Create polar ring stars if needed
+      if (galaxy.polarRing?.enabled) {
+        const ringStarCount = Math.floor(starCount * 0.4);
+        const ringStars: Star[] = [];
+        
+        for (let i = 0; i < ringStarCount; i++) {
+          const theta = Math.random() * 2 * Math.PI;
+          const ringR = galaxy.polarRing.radius + (Math.random() - 0.5) * galaxy.polarRing.thickness;
+          
+          // Position stars in a disk that will rotate perpendicular to main galaxy
+          // Initial positions: ring lies in XZ plane (perpendicular to XY plane)
+          const baseX = centerX + ringR * Math.cos(theta);
+          const baseY = centerY; // All stars at same Y initially (edge-on view)
+          const z = ringR * Math.sin(theta); // Z gives the vertical spread
+          
+          // Young blue stars in the ring
+          const temp = 10000 + Math.random() * 15000; // 10000-25000K (blue stars)
+          const size = 0.8 + Math.random() * 1.5;
+          
+          ringStars.push({
+            x: baseX, // Current position (kept for compatibility)
+            y: baseY, // Current position (kept for compatibility)
+            baseX, // Fixed position relative to galaxy center
+            baseY, // Fixed position relative to galaxy center
+            z,
+            angle: theta, // Initial orbital angle
+            radius: ringR, // Orbital radius
+            temperature: temp,
+            luminosity: Math.pow(temp / 5778, 4) * Math.pow(size, 2),
+            mass: size,
+            age: Math.random() * 0.5, // Young stars
+            size: size * (isMobile ? 0.8 : 1),
+            color: temperatureToColor(temp),
+            opacity: 0.8 + Math.random() * 0.2,
+            brightness: 1,
+            pulsePhase: Math.random() * Math.PI * 2,
+            twinkleRate: 0.5 + Math.random() * 2,
+            population: 'young'
+          });
+        }
+        
+        galaxy.polarRing.stars = ringStars;
+      }
       
       // Create ISM components
       galaxy.dustLanes = createDustLanes(galaxy);
@@ -525,6 +613,7 @@ const AnimatedBackground: React.FC = () => {
       };
       
       galaxy.patternSpeed = 0.05; // Spiral pattern rotation speed
+      galaxy.currentRotation = 0; // Initialize current rotation angle
       
       // Set colors based on type
       galaxy.baseColor = '#fff5e6';
@@ -562,7 +651,7 @@ const AnimatedBackground: React.FC = () => {
       const mainRadius = Math.min(canvas.width, canvas.height) * (isMobile ? 0.2 : 0.25);
       
       galaxiesRef.current.push(
-        createRealisticGalaxy('Sb', mainGalaxyX, mainGalaxyY, mainRadius, -0.5)
+        createRealisticGalaxy('Sb', mainGalaxyX, mainGalaxyY, mainRadius, -5.0)
       );
       
       // Secondary galaxy - smaller barred spiral, same direction for trailing arms
@@ -572,7 +661,7 @@ const AnimatedBackground: React.FC = () => {
         const secondRadius = mainRadius * 0.6;
         
         galaxiesRef.current.push(
-          createRealisticGalaxy('SBc', secondGalaxyX, secondGalaxyY, secondRadius, -0.7)
+          createRealisticGalaxy('SBc', secondGalaxyX, secondGalaxyY, secondRadius, -7.0)
         );
         
         // Third galaxy - smaller and faster, same direction for trailing arms
@@ -580,8 +669,16 @@ const AnimatedBackground: React.FC = () => {
         const thirdGalaxyY = canvas.height * 0.8;
         const thirdRadius = mainRadius * 0.5;
         
-        const fastGalaxy = createRealisticGalaxy('Sc', thirdGalaxyX, thirdGalaxyY, thirdRadius, -1.0);
+        const fastGalaxy = createRealisticGalaxy('Sc', thirdGalaxyX, thirdGalaxyY, thirdRadius, -10.0);
         galaxiesRef.current.push(fastGalaxy);
+        
+        // Eye galaxy - polar ring type in top-left corner
+        const eyeGalaxyX = canvas.width * 0.15;
+        const eyeGalaxyY = canvas.height * 0.20;
+        const eyeRadius = mainRadius * 0.45;
+        
+        const eyeGalaxy = createRealisticGalaxy('PolarRing', eyeGalaxyX, eyeGalaxyY, eyeRadius, -3.0);
+        galaxiesRef.current.push(eyeGalaxy);
       }
     };
 
@@ -681,6 +778,104 @@ const AnimatedBackground: React.FC = () => {
       ctx.restore();
     };
 
+    const renderPolarRing = (ctx: CanvasRenderingContext2D, galaxy: RealisticGalaxy, deltaTime: number) => {
+      if (!galaxy.polarRing?.enabled || !galaxy.polarRing.stars) return;
+      
+      const ring = galaxy.polarRing;
+      
+      ctx.save();
+      
+      // Render ring background glow (ellipse that shows the ring plane)
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = ring.opacity * 0.2;
+      
+      // The ring appears as an ellipse when viewed edge-on
+      const gradient = ctx.createRadialGradient(
+        galaxy.centerX, galaxy.centerY, ring.radius * 0.8,
+        galaxy.centerX, galaxy.centerY, ring.radius * 1.2
+      );
+      gradient.addColorStop(0, 'transparent');
+      gradient.addColorStop(0.5, ring.color);
+      gradient.addColorStop(1, 'transparent');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      
+      // Draw ellipse showing the ring's orientation
+      // The ellipse rotates to show the ring spinning perpendicular to main disk
+      const viewAngle = ring.angle; // This represents the ring's rotation
+      const ellipseWidth = ring.radius;
+      const ellipseHeight = ring.radius * Math.abs(Math.sin(viewAngle)) * 0.4; // Perspective effect
+      
+      ctx.ellipse(
+        galaxy.centerX, 
+        galaxy.centerY, 
+        ellipseWidth,
+        ellipseHeight,
+        0, // No additional rotation needed
+        0, 
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+      
+      // Render ring stars as a rotating perpendicular disk
+      ctx.save();
+      
+      // Calculate 3D positions for all stars based on ring rotation
+      const starsWithPosition = ring.stars.map(star => {
+        // Original position in ring's local coordinates (XZ plane)
+        const localX = star.baseX - galaxy.centerX;
+        const localZ = star.z;
+        
+        // Rotate the ring around the Y axis (perpendicular to main galaxy)
+        const rotatedX = localX * Math.cos(ring.angle) - localZ * Math.sin(ring.angle);
+        const rotatedZ = localX * Math.sin(ring.angle) + localZ * Math.cos(ring.angle);
+        
+        // Final position in screen coordinates
+        const screenX = galaxy.centerX + rotatedX;
+        const screenY = galaxy.centerY + rotatedZ * 0.3; // Compress Z for perspective
+        
+        return { 
+          star, 
+          x: screenX, 
+          y: screenY, 
+          z: rotatedZ,
+          visibility: Math.cos(ring.angle) // Stars on back side are dimmer
+        };
+      });
+      
+      // Sort by Z coordinate (back to front)
+      starsWithPosition.sort((a, b) => a.z - b.z);
+      
+      starsWithPosition.forEach(({ star, x, y, z, visibility }) => {
+        // Hide stars that are behind the galaxy
+        if (z < -ring.radius * 0.3) return;
+        
+        // Depth and visibility effects
+        const depthFactor = 1 + z / (ring.radius * 2);
+        const apparentSize = star.size * depthFactor;
+        const apparentOpacity = star.opacity * (0.4 + 0.6 * depthFactor) * Math.max(0.3, Math.abs(visibility));
+        
+        // Twinkling effect
+        star.pulsePhase += deltaTime * star.twinkleRate;
+        const twinkle = 0.9 + 0.1 * Math.sin(star.pulsePhase);
+        
+        ctx.globalAlpha = apparentOpacity * twinkle;
+        ctx.fillStyle = star.color;
+        ctx.shadowBlur = apparentSize * 2;
+        ctx.shadowColor = star.color;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, apparentSize, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      ctx.restore();
+      ctx.restore();
+    };
+    
     const renderStars = (ctx: CanvasRenderingContext2D, galaxy: RealisticGalaxy, deltaTime: number) => {
       // Sort stars by z-coordinate for proper depth rendering
       const sortedStars = [...galaxy.stars].sort((a, b) => a.z - b.z);
@@ -690,23 +885,27 @@ const AnimatedBackground: React.FC = () => {
         const depthScale = 1 + star.z / (galaxy.totalRadius * 0.1);
         const apparentSize = star.size * depthScale;
         
-        // Distance-based dimming
+        // Distance-based dimming using fixed positions
         const distanceFromCore = Math.sqrt(
-          (star.x - galaxy.core.x) ** 2 + (star.y - galaxy.core.y) ** 2
+          (star.baseX - galaxy.core.x) ** 2 + (star.baseY - galaxy.core.y) ** 2
         );
         const distanceDimming = sersicProfile(distanceFromCore, galaxy.bulgeRadius, 2);
         
         // Population-based rendering
         ctx.save();
         
-        // Apply inclination transformation
-        const inclinationRad = (galaxy.inclination * Math.PI) / 180;
-        const yCompressed = galaxy.centerY + (star.y - galaxy.centerY) * Math.cos(inclinationRad);
+        // For canvas-rotated galaxies, use baseX/baseY directly (transformation is handled by canvas)
+        // Apply inclination only for non-canvas-rotated systems if needed
+        const useDirectPositions = true; // Canvas rotation handles all transformations
         
-        // Mouse interaction
+        const renderX = star.baseX;
+        const renderY = useDirectPositions ? star.baseY : 
+          galaxy.centerY + (star.baseY - galaxy.centerY) * Math.cos((galaxy.inclination * Math.PI) / 180);
+        
+        // Mouse interaction using render positions
         const mouseDistance = Math.sqrt(
-          (mouseRef.current.x - star.x) ** 2 + 
-          (mouseRef.current.y - yCompressed) ** 2
+          (mouseRef.current.x - renderX) ** 2 + 
+          (mouseRef.current.y - renderY) ** 2
         );
         const mouseEffect = mouseDistance < 100 ? 1 + (100 - mouseDistance) / 200 : 1;
         
@@ -748,9 +947,9 @@ const AnimatedBackground: React.FC = () => {
             break;
         }
         
-        // Draw the star
+        // Draw the star using render positions (canvas handles rotation)
         ctx.beginPath();
-        ctx.arc(star.x, yCompressed, apparentSize * mouseEffect, 0, Math.PI * 2);
+        ctx.arc(renderX, renderY, apparentSize * mouseEffect, 0, Math.PI * 2);
         ctx.fill();
         
         // Add bright core for hot stars
@@ -758,7 +957,7 @@ const AnimatedBackground: React.FC = () => {
           ctx.globalAlpha = star.opacity * twinkle;
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(star.x, yCompressed, apparentSize * 0.3, 0, Math.PI * 2);
+          ctx.arc(renderX, renderY, apparentSize * 0.3, 0, Math.PI * 2);
           ctx.fill();
         }
         
@@ -778,8 +977,13 @@ const AnimatedBackground: React.FC = () => {
         return;
       }
       
+      // Smooth deltaTime to reduce variations and jitter
+      if (!smoothDeltaRef.current) smoothDeltaRef.current = 1/60;
+      // Exponential moving average for smooth deltaTime
+      smoothDeltaRef.current = smoothDeltaRef.current * 0.8 + rawDeltaTime * 0.2;
+      
       // Cap deltaTime to prevent jumps during lag/tab switches (max 33ms = 30fps minimum)
-      const deltaTime = Math.min(rawDeltaTime, 1/30);
+      const deltaTime = Math.min(smoothDeltaRef.current, 1/30);
       
       timeRef.current += deltaTime;
       
@@ -809,23 +1013,29 @@ const AnimatedBackground: React.FC = () => {
         ctx.restore();
       });
       
-      // Render each galaxy with smooth direct rotation
+      // Update galaxy rotations using canvas context transformation
       galaxiesRef.current.forEach(galaxy => {
-        galaxy.stars.forEach(star => {
-          // Simple accumulation like CSS linear infinite animation
-          star.angle += star.angularVelocity * deltaTime;
+        // Simply update the galaxy's rotation angle
+        galaxy.currentRotation += galaxy.baseRotationSpeed * deltaTime;
+        
+        // Normalize rotation angle to prevent overflow
+        if (galaxy.currentRotation > 2 * Math.PI) {
+          galaxy.currentRotation -= 2 * Math.PI;
+        } else if (galaxy.currentRotation < 0) {
+          galaxy.currentRotation += 2 * Math.PI;
+        }
+        
+        // Update polar ring rotation if present
+        if (galaxy.polarRing?.enabled) {
+          galaxy.polarRing.angle += galaxy.polarRing.rotationSpeed * deltaTime;
           
-          // Smooth angle normalization without discontinuities
-          if (star.angle > 2 * Math.PI) {
-            star.angle -= 2 * Math.PI;
-          } else if (star.angle < 0) {
-            star.angle += 2 * Math.PI;
+          // Normalize polar ring angle
+          if (galaxy.polarRing.angle > 2 * Math.PI) {
+            galaxy.polarRing.angle -= 2 * Math.PI;
+          } else if (galaxy.polarRing.angle < 0) {
+            galaxy.polarRing.angle += 2 * Math.PI;
           }
-          
-          // Direct position calculation from updated angle
-          star.x = galaxy.centerX + Math.cos(star.angle) * star.radius;
-          star.y = galaxy.centerY + Math.sin(star.angle) * star.radius;
-        });
+        }
         
         // Update HII regions
         galaxy.hiiRegions.forEach(region => {
@@ -837,11 +1047,46 @@ const AnimatedBackground: React.FC = () => {
           lane.rotation += deltaTime * 0.01;
         });
         
-        // Render galaxy components in order
-        renderDustLanes(ctx, galaxy);
-        renderStars(ctx, galaxy, deltaTime);
-        renderHIIRegions(ctx, galaxy);
-        renderGalacticCore(ctx, galaxy);
+        // Render galaxy with canvas context rotation
+        if (galaxy.type === 'PolarRing') {
+          // Special rendering for eye galaxy
+          ctx.save();
+          
+          // Apply transformations in correct order for rotation
+          ctx.translate(galaxy.centerX, galaxy.centerY);
+          
+          // Apply elliptical transform BEFORE rotation
+          if (galaxy.eccentricity && galaxy.eccentricity > 0) {
+            ctx.scale(1, 1 - galaxy.eccentricity * 0.7); // Compress vertically first
+          }
+          
+          // Then apply rotation to the elliptical shape
+          ctx.rotate(galaxy.currentRotation);
+          ctx.translate(-galaxy.centerX, -galaxy.centerY);
+          
+          renderStars(ctx, galaxy, deltaTime);
+          renderGalacticCore(ctx, galaxy);
+          
+          ctx.restore();
+          
+          // Render polar ring on top with its own rotation
+          renderPolarRing(ctx, galaxy, deltaTime);
+        } else {
+          // Standard galaxy rendering with rotation
+          ctx.save();
+          
+          // Apply rotation transformation
+          ctx.translate(galaxy.centerX, galaxy.centerY);
+          ctx.rotate(galaxy.currentRotation);
+          ctx.translate(-galaxy.centerX, -galaxy.centerY);
+          
+          renderDustLanes(ctx, galaxy);
+          renderStars(ctx, galaxy, deltaTime);
+          renderHIIRegions(ctx, galaxy);
+          renderGalacticCore(ctx, galaxy);
+          
+          ctx.restore();
+        }
       });
       
       animationFrameRef.current = requestAnimationFrame(() => animate(performance.now()));
