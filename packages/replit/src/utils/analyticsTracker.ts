@@ -56,7 +56,8 @@ export const trackTransaction = (
     // Update lending pools
     updateLendingPools(type, token, amount)
 
-    console.log(`📊 Analytics: Tracked ${type} transaction for ${amount} ${token}`)
+    // Production: Remove console.log
+    // console.log(`📊 Analytics: Tracked ${type} transaction for ${amount} ${token}`)
   } catch (error) {
     console.error('Failed to track transaction:', error)
   }
@@ -140,7 +141,8 @@ const updateLendingPools = (
 export const initializeAnalytics = () => {
   try {
     if (typeof window === 'undefined' || !window.localStorage) {
-      console.warn('localStorage not available for analytics')
+      // Production: Remove console.warn
+      // console.warn('localStorage not available for analytics')
       return
     }
 

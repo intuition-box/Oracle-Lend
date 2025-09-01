@@ -241,7 +241,8 @@ export const useWallet = () => {
     
     const checkConnection = async () => {
       if (!isMetaMaskInstalled()) {
-        console.log('MetaMask not installed')
+        // Production: Remove console.log
+        // console.log('MetaMask not installed')
         setIsInitializing(false)
         return
       }
@@ -255,7 +256,8 @@ export const useWallet = () => {
         })
 
         if (accounts && accounts.length > 0) {
-          console.log('Found existing wallet connection:', accounts[0])
+          // Production: Remove console.log
+          // console.log('Found existing wallet connection:', accounts[0])
           
           const chainId = await window.ethereum.request({
             method: 'eth_chainId',
@@ -280,7 +282,8 @@ export const useWallet = () => {
             setError(null)
           }
         } else {
-          console.log('No existing wallet connection found')
+          // Production: Remove console.log
+          // console.log('No existing wallet connection found')
         }
       } catch (error) {
         console.error(`Failed to check connection (attempt ${retryCount + 1}):`, error)

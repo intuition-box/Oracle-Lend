@@ -46,7 +46,7 @@ const DEX: React.FC = () => {
   const [toAmount, setToAmount] = useState('')
   const [balances, setBalances] = useState({ TTRUST: '0', ORACLE: '0' })
   const [quote, setQuote] = useState<SwapQuote | null>(null)
-  const [slippage, setSlippage] = useState(0.5)
+  const [slippage, setSlippage] = useState(0.5) // Default 0.5% (min: 0.1%, max: 10% for security)
   const [showSlippageSettings, setShowSlippageSettings] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [dexStats, setDexStats] = useState({ 
@@ -112,35 +112,40 @@ const DEX: React.FC = () => {
   // Fetch real balances and DEX stats
   const fetchBalances = async () => {
     if (!isConnected || !account || !window.ethereum || !isCorrectNetwork) {
-      console.log('fetchBalances: Prerequisites not met', { 
-        isConnected, 
-        account: account ? 'present' : 'missing', 
-        hasEthereum: !!window.ethereum, 
-        isCorrectNetwork 
-      })
+      // Production: Remove console.log
+      // console.log('fetchBalances: Prerequisites not met', { 
+      //   isConnected, 
+      //   account: account ? 'present' : 'missing', 
+      //   hasEthereum: !!window.ethereum, 
+      //   isCorrectNetwork 
+      // })
       return
     }
     
-    console.log('fetchBalances: Fetching balances for account:', account)
+    // Production: Remove console.log
+    // console.log('fetchBalances: Fetching balances for account:', account)
     
     try {
       const provider = new ethers.BrowserProvider(window.ethereum)
       
       // Get native token balance (TTRUST on Intuition Testnet)
       const nativeBalance = await provider.getBalance(account)
-      console.log('fetchBalances: Native balance raw:', nativeBalance.toString())
+      // Production: Remove console.log
+      // console.log('fetchBalances: Native balance raw:', nativeBalance.toString())
       
       // Get ORACLE ERC20 token balance
       const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, provider)
       const oracleBalance = await oracleContract.balanceOf(account)
-      console.log('fetchBalances: Oracle balance raw:', oracleBalance.toString())
+      // Production: Remove console.log
+      // console.log('fetchBalances: Oracle balance raw:', oracleBalance.toString())
       
       const formattedBalances = {
         TTRUST: ethers.formatEther(nativeBalance), // Native token balance
         ORACLE: ethers.formatEther(oracleBalance)  // ERC20 token balance
       }
       
-      console.log('fetchBalances: Setting formatted balances:', formattedBalances)
+      // Production: Remove console.log
+      // console.log('fetchBalances: Setting formatted balances:', formattedBalances)
       setBalances(formattedBalances)
     } catch (error) {
       console.error('Failed to fetch balances:', error)
@@ -492,7 +497,8 @@ const DEX: React.FC = () => {
                 </div>
                 <button
                   onClick={() => {
-                    console.log('Manual refresh clicked', { isConnected, account, isCorrectNetwork })
+                    // Production: Remove console.log
+                    // console.log('Manual refresh clicked', { isConnected, account, isCorrectNetwork })
                     fetchBalances()
                     fetchDexStats()
                   }}
@@ -577,10 +583,15 @@ const DEX: React.FC = () => {
                         <input
                           type="number"
                           value={slippage}
-                          onChange={(e) => setSlippage(parseFloat(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0.5;
+                            // Security: Limit slippage between 0.1% and 10% to prevent exploitation
+                            const safeSlippage = Math.min(Math.max(0.1, value), 10);
+                            setSlippage(safeSlippage);
+                          }}
                           step="0.1"
                           min="0.1"
-                          max="50"
+                          max="10"
                           className="flex-1 px-3 py-2 sm:px-2 sm:py-1.5 text-sm sm:text-xs bg-gray-800 border border-gray-600 rounded text-white focus:border-purple-500 outline-none min-h-[44px] sm:min-h-0"
                           placeholder="Custom"
                         />
