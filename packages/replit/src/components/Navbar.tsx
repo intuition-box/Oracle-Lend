@@ -1,11 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import WalletConnect from './WalletConnect'
-import ThemeToggle from './ThemeToggle'
 
 interface NavbarProps {
-  isDarkMode: boolean
-  toggleTheme: () => void
   isConnected: boolean
   account: string | null
   connectWallet: () => void
@@ -14,8 +11,6 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  isDarkMode,
-  toggleTheme,
   isConnected,
   account,
   connectWallet,
@@ -83,9 +78,8 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Right side - Theme Toggle and Wallet */}
+          {/* Right side - Wallet */}
           <div className="flex items-center space-x-4">
-            <ThemeToggle isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
             <WalletConnect
               isConnected={isConnected}
               account={account}
@@ -166,8 +160,7 @@ const Navbar: React.FC<NavbarProps> = ({
             
             {/* Mobile Footer */}
             <div className="p-4 border-t border-gray-700/50">
-              <div className="flex items-center justify-between">
-                <ThemeToggle isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+              <div className="flex items-center justify-end">
                 <div className="text-xs text-gray-500">v1.0.0</div>
               </div>
             </div>

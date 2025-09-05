@@ -17,83 +17,11 @@
         min-height: 100vh;
       }
       
-      .light body {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 15%, #e2e8f0 25%, #cbd5e1 40%, #e2e8f0 60%, #f1f5f9 80%, #f8fafc 100%) !important;
-      }
-      
       .cosmic-bg {
         background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
         backdrop-filter: blur(1px);
       }
       
-      .light .cosmic-bg {
-        background: radial-gradient(ellipse at center, rgba(148, 163, 184, 0.15) 0%, rgba(248, 250, 252, 0.9) 70%) !important;
-        backdrop-filter: blur(1px);
-      }
-      
-      .light .glass-effect {
-        background: rgba(255, 255, 255, 0.75) !important;
-        backdrop-filter: blur(20px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-        border-color: rgba(148, 163, 184, 0.3) !important;
-        box-shadow: 0 8px 32px rgba(100, 116, 139, 0.15) !important;
-      }
-      
-      /* Remove the global color override - it was breaking slate-100 */
-      
-      /* Dark text on light background */
-      .light .text-white {
-        color: #0f172a !important;
-      }
-      
-      /* Slate-100 becomes dark gray in true light mode */
-      .light .text-slate-100,
-      .light p.text-slate-100,
-      .light [class*="text-slate-100"] {
-        color: #334155 !important;
-      }
-      
-      /* Accent colors optimized for light background */
-      .light .text-purple-400 { color: #9333EA !important; }
-      .light .text-purple-300 { color: #9333EA !important; }
-      .light .text-green-400 { color: #16A34A !important; }
-      .light .text-cyan-400 { color: #0891B2 !important; }
-      .light .text-blue-400 { color: #2563EB !important; }
-      .light .text-blue-300 { color: #3B82F6 !important; }
-      .light .text-orange-400 { color: #EA580C !important; }
-      .light .gradient-text { 
-        background: linear-gradient(135deg, #8B5CF6, #A855F7, #C084FC) !important; 
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-      }
-      
-      /* Force all gray text to be dark in true light mode */
-      .light [class*="text-gray-300"],
-      .light [class*="text-gray-400"],
-      .light [class*="text-gray-500"],
-      .light [class*="text-gray-600"],
-      .light .text-gray-300,
-      .light .text-gray-400,
-      .light .text-gray-500,
-      .light .text-gray-600 {
-        color: #64748b !important; /* Gris moyen pour lisibilité sur fond clair */
-      }
-      
-      /* Also catch any element that might have gray text */
-      .light p[class*="gray"],
-      .light div[class*="gray"],
-      .light span[class*="gray"],
-      .light h1[class*="gray"],
-      .light h2[class*="gray"],
-      .light h3[class*="gray"],
-      .light h4[class*="gray"],
-      .light h5[class*="gray"],
-      .light h6[class*="gray"],
-      .light ul[class*="gray"],
-      .light li[class*="gray"],
-      .light a[class*="gray"] {
-        color: #64748b !important;
-      }
       
       /* Dark mode high contrast overrides */
       .dark * {

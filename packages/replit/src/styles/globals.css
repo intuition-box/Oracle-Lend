@@ -962,61 +962,6 @@ input, select, textarea {
   background: linear-gradient(135deg, #000000 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #000000 100%);
 }
 
-/* Light mode overrides */
-.light {
-  color-scheme: light;
-}
-
-.light body {
-  color: var(--text-primary-light) !important;
-  background: var(--light-stellar-bg) !important;
-}
-
-.light .cosmic-bg {
-  background: var(--light-stellar-bg);
-}
-
-.light .cosmic-bg::before {
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, #64748b, transparent),
-    radial-gradient(1px 1px at 40px 70px, rgba(100, 116, 139, 0.8), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(100, 116, 139, 0.6), transparent),
-    radial-gradient(2px 2px at 130px 80px, rgba(100, 116, 139, 0.4), transparent),
-    radial-gradient(1px 1px at 160px 30px, rgba(100, 116, 139, 0.8), transparent);
-}
-
-.light .glass-effect {
-  background: var(--glass-bg-light) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid var(--glass-border-light) !important;
-  box-shadow: var(--glass-glow-light) !important;
-}
-
-.light .input-primary {
-  background: rgba(248, 250, 252, 0.8) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-color: rgba(100, 116, 139, 0.3) !important;
-  color: var(--text-primary-light) !important;
-}
-
-.light .input-primary::placeholder {
-  color: var(--text-muted-light) !important;
-}
-
-/* Light Mode Theme Variable Overrides */
-.light {
-  --theme-text-primary: var(--text-primary-light);
-  --theme-text-secondary: var(--text-secondary-light);
-  --theme-text-muted: var(--text-muted-light);
-  --theme-text-accent-cyan: var(--text-accent-cyan-light);
-  --theme-text-accent-violet: var(--text-accent-violet-light);
-  --theme-glass-bg: var(--glass-bg-light);
-  --theme-glass-border: var(--glass-border-light);
-  --theme-glass-glow: var(--glass-glow-light);
-  --theme-subtitle: var(--subtitle-light);
-}
 
 /* Unified High-Contrast Utility Classes */
 .text-primary-unified {
@@ -1147,62 +1092,6 @@ div[class*="text-xs"][class*="text-gray-500"] {
   color: var(--theme-subtitle) !important;
 }
 
-/* Ultra-specific selectors for the exact DOM classes found */
-.light p.text-sm.sm\:text-base.text-gray-400,
-.light p.text-xs.sm\:text-sm.text-gray-400,
-.light p.text-xs.sm\:text-sm.text-gray-500,
-.light div.text-xs.text-gray-500,
-.light [class="text-sm sm:text-base text-gray-400 group-hover:text-gray-300 transition-colors"],
-.light [class="text-xs sm:text-sm text-gray-400"],
-.light [class="text-xs text-gray-500"],
-.light p.text-gray-300,
-.light p.text-gray-400,
-.light p[class*="text-gray-300"],
-.light p[class*="text-gray-400"],
-.light [class*="text-sm"][class*="text-gray"],
-.light [class*="text-base"][class*="text-gray"],
-.light [class*="text-lg"][class*="text-gray"] {
-  color: var(--theme-subtitle) !important;
-}
-
-/* Global catch-all for any remaining gray text in light mode */
-.light p[class*="gray"],
-.light div[class*="gray"],
-.light span[class*="gray"],
-.light h1[class*="gray"],
-.light h2[class*="gray"],
-.light h3[class*="gray"],
-.light h4[class*="gray"],
-.light h5[class*="gray"],
-.light h6[class*="gray"],
-.light ul[class*="gray"],
-.light li[class*="gray"] {
-  color: var(--theme-subtitle) !important;
-}
-
-/* Force all Tailwind gray text classes to use theme subtitle in light mode */
-.light .text-gray-300,
-.light .text-gray-400, 
-.light .text-gray-500,
-.light .text-gray-600,
-.light p.text-gray-300,
-.light p.text-gray-400,
-.light p.text-gray-500,
-.light div.text-gray-300,
-.light div.text-gray-400,
-.light div.text-gray-500,
-.light span.text-gray-300,
-.light span.text-gray-400,
-.light span.text-gray-500 {
-  color: #FAFAFA !important; /* Direct color application */
-}
-
-/* Exception: Keep white and very light texts as they are */
-.light [class*="text-white"],
-.light [class*="text-slate-100"],
-.light [class*="text-gray-100"] {
-  color: initial !important;
-}
 
 /* Hover states for subtitle harmony */
 [class*="group-hover:text-gray-300"],

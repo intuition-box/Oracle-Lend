@@ -4,8 +4,6 @@ import Navbar from './Navbar'
 
 interface LayoutProps {
   children: React.ReactNode
-  isDarkMode: boolean
-  toggleTheme: () => void
   isConnected: boolean
   account: string | null
   connectWallet: () => void
@@ -15,8 +13,6 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({
   children,
-  isDarkMode,
-  toggleTheme,
   isConnected,
   account,
   connectWallet,
@@ -29,8 +25,6 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
         isConnected={isConnected}
         account={account}
         connectWallet={connectWallet}
