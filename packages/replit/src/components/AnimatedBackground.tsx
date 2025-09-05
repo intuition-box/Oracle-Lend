@@ -542,8 +542,8 @@ const AnimatedBackground: React.FC = () => {
         }
       }
 
-      // Create stellar populations - REDUCED for smooth rotation
-      const starCount = isMobile ? 100 : 300;
+      // Create stellar populations - OPTIMIZED for polar ring only
+      const starCount = isMobile ? 60 : 180; // Reduced from 100/300 to 60/180
       const stars: Star[] = [
         ...createStellarPopulation(galaxy, 'core', Math.floor(starCount * 0.3), baseRotationSpeed),
         ...createStellarPopulation(galaxy, 'young', Math.floor(starCount * 0.2), baseRotationSpeed),
@@ -554,9 +554,9 @@ const AnimatedBackground: React.FC = () => {
       galaxy.stars = stars;
       galaxy.totalStarCount = stars.length;
 
-      // Create polar ring stars if needed
+      // Create polar ring stars if needed - OPTIMIZED
       if (galaxy.polarRing?.enabled) {
-        const ringStarCount = Math.floor(starCount * 0.4);
+        const ringStarCount = Math.floor(starCount * 0.25); // Reduced from 0.4 to 0.25
         const ringStars: Star[] = [];
 
         for (let i = 0; i < ringStarCount; i++) {
@@ -645,36 +645,11 @@ const AnimatedBackground: React.FC = () => {
       galaxiesRef.current = [];
       initializeBackgroundStars();
 
-      // Main galaxy - large spiral with smooth rotation
-      const mainGalaxyX = canvas.width * 0.6;
-      const mainGalaxyY = canvas.height * 0.45;
-      const mainRadius = Math.min(canvas.width, canvas.height) * (isMobile ? 0.2 : 0.25);
-
-      galaxiesRef.current.push(
-        createRealisticGalaxy('Sb', mainGalaxyX, mainGalaxyY, mainRadius, -1.0)
-      );
-
-      // Secondary galaxy - smaller barred spiral, same direction for trailing arms
+      // Only Eye galaxy - polar ring type with Canvas animation
       if (!isMobile) {
-        const secondGalaxyX = canvas.width * 0.2;
-        const secondGalaxyY = canvas.height * 0.7;
-        const secondRadius = mainRadius * 0.6;
-
-        galaxiesRef.current.push(
-          createRealisticGalaxy('SBc', secondGalaxyX, secondGalaxyY, secondRadius, -1.4)
-        );
-
-        // Third galaxy - smaller and faster, same direction for trailing arms
-        const thirdGalaxyX = canvas.width * 0.85;
-        const thirdGalaxyY = canvas.height * 0.8;
-        const thirdRadius = mainRadius * 0.5;
-
-        const fastGalaxy = createRealisticGalaxy('Sc', thirdGalaxyX, thirdGalaxyY, thirdRadius, -2.0);
-        galaxiesRef.current.push(fastGalaxy);
-
-        // Eye galaxy - polar ring type in top-left corner
         const eyeGalaxyX = canvas.width * 0.15;
         const eyeGalaxyY = canvas.height * 0.20;
+        const mainRadius = Math.min(canvas.width, canvas.height) * (isMobile ? 0.2 : 0.25);
         const eyeRadius = mainRadius * 0.45;
 
         const eyeGalaxy = createRealisticGalaxy('PolarRing', eyeGalaxyX, eyeGalaxyY, eyeRadius, -0.6);
@@ -986,8 +961,8 @@ const AnimatedBackground: React.FC = () => {
       const rawDeltaTime = (currentTime - lastTimeRef.current) / 1000;
       lastTimeRef.current = currentTime;
 
-      // Skip frames on mobile for performance
-      if (isMobile && rawDeltaTime < 1/30) {
+      // Skip frames on mobile for performance - OPTIMIZED for polar ring
+      if (isMobile && rawDeltaTime < 1/20) { // Changed from 1/30 to 1/20 (20fps max on mobile)
         animationFrameRef.current = requestAnimationFrame(animate);
         return;
       }

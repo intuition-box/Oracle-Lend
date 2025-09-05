@@ -6,6 +6,7 @@ import LendingBorrowing from './components/LendingBorrowing'
 import Swap from './components/DEX'
 import Analytics from './components/Analytics'
 import AnimatedBackground from './components/AnimatedBackground'
+import PNGGalaxies from './components/PNGGalaxies'
 import { useWallet } from './hooks/useWallet'
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
   return (
     <>
       <AnimatedBackground />
+      <PNGGalaxies />
       
       {/* Global Transaction Notification - COMPLETELY OUTSIDE EVERYTHING */}
       {notification && (
