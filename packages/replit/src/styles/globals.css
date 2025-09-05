@@ -1166,16 +1166,35 @@ div[class*="text-xs"][class*="text-gray-500"] {
 }
 
 /* Global catch-all for any remaining gray text in light mode */
-.light p[class*="gray-"],
-.light div[class*="gray-"],
-.light span[class*="gray-"],
-.light h1[class*="gray-"],
-.light h2[class*="gray-"],
-.light h3[class*="gray-"],
-.light h4[class*="gray-"],
-.light h5[class*="gray-"],
-.light h6[class*="gray-"] {
+.light p[class*="gray"],
+.light div[class*="gray"],
+.light span[class*="gray"],
+.light h1[class*="gray"],
+.light h2[class*="gray"],
+.light h3[class*="gray"],
+.light h4[class*="gray"],
+.light h5[class*="gray"],
+.light h6[class*="gray"],
+.light ul[class*="gray"],
+.light li[class*="gray"] {
   color: var(--theme-subtitle) !important;
+}
+
+/* Force all Tailwind gray text classes to use theme subtitle in light mode */
+.light .text-gray-300,
+.light .text-gray-400, 
+.light .text-gray-500,
+.light .text-gray-600,
+.light p.text-gray-300,
+.light p.text-gray-400,
+.light p.text-gray-500,
+.light div.text-gray-300,
+.light div.text-gray-400,
+.light div.text-gray-500,
+.light span.text-gray-300,
+.light span.text-gray-400,
+.light span.text-gray-500 {
+  color: #FAFAFA !important; /* Direct color application */
 }
 
 /* Exception: Keep white and very light texts as they are */
