@@ -13,15 +13,8 @@
         margin: 0;
         padding: 0;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-        background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('/attached_assets/image_1755937909833.png');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        background: #000000;
         min-height: 100vh;
-      }
-      
-      .light body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
       }
       
       .cosmic-bg {
@@ -29,26 +22,18 @@
         backdrop-filter: blur(1px);
       }
       
-      .light .cosmic-bg {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
+      
+      /* Dark mode high contrast overrides */
+      .dark * {
+        --tw-text-opacity: 1;
       }
       
-      .light .glass-effect {
-        background: rgba(255, 255, 255, 0.8) !important;
-        border-color: rgba(0, 0, 0, 0.1) !important;
+      .dark .text-gray-300 {
+        color: #F8FAFC !important;
       }
       
-      .light * {
-        color: #1f2937 !important;
-      }
-      
-      .light .text-white {
-        color: #1f2937 !important;
-      }
-      
-      .light .text-gray-300,
-      .light .text-gray-400 {
-        color: #6b7280 !important;
+      .dark .text-gray-400 {
+        color: #E2E8F0 !important;
       }
       
       .glass-effect {

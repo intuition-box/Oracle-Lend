@@ -5,10 +5,12 @@ import Dashboard from './components/Dashboard'
 import LendingBorrowing from './components/LendingBorrowing'
 import Swap from './components/DEX'
 import Analytics from './components/Analytics'
+import AnimatedBackground from './components/AnimatedBackground'
+import PNGGalaxies from './components/PNGGalaxies'
+import ParticleSystem from './components/ParticleSystem'
 import { useWallet } from './hooks/useWallet'
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(true)
   const { isConnected, account, connect, disconnect, isInitializing } = useWallet()
   const [notification, setNotification] = useState<{
     show: boolean
@@ -18,19 +20,10 @@ function App() {
   } | null>(null)
 
   useEffect(() => {
-    // Apply dark mode class to html element
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-      document.documentElement.classList.remove('light')
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.classList.add('light')
-    }
-  }, [isDarkMode])
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-  }
+    // Apply dark mode class permanently
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [])
 
   // Global notification system
   const showNotification = (type: 'success' | 'error' | 'rejected', message: string, txHash?: string) => {
@@ -48,6 +41,10 @@ function App() {
 
   return (
     <>
+      <AnimatedBackground />
+      <PNGGalaxies />
+      <ParticleSystem />
+      
       {/* Global Transaction Notification - COMPLETELY OUTSIDE EVERYTHING */}
       {notification && (
         <div 
@@ -119,11 +116,9 @@ function App() {
         </div>
       )}
       
-      <div className={`min-h-screen cosmic-bg ${isDarkMode ? 'dark' : ''}`}>
+      <div className="min-h-screen app-content dark">
         <Router>
         <Layout 
-          isDarkMode={isDarkMode}
-          toggleTheme={toggleTheme}
           isConnected={isConnected}
           account={account}
           connectWallet={connect}

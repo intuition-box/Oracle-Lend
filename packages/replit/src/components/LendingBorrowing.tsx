@@ -163,7 +163,7 @@ const LendingBorrowing: React.FC = () => {
 
   if (isInitializing) {
   return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white text-xl">Initializing...</div>
       </div>
     )
@@ -171,8 +171,8 @@ const LendingBorrowing: React.FC = () => {
 
   if (!walletConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-8 max-w-md">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="glass-effect border border-gray-700/50 rounded-xl p-8 max-w-md">
           <h2 className="text-2xl font-bold text-white mb-4 text-center">Connect Your Wallet</h2>
           <p className="text-gray-300 mb-6 text-center">
             Please connect your wallet to interact with the Oracle Lend protocol
@@ -190,8 +190,8 @@ const LendingBorrowing: React.FC = () => {
 
   if (!contractConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-8 max-w-md">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="glass-effect border border-gray-700/50 rounded-xl p-8 max-w-md">
           <h2 className="text-2xl font-bold text-white mb-4 text-center">Connecting to Contracts</h2>
           <p className="text-gray-300 mb-6 text-center">
             Initializing contract connections...
@@ -205,38 +205,38 @@ const LendingBorrowing: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 p-6">
+    <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">Oracle Lend Protocol</h1>
-          <p className="text-gray-300 text-lg">Over-collateralized lending with TTRUST collateral and ORACLE borrowing</p>
-              </div>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-3 sm:mb-4">Oracle Lend Protocol</h1>
+          <p className="text-gray-300 text-sm sm:text-base lg:text-lg px-4 sm:px-0">Over-collateralized lending with tTRUST collateral and ORACLE borrowing</p>
+        </div>
 
         {/* Protocol Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
-            <p className="text-2xl font-bold text-purple-400">
+            <p className="text-xl sm:text-2xl font-bold text-purple-400">
               {formatAmount((parseFloat(protocolStats.oracleBalance) / 1e18).toString())}
-                </p>
-              </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+            </p>
+          </div>
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Current Price</h3>
-            <p className="text-2xl font-bold text-blue-400">
+            <p className="text-xl sm:text-2xl font-bold text-blue-400">
               {formatAmount((parseFloat(protocolStats.currentPrice) / 1e18).toString())} ORACLE/TTRUST
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Collateral Ratio</h3>
-            <p className="text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-400">{PROTOCOL_CONFIG.collateralRatio}%</p>
                     </div>
                   </div>
 
         {/* User Position */}
-        <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
-          <h2 className="text-2xl font-bold text-white mb-6">Your Position</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 ${getHealthBgColor(userLendingPosition.status)}`}>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Your Position</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div>
               <h3 className="text-white font-semibold mb-2 flex items-center">
                 <TokenIcon token="tTRUST" className="w-5 h-5 mr-2" />
@@ -269,16 +269,16 @@ const LendingBorrowing: React.FC = () => {
           </div>
 
         {/* Main Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Lending/Borrowing Interface */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
             <div className="flex space-x-4 mb-6">
               <button
                 onClick={() => setActiveTab('collateral')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'collateral'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'glass-effect text-gray-300 hover:border-gray-500/50 border border-gray-600/30'
                 }`}
               >
                 TTRUST Collateral
@@ -288,7 +288,7 @@ const LendingBorrowing: React.FC = () => {
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'borrow'
                     ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'glass-effect text-gray-300 hover:border-gray-500/50 border border-gray-600/30'
                 }`}
               >
                 ORACLE Borrowing
@@ -306,7 +306,7 @@ const LendingBorrowing: React.FC = () => {
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'addCollateral'
                         ? 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-gray-300'
+                        : 'glass-effect text-gray-300 border border-gray-600/30'
                     }`}
                   >
                     Add Collateral
@@ -316,7 +316,7 @@ const LendingBorrowing: React.FC = () => {
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'withdrawCollateral'
                         ? 'bg-red-600 text-white'
-                        : 'bg-gray-700 text-gray-300'
+                        : 'glass-effect text-gray-300 border border-gray-600/30'
                     }`}
                   >
                     Withdraw Collateral
@@ -329,10 +329,17 @@ const LendingBorrowing: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
+                    step="any"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '' || parseFloat(value) >= 0) {
+                        setAmount(value)
+                      }
+                    }}
                     placeholder="0.0"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="flex justify-between text-sm text-gray-400 mt-1">
                     <span>Balance: {formatAmount(balance)} TTRUST</span>
@@ -342,31 +349,31 @@ const LendingBorrowing: React.FC = () => {
                   </div>
                   
                   {/* Quick Amount Selectors */}
-                  <div className="flex space-x-2 mt-3">
+                  <div className="grid grid-cols-2 sm:flex sm:space-x-2 gap-2 mt-3">
                     <button
                       onClick={() => setPercentageAmount(25)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       25%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(50)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       50%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(75)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       75%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(100)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       MAX
@@ -402,7 +409,7 @@ const LendingBorrowing: React.FC = () => {
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'borrowOracle'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-gray-700 text-gray-300'
+                        : 'glass-effect text-gray-300 border border-gray-600/30'
                     }`}
                   >
                     Borrow ORACLE
@@ -412,7 +419,7 @@ const LendingBorrowing: React.FC = () => {
                     className={`px-3 py-1 rounded text-sm font-medium ${
                       action === 'repayOracle'
                         ? 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-gray-300'
+                        : 'glass-effect text-gray-300 border border-gray-600/30'
                     }`}
                   >
                     Repay ORACLE
@@ -425,10 +432,17 @@ const LendingBorrowing: React.FC = () => {
                   </label>
                     <input
                       type="number"
+                      min="0"
+                      step="any"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '' || parseFloat(value) >= 0) {
+                          setAmount(value)
+                        }
+                      }}
                     placeholder="0.0"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <div className="flex justify-between text-sm text-gray-400 mt-1">
                     {action === 'borrowOracle' && (
@@ -440,31 +454,31 @@ const LendingBorrowing: React.FC = () => {
                   </div>
                   
                   {/* Quick Amount Selectors */}
-                  <div className="flex space-x-2 mt-3">
+                  <div className="grid grid-cols-2 sm:flex sm:space-x-2 gap-2 mt-3">
                     <button
                       onClick={() => setPercentageAmount(25)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       25%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(50)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       50%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(75)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       75%
                     </button>
                     <button
                       onClick={() => setPercentageAmount(100)}
-                      className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                      className="flex-1 py-2 px-3 glass-effect hover:border-gray-500/50 text-gray-300 text-sm font-medium rounded-lg transition-all border border-gray-600/30"
                       type="button"
                     >
                       MAX
@@ -503,7 +517,7 @@ const LendingBorrowing: React.FC = () => {
                     value={liquidateAddress}
                     onChange={(e) => setLiquidateAddress(e.target.value)}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                   </div>
 
@@ -523,7 +537,7 @@ const LendingBorrowing: React.FC = () => {
           </div>
 
           {/* Liquidation Interface */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+          <div className="glass-effect border border-gray-700/50 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white">Liquidation</h3>
               <button
@@ -573,7 +587,7 @@ const LendingBorrowing: React.FC = () => {
                   value={liquidateAddress}
                   onChange={(e) => setLiquidateAddress(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 </div>
 
@@ -592,7 +606,7 @@ const LendingBorrowing: React.FC = () => {
               </div>
 
             {/* Protocol Info */}
-            <div className="mt-8 p-4 bg-gray-800/50 rounded-lg">
+            <div className="mt-8 p-4 glass-effect rounded-lg">
               <h4 className="text-white font-semibold mb-2">Protocol Info</h4>
               <ul className="text-sm text-gray-300 space-y-1">
                 <li>• Collateral Ratio Required: {PROTOCOL_CONFIG.collateralRatio}%</li>

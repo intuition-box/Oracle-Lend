@@ -24,23 +24,14 @@ const Analytics: React.FC = () => {
   // Fetch real-time data from contracts
   useEffect(() => {
     const fetchRealTimeData = async () => {
-      console.log('🔄 Fetching analytics data...')
-      console.log('Contracts available:', {
-        dexContract: !!dexContract,
-        oracleTokenContract: !!oracleTokenContract,
-        oracleLendContract: !!oracleLendContract,
-        isConnected
-      })
 
       if (!dexContract || !oracleTokenContract || !oracleLendContract || !isConnected) {
-        console.log('❌ Missing contracts or not connected')
         setDataLoading(false)
         return
       }
 
       try {
         setDataLoading(true)
-        console.log('📊 Getting DEX reserves...')
 
         // Get DEX reserves with error handling
         let dexTTrust = 0
@@ -53,7 +44,6 @@ const Analytics: React.FC = () => {
           dexTTrust = Number(tTrustReserve) / 1e18
           dexOracle = Number(oracleReserve) / 1e18
           
-          console.log('✅ DEX reserves:', { dexTTrust, dexOracle })
         } catch (dexError) {
           console.error('❌ DEX reserves error:', dexError)
         }
@@ -69,7 +59,6 @@ const Analytics: React.FC = () => {
           lendingTTrust = Number(ethBalance) / 1e18
           lendingOracle = Number(oracleBalance) / 1e18
           
-          console.log('✅ Lending balances:', { lendingTTrust, lendingOracle })
         } catch (lendingError) {
           console.error('❌ Lending balances error:', lendingError)
         }
@@ -78,14 +67,12 @@ const Analytics: React.FC = () => {
         const totalTTrust = dexTTrust + lendingTTrust
         const totalOracle = dexOracle + lendingOracle
         
-        console.log('📈 Totals:', { totalTTrust, totalOracle })
 
         // Get current price for USD calculation
         let currentPrice = 500000 // Default fallback
         try {
           const price = await oracleLendContract.getCurrentPrice()
           currentPrice = Number(price) / 1e18
-          console.log('💰 Current price:', currentPrice, 'ORACLE per TTRUST')
         } catch (priceError) {
           console.error('❌ Price error:', priceError)
         }
@@ -114,7 +101,6 @@ const Analytics: React.FC = () => {
           }
         }
 
-        console.log('✅ Final analytics data:', newData)
         setRealTimeData(newData)
 
       } catch (error) {
@@ -240,15 +226,15 @@ const Analytics: React.FC = () => {
 
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">Protocol Analytics</h1>
-        <p className="text-gray-400 text-lg">Real-time data from Oracle Lend Protocol</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2 sm:mb-4">Protocol Analytics</h1>
+        <p className="text-sm sm:text-base lg:text-lg text-gray-400">Real-time data from Oracle Lend Protocol</p>
         
         {/* Debug Status */}
-        <div className="mt-4 p-3 bg-gray-800/50 rounded-lg text-sm">
-          <div className="flex items-center justify-center space-x-4 text-gray-400">
+        <div className="mt-4 p-2 sm:p-3 glass-effect rounded-lg text-xs sm:text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-gray-400">
             <span className={`flex items-center ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
               {isConnected ? 'Connected' : 'Disconnected'}
@@ -270,24 +256,24 @@ const Analytics: React.FC = () => {
       </div>
 
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {mainMetrics.map((metric, index) => (
-          <div key={index} className="glass-effect rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${metric.color} bg-opacity-20 flex items-center justify-center`}>
-                <i className={`${metric.icon} ${metric.color} text-xl`}></i>
+          <div key={index} className="glass-effect rounded-xl p-4 sm:p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br ${metric.color} bg-opacity-20 flex items-center justify-center`}>
+                <i className={`${metric.icon} ${metric.color} text-lg sm:text-xl`}></i>
               </div>
               {metric.change && <span className="text-green-400 text-sm font-medium">{metric.change}</span>}
             </div>
-            <h3 className="text-gray-400 text-sm mb-2">{metric.title}</h3>
-            <p className="text-xl font-bold text-white mb-2">
+            <h3 className="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">{metric.title}</h3>
+            <p className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">
               {dataLoading ? (
                 <div className="animate-pulse bg-gray-700 h-6 w-32 rounded"></div>
               ) : (
                 metric.value
               )}
             </p>
-            <p className="text-xl font-bold text-gray-300">{metric.subtitle}</p>
+            <p className="text-base sm:text-lg font-bold text-gray-300">{metric.subtitle}</p>
           </div>
         ))}
       </div>
@@ -296,16 +282,16 @@ const Analytics: React.FC = () => {
   
 
       {/* Protocol Information */}
-      <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+      <div className="glass-effect rounded-xl p-4 sm:p-6 border border-gray-700/50">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
           <i className="fas fa-info-circle text-blue-400 mr-3"></i>
           Protocol Overview
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-white">🏦 Lending Protocol</h3>
-            <ul className="text-gray-300 text-sm space-y-2">
+            <h3 className="text-base sm:text-lg font-semibold text-white">🏦 Lending Protocol</h3>
+            <ul className="text-gray-300 text-xs sm:text-sm space-y-1 sm:space-y-2">
               <li>• Over-collateralized lending (120% ratio)</li>
               <li>• TTRUST as collateral, ORACLE as borrowable asset</li>
               <li>• 10% liquidation bonus for liquidators</li>
@@ -314,8 +300,8 @@ const Analytics: React.FC = () => {
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-white">🔄 DEX (AMM)</h3>
-            <ul className="text-gray-300 text-sm space-y-2">
+            <h3 className="text-base sm:text-lg font-semibold text-white">🔄 DEX (AMM)</h3>
+            <ul className="text-gray-300 text-xs sm:text-sm space-y-1 sm:space-y-2">
               <li>• Constant product formula (x * y = k)</li>
               <li>• TTRUST/ORACLE trading pair</li>
               <li>• Serves as price oracle for lending</li>
@@ -331,7 +317,7 @@ const Analytics: React.FC = () => {
           href="https://discord.com/invite/0xintuition" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center space-x-3 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25"
+          className="inline-flex items-center space-x-2 sm:space-x-3 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-indigo-500/25 min-h-[44px]"
         >
           <i className="fab fa-discord text-xl"></i>
           <span>Join Intuition Discord</span>

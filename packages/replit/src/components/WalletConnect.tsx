@@ -67,7 +67,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-64 glass-effect border border-gray-600/50 rounded-lg shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-64 glass-effect border border-gray-600/50 rounded-lg shadow-xl z-[60]">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-400">Connected Wallet</span>

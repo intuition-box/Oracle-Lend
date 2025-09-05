@@ -1,5 +1,5 @@
 {
-  "name": "workspace",
+  "name": "@se-2/replit",
   "version": "1.0.0",
   "type": "module",
   "main": "postcss.config.js",
