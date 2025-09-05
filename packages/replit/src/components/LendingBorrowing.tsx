@@ -209,9 +209,9 @@ const LendingBorrowing: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">Oracle Lend Protocol</h1>
-          <p className="text-gray-300 text-sm sm:text-base lg:text-lg px-4 sm:px-0">Over-collateralized lending with TTRUST collateral and ORACLE borrowing</p>
-              </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-3 sm:mb-4">Oracle Lend Protocol</h1>
+          <p className="text-gray-300 text-sm sm:text-base lg:text-lg px-4 sm:px-0">Over-collateralized lending with tTRUST collateral and ORACLE borrowing</p>
+        </div>
 
         {/* Protocol Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -219,8 +219,8 @@ const LendingBorrowing: React.FC = () => {
             <h3 className="text-white font-semibold mb-2">Available ORACLE</h3>
             <p className="text-xl sm:text-2xl font-bold text-purple-400">
               {formatAmount((parseFloat(protocolStats.oracleBalance) / 1e18).toString())}
-                </p>
-              </div>
+            </p>
+          </div>
           <div className="glass-effect border border-gray-700/50 rounded-xl p-4 sm:p-6">
             <h3 className="text-white font-semibold mb-2">Current Price</h3>
             <p className="text-xl sm:text-2xl font-bold text-blue-400">

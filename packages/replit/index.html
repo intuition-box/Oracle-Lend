@@ -18,7 +18,7 @@
       }
       
       .light body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 15%, #cbd5e1 35%, #94a3b8 55%, #64748b 75%, #475569 90%, #334155 100%) !important;
       }
       
       .cosmic-bg {
@@ -27,25 +27,41 @@
       }
       
       .light .cosmic-bg {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%) !important;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 15%, #cbd5e1 35%, #94a3b8 55%, #64748b 75%, #475569 90%, #334155 100%) !important;
       }
       
       .light .glass-effect {
-        background: rgba(255, 255, 255, 0.8) !important;
-        border-color: rgba(0, 0, 0, 0.1) !important;
+        background: rgba(248, 250, 252, 0.65) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border-color: rgba(148, 163, 184, 0.25) !important;
+        box-shadow: 0 8px 32px rgba(100, 116, 139, 0.25) !important;
       }
       
       .light * {
-        color: #1f2937 !important;
+        color: #0f172a !important;
       }
       
       .light .text-white {
-        color: #1f2937 !important;
+        color: #0f172a !important;
       }
       
       .light .text-gray-300,
       .light .text-gray-400 {
-        color: #6b7280 !important;
+        color: #475569 !important;
+      }
+      
+      /* Dark mode high contrast overrides */
+      .dark * {
+        --tw-text-opacity: 1;
+      }
+      
+      .dark .text-gray-300 {
+        color: #F8FAFC !important;
+      }
+      
+      .dark .text-gray-400 {
+        color: #E2E8F0 !important;
       }
       
       .glass-effect {
