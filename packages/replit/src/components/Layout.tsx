@@ -41,10 +41,10 @@ const Layout: React.FC<LayoutProps> = ({
       {isDashboard && (
         <div className="relative py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-6xl font-bold mb-8 gradient-text">
+            <h1 className="text-6xl font-bold mb-8 gradient-text tracking-wide">
               ORACLE LEND
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-100 max-w-3xl mx-auto font-normal">
               A decentralized finance protocol that revolutionizes lending, borrowing, and token swapping on Intuition testnet. Trust your Intuition.
             </p>
             <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400 rounded-full star" style={{ animationDelay: '0.5s' }}></div>
@@ -58,9 +58,9 @@ const Layout: React.FC<LayoutProps> = ({
       </main>
 
       <footer className="relative z-10 py-8 mt-auto glass-effect">
-        <div className="max-w-7xl mx-auto px-4 text-center text-gray-400">
-          <p>&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
-          <p className="text-sm mt-2">
+        <div className="max-w-7xl mx-auto px-4 text-center text-slate-200">
+          <p className="font-medium">&copy; 2025 ORACLE LEND. Built on Intuition Testnet.</p>
+          <p className="text-sm mt-2 font-normal text-slate-300">
             Chain ID: 13579 | Native Token: tTRUST | Data Availability: Arbitrum AnyTrust
           </p>
         </div>

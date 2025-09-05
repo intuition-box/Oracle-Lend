@@ -545,11 +545,11 @@ const DEX: React.FC = () => {
           <div className="max-w-full sm:max-w-md mx-auto">
             <div className="glass-effect rounded-xl p-6 border border-gray-700/50">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Swap Tokens</h2>
+                <h2 className="text-xl font-bold text-white tracking-wide">Swap Tokens</h2>
                 <div className="relative">
                   <button 
                     onClick={() => setShowSlippageSettings(!showSlippageSettings)}
-                    className="flex items-center space-x-2 px-3 py-2 glass-effect border border-gray-600/50 rounded-lg text-gray-400 hover:text-white hover:border-purple-500/50 transition-all"
+                    className="flex items-center space-x-2 px-3 py-2 glass-effect border border-purple-500/30 rounded-lg text-slate-200 hover:text-cyan-300 hover:border-cyan-400/50 transition-all font-medium"
                   >
                     <i className="fas fa-cog"></i>
                     <span className="text-sm">Settings</span>
@@ -611,8 +611,8 @@ const DEX: React.FC = () => {
               <div className="space-y-5">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm text-gray-400">From</label>
-                    <span className="text-xs text-gray-400">
+                    <label className="text-sm text-slate-200 font-medium">From</label>
+                    <span className="text-xs text-slate-300 font-medium">
                       Balance: {parseFloat(balances[fromToken]).toFixed(4)}
                     </span>
                   </div>
@@ -623,13 +623,13 @@ const DEX: React.FC = () => {
                         value={fromAmount}
                         onChange={(e) => setFromAmount(e.target.value)}
                         placeholder="0.00"
-                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full py-2"
+                        className="bg-transparent text-lg sm:text-xl font-semibold text-white placeholder-slate-400 flex-1 outline-none w-full py-2"
                       />
                       <div className="relative">
                         <select
                           value={fromToken}
                           onChange={(e) => setFromToken(e.target.value as 'TTRUST' | 'ORACLE')}
-                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-bold cursor-pointer hover:border-purple-400/50 transition-all duration-200 border border-purple-500/30 focus:border-purple-400/70 outline-none min-h-[44px]"
+                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-semibold cursor-pointer hover:border-cyan-400/50 transition-all duration-200 border border-purple-500/30 focus:border-cyan-400/70 outline-none min-h-[44px]"
                         >
                           {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
@@ -643,25 +643,25 @@ const DEX: React.FC = () => {
                     <div className="grid grid-cols-4 gap-2 sm:gap-3">
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.25).toString())}
-                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
+                        className="py-3 px-2 text-xs font-semibold text-cyan-300 hover:text-white rounded-xl glass-effect border border-cyan-500/40 hover:border-cyan-400/70 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/30 min-h-[44px]"
                       >
                         25%
                       </button>
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.5).toString())}
-                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
+                        className="py-3 px-2 text-xs font-semibold text-cyan-300 hover:text-white rounded-xl glass-effect border border-cyan-500/40 hover:border-cyan-400/70 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/30 min-h-[44px]"
                       >
                         50%
                       </button>
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.75).toString())}
-                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
+                        className="py-3 px-2 text-xs font-semibold text-cyan-300 hover:text-white rounded-xl glass-effect border border-cyan-500/40 hover:border-cyan-400/70 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/30 min-h-[44px]"
                       >
                         75%
                       </button>
                       <button
                         onClick={() => setFromAmount(balances[fromToken])}
-                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
+                        className="py-3 px-2 text-xs font-semibold text-cyan-300 hover:text-white rounded-xl glass-effect border border-cyan-500/40 hover:border-cyan-400/70 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/30 min-h-[44px]"
                       >
                         MAX
                       </button>
@@ -673,7 +673,7 @@ const DEX: React.FC = () => {
                 <div className="flex justify-center">
                   <button
                     onClick={handleSwapTokens}
-                    className="w-12 h-12 rounded-full glass-effect border-2 border-purple-500/30 hover:border-purple-400/50 text-purple-400 hover:text-white transition-all duration-200 hover:scale-110"
+                    className="w-12 h-12 rounded-full glass-effect border-2 border-cyan-500/40 hover:border-cyan-400/70 text-cyan-300 hover:text-white transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-400/30 font-medium"
                   >
                     <i className="fas fa-arrow-down"></i>
                   </button>
@@ -682,8 +682,8 @@ const DEX: React.FC = () => {
                 {/* To Token */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm text-gray-400">To</label>
-                    <span className="text-xs text-gray-400">
+                    <label className="text-sm text-slate-200 font-medium">To</label>
+                    <span className="text-xs text-slate-300 font-medium">
                       Balance: {parseFloat(balances[toToken]).toFixed(4)}
                     </span>
                   </div>
@@ -694,13 +694,13 @@ const DEX: React.FC = () => {
                         value={toAmount}
                         readOnly
                         placeholder="0.00"
-                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full py-2"
+                        className="bg-transparent text-lg sm:text-xl font-semibold text-white placeholder-slate-400 flex-1 outline-none w-full py-2"
                       />
                       <div className="relative">
                         <select
                           value={toToken}
                           onChange={(e) => setToToken(e.target.value as 'TTRUST' | 'ORACLE')}
-                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-bold cursor-pointer hover:border-purple-400/50 transition-all duration-200 border border-purple-500/30 focus:border-purple-400/70 outline-none min-h-[44px]"
+                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-semibold cursor-pointer hover:border-cyan-400/50 transition-all duration-200 border border-purple-500/30 focus:border-cyan-400/70 outline-none min-h-[44px]"
                         >
                           {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
@@ -744,10 +744,10 @@ const DEX: React.FC = () => {
                 <button
                   onClick={handleSwap}
                   disabled={!fromAmount || !toAmount || !quote || isLoading || fromToken === toToken}
-                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-bold text-base sm:text-lg transition-all duration-200 min-h-[44px] ${
+                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-medium text-base sm:text-lg transition-all duration-300 min-h-[44px] ${
                     !fromAmount || !toAmount || !quote || isLoading || fromToken === toToken
-                      ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-purple-500/25'
+                      ? 'glass-effect text-slate-500 cursor-not-allowed border border-slate-700/50'
+                      : 'bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700 text-slate-100 shadow-lg hover:shadow-cyan-500/25 border border-cyan-500/30'
                   } flex items-center justify-center space-x-2`}
                 >
                   {isLoading ? (
