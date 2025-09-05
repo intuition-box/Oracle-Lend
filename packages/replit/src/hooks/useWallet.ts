@@ -89,11 +89,9 @@ export const useWallet = () => {
           })
           return true
         } catch (addError) {
-          console.error('Failed to add network:', addError)
           return false
         }
       }
-      console.error('Failed to switch network:', switchError)
       return false
     }
   }
@@ -111,7 +109,6 @@ export const useWallet = () => {
       const balanceInEther = parseInt(balance, 16) / Math.pow(10, 18)
       return balanceInEther.toString()
     } catch (error) {
-      console.error('Failed to get balance:', error)
       return '0'
     }
   }
@@ -175,7 +172,6 @@ export const useWallet = () => {
       cacheWalletState(newState)
 
     } catch (error: any) {
-      console.error('Failed to connect wallet:', error)
       setError(error.message || 'Failed to connect wallet')
     } finally {
       setIsLoading(false)
@@ -241,8 +237,6 @@ export const useWallet = () => {
     
     const checkConnection = async () => {
       if (!isMetaMaskInstalled()) {
-        // Production: Remove console.log
-        // console.log('MetaMask not installed')
         setIsInitializing(false)
         return
       }
@@ -256,8 +250,6 @@ export const useWallet = () => {
         })
 
         if (accounts && accounts.length > 0) {
-          // Production: Remove console.log
-          // console.log('Found existing wallet connection:', accounts[0])
           
           const chainId = await window.ethereum.request({
             method: 'eth_chainId',
@@ -282,11 +274,8 @@ export const useWallet = () => {
             setError(null)
           }
         } else {
-          // Production: Remove console.log
-          // console.log('No existing wallet connection found')
         }
       } catch (error) {
-        console.error(`Failed to check connection (attempt ${retryCount + 1}):`, error)
         
         // Retry if we haven't reached max retries and it's a potentially transient error
         if (retryCount < maxRetries && (error as any)?.code !== 4001) {

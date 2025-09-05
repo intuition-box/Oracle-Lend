@@ -16,7 +16,7 @@ const ParticleSystem: React.FC = () => {
   const animationRef = useRef<number>();
   const particlesRef = useRef<Particle[]>([]);
 
-  // Couleurs vives et variées
+  // Bright and varied colors
   const colors = [
     '#8B5CF6', // Purple
     '#06B6D4', // Cyan

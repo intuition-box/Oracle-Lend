@@ -5,30 +5,30 @@ interface Galaxy {
   x: string;
   y: string;
   scale: number;
-  rotationSpeed: number; // secondes pour rotation complète
+  rotationSpeed: number; // seconds for complete rotation
   zIndex: number;
-  bestFrame: string; // Meilleure frame à utiliser (ex: "045")
+  bestFrame: string; // Best frame to use (e.g., "045")
 }
 
 const PNGGalaxies: React.FC = () => {
   
-  // Configuration des 3 galaxies PNG - ROTATION CSS FLUIDE
+  // Configuration of 3 PNG galaxies - SMOOTH CSS ROTATION
   const galaxies: Galaxy[] = [
     {
       name: 'main',
       x: '62%',
       y: '45%',
       scale: 1200, // ZOOM x4.8 - ÉNORME et spectaculaire (était 750)
-      rotationSpeed: -60, // 60 secondes par rotation - sens spirales
+      rotationSpeed: -60, // 60 seconds per rotation - spiral direction
       zIndex: 3,
-      bestFrame: '045' // Meilleure frame pour les bras spiraux
+      bestFrame: '045' // Best frame for spiral arms
     },
     {
       name: 'secondary',
       x: '20%',
       y: '70%',
       scale: 900, // ZOOM x5 proportionnel - TRÈS GRAND (était 540)
-      rotationSpeed: -45, // 45 secondes - plus rapide
+      rotationSpeed: -45, // 45 seconds - faster
       zIndex: 2,
       bestFrame: '000' // Frame classique face-on
     },
@@ -37,9 +37,9 @@ const PNGGalaxies: React.FC = () => {
       x: '85%',
       y: '80%',
       scale: 750, // ZOOM x5 proportionnel - MASSIF (était 450)
-      rotationSpeed: -30, // 30 secondes - le plus rapide
+      rotationSpeed: -30, // 30 seconds - fastest
       zIndex: 1,
-      bestFrame: '090' // Perspective intéressante
+      bestFrame: '090' // Interesting perspective
     }
   ];
 
@@ -71,7 +71,7 @@ const PNGGalaxies: React.FC = () => {
                 filter: 'hue-rotate(20deg) saturate(1.2) brightness(1.1) drop-shadow(0 0 25px rgba(138, 43, 226, 0.5)) drop-shadow(0 0 8px rgba(138, 43, 226, 0.3))'
               }}
               onError={(e) => {
-                // Fallback vers la frame 000 si l'image ne charge pas
+                // Fallback to frame 000 if image doesn't load
                 const target = e.target as HTMLImageElement;
                 target.src = `/galaxies/galaxy-${galaxy.name}-000.png`;
               }}

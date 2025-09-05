@@ -24,26 +24,14 @@ const Analytics: React.FC = () => {
   // Fetch real-time data from contracts
   useEffect(() => {
     const fetchRealTimeData = async () => {
-      // Production: Remove console.log
-      // console.log('🔄 Fetching analytics data...')
-      // console.log('Contracts available:', {
-      //   dexContract: !!dexContract,
-      //   oracleTokenContract: !!oracleTokenContract,
-      //   oracleLendContract: !!oracleLendContract,
-      //   isConnected
-      // })
 
       if (!dexContract || !oracleTokenContract || !oracleLendContract || !isConnected) {
-        // Production: Remove console.log
-        // console.log('❌ Missing contracts or not connected')
         setDataLoading(false)
         return
       }
 
       try {
         setDataLoading(true)
-        // Production: Remove console.log
-        // console.log('📊 Getting DEX reserves...')
 
         // Get DEX reserves with error handling
         let dexTTrust = 0
@@ -56,8 +44,6 @@ const Analytics: React.FC = () => {
           dexTTrust = Number(tTrustReserve) / 1e18
           dexOracle = Number(oracleReserve) / 1e18
           
-          // Production: Remove console.log
-          // console.log('✅ DEX reserves:', { dexTTrust, dexOracle })
         } catch (dexError) {
           console.error('❌ DEX reserves error:', dexError)
         }
@@ -73,8 +59,6 @@ const Analytics: React.FC = () => {
           lendingTTrust = Number(ethBalance) / 1e18
           lendingOracle = Number(oracleBalance) / 1e18
           
-          // Production: Remove console.log
-          // console.log('✅ Lending balances:', { lendingTTrust, lendingOracle })
         } catch (lendingError) {
           console.error('❌ Lending balances error:', lendingError)
         }
@@ -83,16 +67,12 @@ const Analytics: React.FC = () => {
         const totalTTrust = dexTTrust + lendingTTrust
         const totalOracle = dexOracle + lendingOracle
         
-        // Production: Remove console.log
-        // console.log('📈 Totals:', { totalTTrust, totalOracle })
 
         // Get current price for USD calculation
         let currentPrice = 500000 // Default fallback
         try {
           const price = await oracleLendContract.getCurrentPrice()
           currentPrice = Number(price) / 1e18
-          // Production: Remove console.log
-          // console.log('💰 Current price:', currentPrice, 'ORACLE per TTRUST')
         } catch (priceError) {
           console.error('❌ Price error:', priceError)
         }
@@ -121,8 +101,6 @@ const Analytics: React.FC = () => {
           }
         }
 
-        // Production: Remove console.log
-        // console.log('✅ Final analytics data:', newData)
         setRealTimeData(newData)
 
       } catch (error) {

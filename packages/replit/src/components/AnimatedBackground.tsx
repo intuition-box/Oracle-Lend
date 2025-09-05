@@ -223,7 +223,7 @@ const AnimatedBackground: React.FC = () => {
       return `rgb(${r}, ${g}, ${b})`;
     };
 
-    // Sérsic profile for galaxy brightness distribution
+    // Sersic profile for galaxy brightness distribution
     const sersicProfile = (r: number, re: number, n: number): number => {
       const bn = 1.9992 * n - 0.3271; // Approximation for b_n
       return Math.exp(-bn * (Math.pow(r / re, 1 / n) - 1));
@@ -501,9 +501,9 @@ const AnimatedBackground: React.FC = () => {
             thickness: radius * 0.2,
             angle: 0,
             baseAngle: Math.PI / 2, // Perpendicular to main disk
-            rotationSpeed: baseRotationSpeed * 0.5, // Même sens que les galaxies
+            rotationSpeed: baseRotationSpeed * 0.5, // Same direction as galaxies
             opacity: 0.7,
-            color: '#8B5CF6', // Violet cosmique harmonieux avec le thème
+            color: '#8B5CF6', // Cosmic violet harmonious with theme
             stars: []
           };
           break;
@@ -676,14 +676,14 @@ const AnimatedBackground: React.FC = () => {
 
         const alpha = Math.pow(1 / i, 2) * 0.3;
         
-        // Couleurs spéciales pour la galaxie œil (centre violet)
+        // Special colors for eye galaxy (violet center)
         if (galaxy.type === 'PolarRing') {
           gradient.addColorStop(0, `rgba(138, 43, 226, ${alpha * 2})`); // Violet brillant
-          gradient.addColorStop(0.2, `rgba(148, 0, 211, ${alpha * 1.5})`); // Violet foncé
+          gradient.addColorStop(0.2, `rgba(148, 0, 211, ${alpha * 1.5})`); // Dark violet
           gradient.addColorStop(0.5, `rgba(75, 0, 130, ${alpha})`); // Indigo
           gradient.addColorStop(0.8, `rgba(72, 61, 139, ${alpha * 0.5})`); // Slate blue
         } else {
-          // Couleurs normales pour les autres galaxies
+          // Normal colors for other galaxies
           gradient.addColorStop(0, `rgba(255, 250, 205, ${alpha * 2})`); // Bright center
           gradient.addColorStop(0.2, `rgba(255, 245, 200, ${alpha * 1.5})`);
           gradient.addColorStop(0.5, `rgba(255, 240, 190, ${alpha})`);
@@ -717,7 +717,7 @@ const AnimatedBackground: React.FC = () => {
 
       // Apply differential rotation: dust lanes rotate 90% as fast as stars
       ctx.translate(galaxy.centerX, galaxy.centerY);
-      ctx.rotate(galaxy.currentRotation * 1.0); // Même sens que la galaxie
+      ctx.rotate(galaxy.currentRotation * 1.0); // Same direction as galaxy
       ctx.translate(-galaxy.centerX, -galaxy.centerY);
 
       galaxy.dustLanes.forEach(lane => {

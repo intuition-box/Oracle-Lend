@@ -121,20 +121,12 @@ export const useContract = () => {
   const initializeWeb3 = useCallback(async () => {
     try {
       if (typeof window !== 'undefined' && window.ethereum) {
-        // Production: Remove console statement
-        // console.log('🔄 Initializing Web3 connection...')
         
         const provider = new ethers.BrowserProvider(window.ethereum)
         const network = await provider.getNetwork()
         const signer = await provider.getSigner()
         const address = await signer.getAddress()
         
-        // Production: Remove console statement
-        // console.log('🌐 Connected to network:', {
-        //   chainId: network.chainId,
-        //   name: network.name,
-        //   userAddress: address
-        // })
         
         setProvider(provider)
         setSigner(signer)
@@ -161,57 +153,35 @@ export const useContract = () => {
           )
 
           // Test contract connections with simple calls
-          // Production: Remove console statement
-          // console.log('🧪 Testing contract connections...')
           
           try {
             const oracleBalance = await oracleToken.balanceOf(address)
-            // Production: Remove console statement
-            // console.log('✅ OracleToken contract working, user balance:', ethers.formatEther(oracleBalance))
           } catch (tokenError) {
-            // Production: Remove console statement
-            // console.warn('⚠️ OracleToken contract issue:', tokenError.message)
           }
 
           try {
             const userCollateral = await oracleLend.userCollateral(address)
-            // Production: Remove console statement
-            // console.log('✅ OracleLend contract working, user collateral:', ethers.formatEther(userCollateral))
           } catch (lendError) {
-            // Production: Remove console statement
-            // console.warn('⚠️ OracleLend contract issue:', lendError.message)
           }
 
           setOracleLendContract(oracleLend)
           setOracleTokenContract(oracleToken)
           setDexContract(dex)
 
-          // Production: Remove console statement
-
-          // console.log('✅ All contracts initialized:', {
-          //   oracleLend: INTUITION_TESTNET.contracts.oracleLend,
-          //   oracleToken: INTUITION_TESTNET.contracts.oracleToken,
-          //   dex: INTUITION_TESTNET.contracts.dex,
-          //   userAddress: address,
-          //   network: `${network.name} (${network.chainId})`
-          // })
 
           return true
         } catch (contractError) {
           // Production: Remove console statement
-          // console.error('❌ Contract initialization failed:', contractError)
           setError(`Contract initialization failed: ${contractError.message}`)
           return false
         }
       } else {
         // Production: Remove console statement
-        // console.warn('No Web3 provider found')
         setError('Please install MetaMask or another Web3 wallet')
         return false
       }
     } catch (err) {
       // Production: Remove console statement
-      // console.error('Failed to initialize Web3:', err)
       setError(`Failed to connect to wallet: ${err.message}`)
       return false
     }
@@ -223,7 +193,6 @@ export const useContract = () => {
 
     try {
       // Production: Remove console statement
-      // console.log('🔄 Fetching contract data for:', userAddress)
 
       // Get user position with individual error handling
       let userPosition = {
@@ -245,22 +214,14 @@ export const useContract = () => {
           healthRatio: Number(healthRatio),
           liquidatable
         }
-        // Production: Remove console statement
-        // console.log('✅ User position fetched:', userPosition)
       } catch (positionError) {
-        // Production: Remove console statement
-        // console.error('❌ Error fetching user position:', positionError)
         // Try individual calls as fallback
         try {
           const collateral = await oracleLendContract.userCollateral(userAddress)
           const borrowed = await oracleLendContract.userBorrowed(userAddress)
           userPosition.collateral = collateral.toString()
           userPosition.borrowed = borrowed.toString()
-          // Production: Remove console statement
-          // console.log('✅ Fallback position data:', { collateral: userPosition.collateral, borrowed: userPosition.borrowed })
         } catch (fallbackError) {
-          // Production: Remove console statement
-          // console.error('❌ Fallback position fetch failed:', fallbackError)
         }
       }
 
@@ -274,31 +235,19 @@ export const useContract = () => {
       try {
         const oracleBalance = await oracleLendContract.getContractOracleBalance()
         protocolData.oracleBalance = oracleBalance.toString()
-        // Production: Remove console statement
-        // console.log('✅ Oracle balance:', protocolData.oracleBalance)
       } catch (err) {
-        // Production: Remove console statement
-        // console.error('❌ Error fetching oracle balance:', err)
       }
 
       try {
         const ethBalance = await oracleLendContract.getContractETHBalance()
         protocolData.ethBalance = ethBalance.toString()
-        // Production: Remove console statement
-        // console.log('✅ ETH balance:', protocolData.ethBalance)
       } catch (err) {
-        // Production: Remove console statement
-        // console.error('❌ Error fetching ETH balance:', err)
       }
 
       try {
         const currentPrice = await oracleLendContract.getCurrentPrice()
         protocolData.currentPrice = currentPrice.toString()
-        // Production: Remove console statement
-        // console.log('✅ Current price:', protocolData.currentPrice)
       } catch (err) {
-        // Production: Remove console statement
-        // console.error('❌ Error fetching current price (likely no DEX liquidity):', err)
         // Set a default price if DEX has no liquidity
         protocolData.currentPrice = '500000000000000000000000' // 500k ORACLE per ETH as fallback
       }
@@ -350,7 +299,6 @@ export const useContract = () => {
 
     } catch (err) {
       // Production: Remove console statement
-      // console.error('Error fetching contract data:', err)
       setError('Failed to fetch contract data')
     }
   }, [oracleLendContract, oracleTokenContract, dexContract, userAddress])
@@ -374,10 +322,8 @@ export const useContract = () => {
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -389,7 +335,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Add collateral error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -415,10 +360,8 @@ export const useContract = () => {
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -430,7 +373,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Withdraw collateral error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -456,10 +398,8 @@ export const useContract = () => {
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -471,7 +411,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Borrow ORACLE error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -499,11 +438,9 @@ export const useContract = () => {
       
       if (allowance < value) {
         // Production: Remove console statement
-        // console.log('Approving ORACLE spending...')
         const approveTx = await oracleTokenContract.approve(INTUITION_TESTNET.contracts.oracleLend, value)
         await approveTx.wait()
         // Production: Remove console statement
-        // console.log('Approval confirmed')
       }
 
       // Now repay
@@ -511,10 +448,8 @@ export const useContract = () => {
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -526,7 +461,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Repay ORACLE error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -561,11 +495,8 @@ export const useContract = () => {
       
       // Production: Remove console statement
       
-      // console.log('Liquidation check:')
       // Production: Remove console statement
-      // console.log(`  User debt: ${ethers.formatEther(userDebt)} ORACLE`)
       // Production: Remove console statement
-      // console.log(`  Your balance: ${ethers.formatEther(liquidatorBalance)} ORACLE`)
       
       // Check if liquidator has enough ORACLE tokens
       if (liquidatorBalance < userDebt) {
@@ -582,20 +513,16 @@ export const useContract = () => {
         const approveTx = await oracleTokenContract.approve(INTUITION_TESTNET.contracts.oracleLend, userDebt)
         await approveTx.wait()
         // Production: Remove console statement
-        // console.log('Approval confirmed')
       }
 
       // Liquidate
       // Production: Remove console statement
-      // console.log(`Liquidating position with ${ethers.formatEther(userDebt)} ORACLE...`)
       const tx = await oracleLendContract.liquidate(userAddress)
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -607,7 +534,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Liquidation error:', err)
       
       // Provide more specific error messages
       let errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
@@ -687,10 +613,8 @@ export const useContract = () => {
 
       // Production: Remove console statement
 
-      // console.log('Swap transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Swap transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -702,7 +626,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Swap error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -733,16 +656,13 @@ export const useContract = () => {
 
       const mintAmount = ethers.parseEther(amount)
       // Production: Remove console statement
-      // console.log(`Minting ${amount} ORACLE tokens...`)
       
       const tx = await oracleTokenContract.mint(userAddress, mintAmount)
       
       // Production: Remove console statement
       
-      // console.log('Transaction sent:', tx.hash)
       const receipt = await tx.wait()
       // Production: Remove console statement
-      // console.log('Transaction confirmed:', receipt)
 
       // Refresh data
       await fetchContractData()
@@ -754,7 +674,6 @@ export const useContract = () => {
       }
     } catch (err: any) {
       // Production: Remove console statement
-      // console.error('Mint ORACLE error:', err)
       const errorMsg = err.reason || err.message || ERROR_MESSAGES.UNKNOWN_ERROR
       setError(errorMsg)
       return { success: false, error: errorMsg }

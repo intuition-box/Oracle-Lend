@@ -112,40 +112,25 @@ const DEX: React.FC = () => {
   // Fetch real balances and DEX stats
   const fetchBalances = async () => {
     if (!isConnected || !account || !window.ethereum || !isCorrectNetwork) {
-      // Production: Remove console.log
-      // console.log('fetchBalances: Prerequisites not met', { 
-      //   isConnected, 
-      //   account: account ? 'present' : 'missing', 
-      //   hasEthereum: !!window.ethereum, 
-      //   isCorrectNetwork 
-      // })
       return
     }
     
-    // Production: Remove console.log
-    // console.log('fetchBalances: Fetching balances for account:', account)
     
     try {
       const provider = new ethers.BrowserProvider(window.ethereum)
       
       // Get native token balance (TTRUST on Intuition Testnet)
       const nativeBalance = await provider.getBalance(account)
-      // Production: Remove console.log
-      // console.log('fetchBalances: Native balance raw:', nativeBalance.toString())
       
       // Get ORACLE ERC20 token balance
       const oracleContract = new ethers.Contract(CONTRACTS.OracleToken, ORACLE_TOKEN_ABI, provider)
       const oracleBalance = await oracleContract.balanceOf(account)
-      // Production: Remove console.log
-      // console.log('fetchBalances: Oracle balance raw:', oracleBalance.toString())
       
       const formattedBalances = {
         TTRUST: ethers.formatEther(nativeBalance), // Native token balance
         ORACLE: ethers.formatEther(oracleBalance)  // ERC20 token balance
       }
       
-      // Production: Remove console.log
-      // console.log('fetchBalances: Setting formatted balances:', formattedBalances)
       setBalances(formattedBalances)
     } catch (error) {
       console.error('Failed to fetch balances:', error)
@@ -491,20 +476,8 @@ const DEX: React.FC = () => {
                 Your Balances
               </h2>
               <div className="flex items-center space-x-3">
-                {/* Debug info - remove after fixing */}
-                <div className={`text-xs px-2 py-1 rounded ${
-                  isConnected && isCorrectNetwork && account
-                    ? 'bg-green-900/20 border border-green-500/30 text-green-300'
-                    : 'bg-red-900/20 border border-red-500/30 text-red-300'
-                }`}>
-                  Connected: {isConnected ? '✓' : '✗'} | 
-                  Network: {isCorrectNetwork ? '✓' : '✗'} | 
-                  Account: {account ? '✓' : '✗'}
-                </div>
                 <button
                   onClick={() => {
-                    // Production: Remove console.log
-                    // console.log('Manual refresh clicked', { isConnected, account, isCorrectNetwork })
                     fetchBalances()
                     fetchDexStats()
                   }}
