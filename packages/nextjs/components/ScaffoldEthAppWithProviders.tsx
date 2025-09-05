@@ -13,6 +13,31 @@ import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 
+// Prevent burner wallet from accessing localStorage during SSR
+if (typeof window !== "undefined") {
+  // Only patch on client side
+  const originalGetItem = Storage.prototype.getItem;
+  const originalSetItem = Storage.prototype.setItem;
+  
+  // Create safer versions that handle errors gracefully
+  Storage.prototype.getItem = function(key: string) {
+    try {
+      return originalGetItem.call(this, key);
+    } catch (error) {
+      console.warn("Storage access failed:", error);
+      return null;
+    }
+  };
+  
+  Storage.prototype.setItem = function(key: string, value: string) {
+    try {
+      return originalSetItem.call(this, key, value);
+    } catch (error) {
+      console.warn("Storage write failed:", error);
+    }
+  };
+}
+
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   useInitializeNativeCurrencyPrice();
 

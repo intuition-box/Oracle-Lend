@@ -18,7 +18,7 @@ const PNGGalaxies: React.FC = () => {
       name: 'main',
       x: '62%',
       y: '45%',
-      scale: 1200, // ZOOM x4.8 - ÉNORME et spectaculaire (était 750)
+      scale: 1200, // ZOOM x4.8 - HUGE and spectacular (was 750)
       rotationSpeed: -60, // 60 seconds per rotation - spiral direction
       zIndex: 3,
       bestFrame: '045' // Best frame for spiral arms
@@ -27,7 +27,7 @@ const PNGGalaxies: React.FC = () => {
       name: 'secondary',
       x: '20%',
       y: '70%',
-      scale: 900, // ZOOM x5 proportionnel - TRÈS GRAND (était 540)
+      scale: 900, // ZOOM x5 proportional - VERY LARGE (was 540)
       rotationSpeed: -45, // 45 seconds - faster
       zIndex: 2,
       bestFrame: '000' // Frame classique face-on
@@ -36,7 +36,7 @@ const PNGGalaxies: React.FC = () => {
       name: 'third',
       x: '85%',
       y: '80%',
-      scale: 750, // ZOOM x5 proportionnel - MASSIF (était 450)
+      scale: 750, // ZOOM x5 proportional - MASSIVE (was 450)
       rotationSpeed: -30, // 30 seconds - fastest
       zIndex: 1,
       bestFrame: '090' // Interesting perspective
@@ -80,7 +80,7 @@ const PNGGalaxies: React.FC = () => {
         );
       })}
       
-      {/* Animation CSS fluide pour toutes les galaxies */}
+      {/* Smooth CSS animation for all galaxies */}
       <style>{`
         @keyframes rotateGalaxy {
           from { transform: translate(-50%, -50%) rotate(0deg); }

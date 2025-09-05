@@ -12,6 +12,10 @@ export const RevealBurnerPKModal = () => {
 
   const handleCopyPK = async () => {
     try {
+      // Guard against SSR - ensure we're in browser environment
+      if (typeof window === "undefined") {
+        throw new Error("Window object not available - cannot access browser storage");
+      }
       const storage = rainbowkitBurnerWallet.useSessionStorage ? sessionStorage : localStorage;
       const burnerPK = storage?.getItem(BURNER_WALLET_PK_KEY);
       if (!burnerPK) throw new Error("Burner wallet private key not found");

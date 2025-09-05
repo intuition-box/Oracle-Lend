@@ -67,7 +67,7 @@
   /* Centralized Header System - Color Harmony */
   --header-gradient: linear-gradient(135deg, #8B5CF6, #A855F7, #C084FC);
   --subtitle-dark: #E2E8F0;
-  --subtitle-light: #FAFAFA; /* Presque blanc pour maximiser la visibilité sur fond noir spatial */
+  --subtitle-light: #FAFAFA; /* Almost white to maximize visibility on spatial black background */
   
   /* Unified Theme Variables - Auto-switching */
   --theme-text-primary: var(--text-primary);
