@@ -503,7 +503,7 @@ const AnimatedBackground: React.FC = () => {
             baseAngle: Math.PI / 2, // Perpendicular to main disk
             rotationSpeed: baseRotationSpeed * 0.5, // Même sens que les galaxies
             opacity: 0.7,
-            color: '#FFD700', // Doré cosmique pour l'anneau
+            color: '#8B5CF6', // Violet cosmique harmonieux avec le thème
             stars: []
           };
           break;

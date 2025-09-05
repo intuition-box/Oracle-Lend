@@ -458,10 +458,12 @@ const DEX: React.FC = () => {
       )}
 
       {!isInitializing && !isConnected && (
-        <div className="glass-effect rounded-xl p-8 border border-yellow-500/30 text-center">
-          <i className="fas fa-wallet text-yellow-400 text-4xl mb-4"></i>
-          <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
-          <p className="text-gray-400">Please connect your wallet to start trading.</p>
+        <div className="flex justify-center pt-24 pb-16">
+          <div className="glass-effect rounded-xl p-8 border border-yellow-500/30 text-center max-w-md">
+            <i className="fas fa-wallet text-yellow-400 text-4xl mb-4"></i>
+            <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
+            <p className="text-gray-400">Please connect your wallet to start trading.</p>
+          </div>
         </div>
       )}
 
