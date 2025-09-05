@@ -608,7 +608,7 @@ const DEX: React.FC = () => {
               </div>
 
               {/* From Token */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="text-sm text-gray-400">From</label>
@@ -616,20 +616,20 @@ const DEX: React.FC = () => {
                       Balance: {parseFloat(balances[fromToken]).toFixed(4)}
                     </span>
                   </div>
-                  <div className="glass-effect rounded-lg p-3 sm:p-4 border border-gray-600/30">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="glass-effect rounded-lg p-4 sm:p-5 border border-gray-600/30">
+                    <div className="flex items-center justify-between gap-3 mb-4">
                       <input
                         type="number"
                         value={fromAmount}
                         onChange={(e) => setFromAmount(e.target.value)}
                         placeholder="0.00"
-                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full"
+                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full py-2"
                       />
                       <div className="relative">
                         <select
                           value={fromToken}
                           onChange={(e) => setFromToken(e.target.value as 'TTRUST' | 'ORACLE')}
-                          className="appearance-none bg-gray-700/50 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none min-h-[44px]"
+                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-bold cursor-pointer hover:border-purple-400/50 transition-all duration-200 border border-purple-500/30 focus:border-purple-400/70 outline-none min-h-[44px]"
                         >
                           {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">
@@ -640,28 +640,28 @@ const DEX: React.FC = () => {
                         <i className="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-3">
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.25).toString())}
-                        className="py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors min-h-[44px]"
+                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
                       >
                         25%
                       </button>
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.5).toString())}
-                        className="py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors min-h-[44px]"
+                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
                       >
                         50%
                       </button>
                       <button
                         onClick={() => setFromAmount((parseFloat(balances[fromToken]) * 0.75).toString())}
-                        className="py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors min-h-[44px]"
+                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
                       >
                         75%
                       </button>
                       <button
                         onClick={() => setFromAmount(balances[fromToken])}
-                        className="py-2 text-xs text-purple-400 hover:text-purple-300 rounded bg-purple-600/20 transition-colors min-h-[44px]"
+                        className="py-3 px-2 text-xs font-medium text-purple-400 hover:text-white rounded-lg glass-effect border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 min-h-[44px]"
                       >
                         MAX
                       </button>
@@ -673,7 +673,7 @@ const DEX: React.FC = () => {
                 <div className="flex justify-center">
                   <button
                     onClick={handleSwapTokens}
-                    className="w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 hover:border-purple-500 text-gray-400 hover:text-purple-400 transition-all duration-200 hover:scale-110"
+                    className="w-12 h-12 rounded-full glass-effect border-2 border-purple-500/30 hover:border-purple-400/50 text-purple-400 hover:text-white transition-all duration-200 hover:scale-110"
                   >
                     <i className="fas fa-arrow-down"></i>
                   </button>
@@ -687,20 +687,20 @@ const DEX: React.FC = () => {
                       Balance: {parseFloat(balances[toToken]).toFixed(4)}
                     </span>
                   </div>
-                  <div className="glass-effect rounded-lg p-3 sm:p-4 border border-gray-600/30">
-                    <div className="flex items-center justify-between">
+                  <div className="glass-effect rounded-lg p-4 sm:p-5 border border-gray-600/30">
+                    <div className="flex items-center justify-between gap-3">
                       <input
                         type="number"
                         value={toAmount}
                         readOnly
                         placeholder="0.00"
-                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full"
+                        className="bg-transparent text-lg sm:text-xl font-bold text-white placeholder-gray-500 flex-1 outline-none w-full py-2"
                       />
                       <div className="relative">
                         <select
                           value={toToken}
                           onChange={(e) => setToToken(e.target.value as 'TTRUST' | 'ORACLE')}
-                          className="appearance-none bg-gray-700/50 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base text-white font-medium cursor-pointer hover:bg-gray-600/50 transition-colors border border-gray-600/30 focus:border-purple-500/50 outline-none min-h-[44px]"
+                          className="appearance-none glass-effect rounded-lg px-2 py-1 text-lg sm:text-xl text-white font-bold cursor-pointer hover:border-purple-400/50 transition-all duration-200 border border-purple-500/30 focus:border-purple-400/70 outline-none min-h-[44px]"
                         >
                           {(['TTRUST', 'ORACLE'] as const).map((token) => (
                             <option key={token} value={token} className="bg-gray-800">

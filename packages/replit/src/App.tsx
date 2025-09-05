@@ -7,6 +7,7 @@ import Swap from './components/DEX'
 import Analytics from './components/Analytics'
 import AnimatedBackground from './components/AnimatedBackground'
 import PNGGalaxies from './components/PNGGalaxies'
+import ParticleSystem from './components/ParticleSystem'
 import { useWallet } from './hooks/useWallet'
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
     <>
       <AnimatedBackground />
       <PNGGalaxies />
+      <ParticleSystem />
       
       {/* Global Transaction Notification - COMPLETELY OUTSIDE EVERYTHING */}
       {notification && (
