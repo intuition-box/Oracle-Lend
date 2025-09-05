@@ -289,8 +289,15 @@ const LiquidationExplainer: React.FC<LiquidationExplainerProps> = ({
                   <div className="flex items-center space-x-2">
                     <input
                       type="number"
+                      min="0"
+                      step="any"
                       value={mintAmount}
-                      onChange={(e) => setMintAmount(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '' || parseFloat(value) >= 0) {
+                          setMintAmount(value)
+                        }
+                      }}
                       placeholder="Amount to mint"
                       className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
                     />

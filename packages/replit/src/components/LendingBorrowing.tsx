@@ -329,8 +329,15 @@ const LendingBorrowing: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
+                    step="any"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '' || parseFloat(value) >= 0) {
+                        setAmount(value)
+                      }
+                    }}
                     placeholder="0.0"
                     className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -425,8 +432,15 @@ const LendingBorrowing: React.FC = () => {
                   </label>
                     <input
                       type="number"
+                      min="0"
+                      step="any"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '' || parseFloat(value) >= 0) {
+                          setAmount(value)
+                        }
+                      }}
                     placeholder="0.0"
                     className="w-full px-4 py-3 glass-effect border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />

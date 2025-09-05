@@ -492,7 +492,11 @@ const DEX: React.FC = () => {
               </h2>
               <div className="flex items-center space-x-3">
                 {/* Debug info - remove after fixing */}
-                <div className="text-xs text-gray-500 glass-effect px-2 py-1 rounded border border-gray-600/30">
+                <div className={`text-xs px-2 py-1 rounded ${
+                  isConnected && isCorrectNetwork && account
+                    ? 'bg-green-900/20 border border-green-500/30 text-green-300'
+                    : 'bg-red-900/20 border border-red-500/30 text-red-300'
+                }`}>
                   Connected: {isConnected ? '✓' : '✗'} | 
                   Network: {isCorrectNetwork ? '✓' : '✗'} | 
                   Account: {account ? '✓' : '✗'}
@@ -620,8 +624,15 @@ const DEX: React.FC = () => {
                     <div className="flex items-center justify-between gap-3 mb-4">
                       <input
                         type="number"
+                        min="0"
+                        step="any"
                         value={fromAmount}
-                        onChange={(e) => setFromAmount(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (value === '' || parseFloat(value) >= 0) {
+                            setFromAmount(value)
+                          }
+                        }}
                         placeholder="0.00"
                         className="bg-transparent text-lg sm:text-xl font-semibold text-white placeholder-slate-400 flex-1 outline-none w-full py-2"
                       />
@@ -786,7 +797,7 @@ const DEX: React.FC = () => {
                 <div className="text-center">
                   <div className="text-2xl sm:text-3xl mb-2 flex items-center justify-center space-x-2">
                     <span>⚡</span>
-                    <span>→</span>
+                    <span className="text-blue-400 font-bold">→</span>
                     <TokenIcon token="ORACLE" size="lg" />
                   </div>
                   <h3 className="text-sm sm:text-base font-bold text-white mb-1">TTRUST to ORACLE</h3>
@@ -803,7 +814,7 @@ const DEX: React.FC = () => {
                 <div className="text-center">
                   <div className="text-2xl sm:text-3xl mb-2 flex items-center justify-center space-x-2">
                     <TokenIcon token="ORACLE" size="lg" />
-                    <span>→</span>
+                    <span className="text-blue-400 font-bold">→</span>
                     <span>⚡</span>
                   </div>
                   <h3 className="text-sm sm:text-base font-bold text-white mb-1">ORACLE to TTRUST</h3>
